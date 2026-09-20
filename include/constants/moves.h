@@ -907,6 +907,8 @@ enum __attribute__((packed)) Move
 
     // Add any custom moves here, not further down!
     MOVE_BOILING_TIDE = MOVES_COUNT_GEN9,
+    MOVE_TIDAL_GUARD,
+    MOVE_CRAB_RAVE,
 
     MOVES_COUNT,
 
