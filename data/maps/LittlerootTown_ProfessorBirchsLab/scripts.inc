@@ -106,6 +106,7 @@ LittlerootTown_ProfessorBirchsLab_OnFrame:
 @ This is just where the game tells you its yours and lets you nickname it
 LittlerootTown_ProfessorBirchsLab_EventScript_GiveStarterEvent::
 	lockall
+	call Test01_EventScript_GiveRemainingStarters
 	bufferleadmonspeciesname STR_VAR_1
 	message LittlerootTown_ProfessorBirchsLab_Text_LikeYouToHavePokemon
 	waitmessage
@@ -115,6 +116,28 @@ LittlerootTown_ProfessorBirchsLab_EventScript_GiveStarterEvent::
 	goto_if_eq VAR_RESULT, YES, LittlerootTown_ProfessorBirchsLab_EventScript_NicknameStarter
 	goto_if_eq VAR_RESULT, NO, LittlerootTown_ProfessorBirchsLab_EventScript_GoSeeRival
 	end
+
+@ Test01: after the player chooses one starter, give the other two as well.
+@ VAR_STARTER_MON stores the 0/1/2 index used by GetStarterPokemon.
+Test01_EventScript_GiveRemainingStarters::
+	goto_if_eq VAR_STARTER_MON, 0, Test01_EventScript_StarterWasKubfu
+	goto_if_eq VAR_STARTER_MON, 1, Test01_EventScript_StarterWasWickrab
+	goto Test01_EventScript_StarterWasMudkip
+
+Test01_EventScript_StarterWasKubfu::
+	givemon SPECIES_TORCHIC, 5
+	givemon SPECIES_MUDKIP, 5
+	return
+
+Test01_EventScript_StarterWasWickrab::
+	givemon SPECIES_KUBFU, 5
+	givemon SPECIES_MUDKIP, 5
+	return
+
+Test01_EventScript_StarterWasMudkip::
+	givemon SPECIES_KUBFU, 5
+	givemon SPECIES_TORCHIC, 5
+	return
 
 LittlerootTown_ProfessorBirchsLab_EventScript_NicknameStarter::
 	setvar VAR_0x8004, 0
