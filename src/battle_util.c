@@ -2359,6 +2359,10 @@ bool32 CanAbilityAbsorbMove(struct DamageContext *ctx)
         if (ctx->moveType == TYPE_FIRE)
             battleScript = AbsorbedByStatIncreaseAbility(ctx, STAT_DEF, 2);
         break;
+    case ABILITY_STEAM_SHELL:
+        if (ctx->moveType == TYPE_FIRE || ctx->moveType == TYPE_WATER)
+            battleScript = AbsorbedByStatIncreaseAbility(ctx, STAT_SPATK, 1);
+        break;
     case ABILITY_WIND_RIDER:
         if (IsWindMove(ctx->move))
             battleScript = AbsorbedByStatIncreaseAbility(ctx, STAT_ATK, 1);
