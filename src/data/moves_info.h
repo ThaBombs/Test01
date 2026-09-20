@@ -22103,6 +22103,28 @@ const struct MoveInfo gMovesInfo[MOVES_COUNT_ALL] =
         .battleAnimScript = gBattleAnimMove_MalignantChain,
     },
 
+    [MOVE_BOILING_TIDE] =
+    {
+        .name = COMPOUND_STRING("Boiling Tide"),
+        .description = COMPOUND_STRING(
+            "A scalding wave that grows\n"
+            "stronger in harsh sunlight."),
+        .effect = EFFECT_HYDRO_STEAM,
+        .power = 65,
+        .type = TYPE_WATER,
+        .accuracy = 100,
+        .pp = 15,
+        .target = TARGET_SELECTED,
+        .priority = 0,
+        .category = DAMAGE_CATEGORY_SPECIAL,
+        .thawsUser = TRUE,
+        .additionalEffects = ADDITIONAL_EFFECTS({
+            .moveEffect = MOVE_EFFECT_BURN,
+            .chance = 30,
+        }),
+        .battleAnimScript = gBattleAnimMove_HydroSteam,
+    },
+
     // Z-Moves
     [MOVE_BREAKNECK_BLITZ] =
     {
