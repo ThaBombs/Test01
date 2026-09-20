@@ -1,3 +1,4 @@
+# ChatGPT build artifact trigger
 name: CI
 
 on:
