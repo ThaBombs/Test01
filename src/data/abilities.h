@@ -2556,4 +2556,12 @@ const struct AbilityInfo gAbilitiesInfo[ABILITIES_COUNT] =
         .name = _("Aura Guard"),
         .description = COMPOUND_STRING("Unimplemented."),
     },
+    [ABILITY_STEAM_SHELL] =
+    {
+        .name = _("Steam Shell"),
+        .description = COMPOUND_STRING("Absorbs Fire/Water; raises Sp. Atk."),
+        .aiRating = 8,
+        .breakable = TRUE,
+    },
+
 };
