@@ -5139,6 +5139,20 @@ static void Cmd_setprotectlike(void)
         gBattleCommunication[MULTISTRING_CHOOSER] = B_MSG_PROTECTED_ITSELF;
     }
 
+    if (gCurrentMove == MOVE_TIDAL_GUARD)
+    {
+        enum BattlerId foe = GetOppositeBattler(gBattlerAttacker);
+        enum Move incomingMove = gChosenMoveByBattler[foe];
+
+        if (incomingMove != MOVE_NONE && !IsBattleMoveStatus(incomingMove))
+        {
+            if (IsBattleMovePhysical(incomingMove))
+                TryChangeBattleWeather(gBattlerAttacker, BATTLE_WEATHER_RAIN, ABILITY_NONE);
+            else if (IsBattleMoveSpecial(incomingMove))
+                TryChangeBattleWeather(gBattlerAttacker, BATTLE_WEATHER_SUN, ABILITY_NONE);
+        }
+    }
+
     gBattleMons[gBattlerAttacker].volatiles.consecutiveMoveUses++;
     gBattlescriptCurrInstr = cmd->nextInstr;
 }
