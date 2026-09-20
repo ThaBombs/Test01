@@ -7365,12 +7365,16 @@ static uq4_12_t GetWeatherDamageModifier(struct DamageContext *ctx)
     {
         if (ctx->moveType != TYPE_FIRE && ctx->moveType != TYPE_WATER)
             return UQ_4_12(1.0);
+        if (ctx->moveType == TYPE_WATER && ctx->abilities[ctx->battlerAtk] == ABILITY_TIDAL_FLAME)
+            return UQ_4_12(1.0);
         return (ctx->moveType == TYPE_WATER) ? UQ_4_12(0.5) : UQ_4_12(1.5);
     }
 
     if (ctx->weather & B_WEATHER_RAIN || attackerWeather & B_WEATHER_RAIN)
     {
         if (ctx->moveType != TYPE_FIRE && ctx->moveType != TYPE_WATER)
+            return UQ_4_12(1.0);
+        if (ctx->moveType == TYPE_FIRE && ctx->abilities[ctx->battlerAtk] == ABILITY_TIDAL_FLAME)
             return UQ_4_12(1.0);
         return (ctx->moveType == TYPE_FIRE) ? UQ_4_12(0.5) : UQ_4_12(1.5);
     }
