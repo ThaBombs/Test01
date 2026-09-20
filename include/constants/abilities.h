@@ -344,7 +344,7 @@ enum __attribute__((packed)) Ability
     ABILITIES_COUNT_GEN9,
 
     // Test01 custom abilities
-    ABILITY_STEAM_SHELL = ABILITIES_COUNT_GEN9,
+    ABILITY_TIDAL_FLAME = ABILITIES_COUNT_GEN9,
     ABILITIES_COUNT,
 };
 
