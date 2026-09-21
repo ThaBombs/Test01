@@ -1691,7 +1691,13 @@ enum __attribute__((packed)) Species
     SPECIES_GLIMMORA_MEGA = 1572,
 
     SPECIES_CUSTOM_START = SPECIES_GLIMMORA_MEGA,
-    // Add any custom species between here and SPECIES_CUSTOM_END
+    // Mireglen custom species. Append new species only; never reorder these IDs.
+    SPECIES_WICKRAB,
+    SPECIES_CANDELAW,
+    SPECIES_CRABRAZIER,
+    SPECIES_MUDKIP_MIREGLEN,
+    SPECIES_MARSHTOMP_MIREGLEN,
+    SPECIES_SWAMPERT_MIREGLEN,
     SPECIES_CUSTOM_END,
 
     SPECIES_EGG = SPECIES_CUSTOM_END,
