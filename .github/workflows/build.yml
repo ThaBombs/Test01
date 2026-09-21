@@ -8,6 +8,10 @@ on:
       - upcoming
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: true
+
 env:
   GAME_REVISION: 0
   GAME_LANGUAGE: ENGLISH
