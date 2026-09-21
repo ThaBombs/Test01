@@ -79,13 +79,15 @@ jobs:
       - name: ROM (Emerald)
         env:
           GAME_VERSION: EMERALD
-        run: make -j$(nproc) -O all
+        run: |
+          make -j$(nproc) -O all
+          cp pokeemerald.gba Mireglen.gba
 
       - name: Upload Emerald ROM
         uses: actions/upload-artifact@v4
         with:
-          name: pokeemerald-${{ github.sha }}
-          path: pokeemerald.gba
+          name: Mireglen
+          path: Mireglen.gba
           if-no-files-found: error
           retention-days: 30
 
