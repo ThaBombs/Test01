@@ -1,7 +1,11 @@
 #ifndef GUARD_GBA_IO_REG_H
 #define GUARD_GBA_IO_REG_H
 
+#ifndef PORTABLE
 #define REG_BASE 0x4000000 // I/O register base address
+#else
+extern unsigned char REG_BASE[];
+#endif
 
 // I/O register offsets
 
