@@ -125,18 +125,18 @@ Test01_EventScript_GiveRemainingStarters::
 	goto Test01_EventScript_StarterWasMudkip
 
 Test01_EventScript_StarterWasKubfu::
-	givemon SPECIES_TORCHIC, 5
-	givemon SPECIES_MUDKIP, 5
+	givemon SPECIES_WICKRAB, 5
+	givemon SPECIES_MUDKIP_MIREGLEN, 5
 	return
 
 Test01_EventScript_StarterWasWickrab::
 	givemon SPECIES_KUBFU, 5
-	givemon SPECIES_MUDKIP, 5
+	givemon SPECIES_MUDKIP_MIREGLEN, 5
 	return
 
 Test01_EventScript_StarterWasMudkip::
 	givemon SPECIES_KUBFU, 5
-	givemon SPECIES_TORCHIC, 5
+	givemon SPECIES_WICKRAB, 5
 	return
 
 LittlerootTown_ProfessorBirchsLab_EventScript_NicknameStarter::
