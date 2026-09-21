@@ -1,7 +1,11 @@
 #ifndef GUARD_GBA_FLASH_INTERNAL_H
 #define GUARD_GBA_FLASH_INTERNAL_H
 
+#ifndef PORTABLE
 #define FLASH_BASE ((u8 *)0xE000000)
+#else
+extern unsigned char FLASH_BASE[131072];
+#endif
 
 #define FLASH_WRITE(addr, data) ((*(vu8 *)(FLASH_BASE + (addr))) = (data))
 
