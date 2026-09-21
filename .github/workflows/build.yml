@@ -55,6 +55,27 @@ jobs:
       - name: Apply Test01 swamp map
         run: python3 tools/apply_test01_swamp.py
 
+      - name: Upload Mireglen visual development assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: mireglen-visual-assets-${{ github.sha }}
+          path: |
+            graphics/pokemon/torchic
+            graphics/pokemon/combusken
+            graphics/pokemon/blaziken
+            graphics/pokemon/mudkip
+            graphics/pokemon/marshtomp
+            graphics/pokemon/swampert
+            tools/test01_sprite_data
+            data/layouts/LittlerootTown
+            data/layouts/Route101
+            data/layouts/Route102
+            data/layouts/Route103
+            data/tilesets/primary/general
+            data/tilesets/secondary/petalburg
+          if-no-files-found: error
+          retention-days: 7
+
       - name: ROM (Emerald)
         env:
           GAME_VERSION: EMERALD
