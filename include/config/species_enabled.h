@@ -6,16 +6,19 @@
 // so Pikachu depends on the Gen 1 setting despite Pichu being the lowest member of the evolution tree.
 // Eg: If P_GEN_2_POKEMON is set to FALSE, all members of the Sneasel Family will be disabled
 // (Sneasel + Hisuian, Weavile and Sneasler).
-#define P_GEN_1_POKEMON                  TRUE // Generation 1 Pokémon (RGBY)
-#define P_GEN_2_POKEMON                  TRUE // Generation 2 Pokémon (GSC)
-#define P_GEN_3_POKEMON                  TRUE // Generation 3 Pokémon (RSE, FRLG)
-#define P_GEN_4_POKEMON                  TRUE // Generation 4 Pokémon (DPPt, HGSS)
-#define P_GEN_5_POKEMON                  TRUE // Generation 5 Pokémon (BW, B2W2)
-#define P_GEN_6_POKEMON                  TRUE // Generation 6 Pokémon (XY, ORAS)
-#define P_GEN_7_POKEMON                  TRUE // Generation 7 Pokémon (SM, USUM, LGPE)
-#define P_GEN_8_POKEMON                  TRUE // Generation 8 Pokémon (SwSh, BDSP, LA)
-#define P_GEN_9_POKEMON                  TRUE // Generation 9 Pokémon (SV)
+#define P_GEN_1_POKEMON                  FALSE // Generation 1 Pokémon (RGBY)
+#define P_GEN_2_POKEMON                  FALSE // Generation 2 Pokémon (GSC)
+#define P_GEN_3_POKEMON                  FALSE // Generation 3 Pokémon (RSE, FRLG)
+#define P_GEN_4_POKEMON                  FALSE // Generation 4 Pokémon (DPPt, HGSS)
+#define P_GEN_5_POKEMON                  FALSE // Generation 5 Pokémon (BW, B2W2)
+#define P_GEN_6_POKEMON                  FALSE // Generation 6 Pokémon (XY, ORAS)
+#define P_GEN_7_POKEMON                  FALSE // Generation 7 Pokémon (SM, USUM, LGPE)
+#define P_GEN_8_POKEMON                  FALSE // Generation 8 Pokémon (SwSh, BDSP, LA)
+#define P_GEN_9_POKEMON                  FALSE // Generation 9 Pokémon (SV)
 
+// Mireglen uses a curated active roster during development.  The complete
+// upstream roster remains archived/in Git history; new custom species are
+// appended independently of these family switches.
 // Setting this to TRUE will add the new evolutions to the Regional Dex.
 #define P_NEW_EVOS_IN_REGIONAL_DEX       TRUE
 
@@ -186,10 +189,10 @@
 #define P_FAMILY_CELEBI                  P_GEN_2_POKEMON
 
 #define P_FAMILY_TREECKO                 P_GEN_3_POKEMON
-#define P_FAMILY_TORCHIC                 P_GEN_3_POKEMON
-#define P_FAMILY_MUDKIP                  P_GEN_3_POKEMON
-#define P_FAMILY_POOCHYENA               P_GEN_3_POKEMON
-#define P_FAMILY_ZIGZAGOON               P_GEN_3_POKEMON
+#define P_FAMILY_TORCHIC                 TRUE // Mireglen internal art/learnset donor
+#define P_FAMILY_MUDKIP                  TRUE // Mireglen internal art/learnset donor
+#define P_FAMILY_POOCHYENA               TRUE // early-area/test encounter support
+#define P_FAMILY_ZIGZAGOON               TRUE // Emerald Birch-rescue/early-area support
 #define P_FAMILY_WURMPLE                 P_GEN_3_POKEMON
 #define P_FAMILY_LOTAD                   P_GEN_3_POKEMON
 #define P_FAMILY_SEEDOT                  P_GEN_3_POKEMON
@@ -520,7 +523,7 @@
 #define P_FAMILY_ZACIAN                  P_GEN_8_POKEMON
 #define P_FAMILY_ZAMAZENTA               P_GEN_8_POKEMON
 #define P_FAMILY_ETERNATUS               P_GEN_8_POKEMON
-#define P_FAMILY_KUBFU                   P_GEN_8_POKEMON
+#define P_FAMILY_KUBFU                   TRUE // Mireglen starter
 #define P_FAMILY_ZARUDE                  P_GEN_8_POKEMON
 #define P_FAMILY_REGIELEKI               P_GEN_8_POKEMON
 #define P_FAMILY_REGIDRAGO               P_GEN_8_POKEMON
