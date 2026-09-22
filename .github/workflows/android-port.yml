@@ -59,18 +59,26 @@ jobs:
             src/data/tutor_moves.h \
             src/data/pokemon/teachable_learnsets.h
 
-          # Expansion keeps audio sources as WAV/AIF and generates the binary
-          # sample payloads consumed by data/sound_data.s.
-          mapfile -t AUDIO_BINS < <(grep -RhoE 'sound/[A-Za-z0-9_./-]+\\.bin' sound data/sound_data.s | sort -u)
+          # Generate every audio binary from its source file using Expansion's
+          # own Make rules. This is more robust than parsing .incbin directives.
+          mapfile -t AUDIO_BINS < <(
+            {
+              find sound -type f -name '*.wav' -print | sed 's/\.wav$/.bin/'
+              find sound/direct_sound_samples/cries -type f -name 'uncomp_*.aif' -print | sed 's/\.aif$/.bin/'
+            } | sort -u
+          )
+          echo "Generating ${#AUDIO_BINS[@]} audio sample binaries"
           if ((${#AUDIO_BINS[@]})); then
-            make -j"$(nproc)" GAME_VERSION=EMERALD "${AUDIO_BINS[@]}"
+            make NODEP=1 -j"$(nproc)" GAME_VERSION=EMERALD "${AUDIO_BINS[@]}"
           fi
+          test -f sound/direct_sound_samples/sc88pro_glockenspiel.bin
 
           # Generate MIDI-derived song assembly before CMake evaluates its
           # source glob, otherwise those songs are invisible to the native build.
-          mapfile -t SONG_ASM < <(find sound/songs/midi -type f -name '*.mid' | sed 's/\\.mid$/.s/' | sort)
+          mapfile -t SONG_ASM < <(find sound/songs/midi -type f -name '*.mid' -print | sed 's/\.mid$/.s/' | sort)
+          echo "Generating ${#SONG_ASM[@]} MIDI song assembly files"
           if ((${#SONG_ASM[@]})); then
-            make -j"$(nproc)" GAME_VERSION=EMERALD "${SONG_ASM[@]}"
+            make NODEP=1 -j"$(nproc)" GAME_VERSION=EMERALD "${SONG_ASM[@]}"
           fi
 
       - name: Patch SDL2 Android lifecycle
