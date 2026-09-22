@@ -785,10 +785,17 @@ static void UpdateBlendRegisters(void)
             // increment each target until reaching weather's values
             SetGpuReg(
                 REG_OFFSET_BLDALPHA,
+#ifdef PORT_BOOTSTRAP_NO_WEATHER
+                // The start menu has no field weather. Restore toward the
+                // neutral hardware-blend range until the weather subsystem is
+                // linked into the native Android runtime.
+                BLDALPHA_BLEND(min(++tgt1, 16), min(++tgt2, 16))
+#else
                 BLDALPHA_BLEND(
                     min(++tgt1, gWeatherPtr->currBlendEVA),
                     min(++tgt2, gWeatherPtr->currBlendEVB)
                 )
+#endif
             );
             break;
         case FADE_TO_BLACK:
