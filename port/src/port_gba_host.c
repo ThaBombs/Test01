@@ -1,6 +1,7 @@
 #include "port_gba_host.h"
 #include "port_gba_bios.h"
 #include "port_gba_dma.h"
+#include "port_gba_timing.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -25,6 +26,7 @@ void PortGbaHost_Init(void)
     memset(gPortVram, 0, sizeof(gPortVram));
     memset(gPortOam, 0, sizeof(gPortOam));
     PortGbaDma_Init();
+    PortGbaTiming_Init();
 
     SOUND_INFO_PTR = NULL;
     INTR_CHECK = 0;
@@ -60,7 +62,8 @@ bool PortGbaHost_SelfTest(void)
         && GetGpuReg(REG_OFFSET_BG1CNT) == 0x2468
         && REG_BG1CNT == 0x2468
         && PortGbaBios_SelfTest()
-        && PortGbaDma_SelfTest();
+        && PortGbaDma_SelfTest()
+        && PortGbaTiming_SelfTest();
 
     PortGbaHost_Init();
     return passed;

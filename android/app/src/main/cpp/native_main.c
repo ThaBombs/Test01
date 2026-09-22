@@ -6,6 +6,7 @@
 #include <time.h>
 
 #include "port_runtime.h"
+#include "port_gba_timing.h"
 
 #define LOG_TAG "PokeemeraldNative"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -191,11 +192,13 @@ void android_main(struct android_app *app)
             deltaSeconds = (double)(now - engine.lastFrameNanos) / 1000000000.0;
         engine.lastFrameNanos = now;
 
+        PortGbaTiming_WaitForNextFrame();
+        PortGbaTiming_BeginVisibleFrame();
+
         PortRuntime_Step(&engine.input, deltaSeconds);
         RenderFrame(&engine);
 
-        // Avoid running a hot uncapped loop while this bootstrap renderer is active.
-        struct timespec sleepTime = {.tv_sec = 0, .tv_nsec = 10000000L};
-        nanosleep(&sleepTime, NULL);
+        PortGbaTiming_EnterVBlank();
+        PortGbaTiming_LeaveVBlank();
     }
 }
