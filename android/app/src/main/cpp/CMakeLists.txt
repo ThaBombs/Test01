@@ -75,7 +75,7 @@ foreach(SOURCE IN LISTS DATA_ASM SONG_ASM)
         add_custom_command(
             OUTPUT "${OUTPUT}"
             COMMAND "${CMAKE_COMMAND}" -E make_directory "${OUTPUT_DIR}"
-            COMMAND /bin/sh -c "cd '${ROOT}' && { printf \".include \\\"${SPECIAL_IDS}\\\"\\n\"; '${ROOT}/tools/preproc/preproc' '${SOURCE}' '${ROOT}/charmap.txt' | /usr/bin/cpp -I'${ROOT}/include' -DEMERALD -DMODERN=1 -DPORTABLE -DUBFIX | '${ROOT}/tools/preproc/preproc' -ie '${SOURCE}' '${ROOT}/charmap.txt'; } > '${OUTPUT}.s' && '${ARM_NONE_EABI_AS}' -march=armv7-a -I'${ROOT}' -I'${ROOT}/sound' -o '${OUTPUT}' '${OUTPUT}.s'"
+            COMMAND /bin/sh -c "cd '${ROOT}' && { printf \".include \\\"${SPECIAL_IDS}\\\"\\n\"; '${ROOT}/tools/preproc/preproc' '${SOURCE}' '${ROOT}/charmap.txt' | /usr/bin/cpp -I'${ROOT}/include' -DEMERALD -DMODERN=1 -DPORTABLE -DUBFIX | '${ROOT}/tools/preproc/preproc' -ie '${SOURCE}' '${ROOT}/charmap.txt' | sed -E 's/\\.global ([A-Za-z_][A-Za-z0-9_]*);[[:space:]]*\\.equiv \\1,/.equiv \\1,/' ; } > '${OUTPUT}.s' && '${ARM_NONE_EABI_AS}' -march=armv7-a -I'${ROOT}' -I'${ROOT}/sound' -o '${OUTPUT}' '${OUTPUT}.s'"
             DEPENDS "${SOURCE}" "${ROOT}/tools/preproc/preproc" "${ROOT}/charmap.txt" "${SPECIAL_IDS}"
             VERBATIM)
     endif()
