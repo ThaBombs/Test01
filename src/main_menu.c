@@ -1009,20 +1009,9 @@ static void Task_HandleMainMenuInput(u8 taskId)
 static void Task_HandleMainMenuAPressed(u8 taskId)
 {
 #ifdef PORT_BOOTSTRAP_MENU_ONLY
-    // OPTION is now backed by Emerald's real option-menu state machine.
-    // NEW GAME remains isolated until its Birch/naming/overworld dependency
-    // graph is linked into the Android target.
-    if (gTasks[taskId].tCurrItem == 1)
-    {
-        gMain.savedCallback = CB2_ReinitMainMenu;
-        FreeAllWindowBuffers();
-        SetMainCallback2(CB2_InitOptionMenu);
-        DestroyTask(taskId);
-    }
-    else
-    {
-        gTasks[taskId].func = Task_HighlightSelectedMainMenuItem;
-    }
+    // Keep the proven Android main-menu path active while OPTION dependencies
+    // are measured by the compile-only probe.
+    gTasks[taskId].func = Task_HighlightSelectedMainMenuItem;
 #else
 
     bool8 wirelessAdapterConnected;

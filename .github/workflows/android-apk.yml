@@ -130,6 +130,26 @@ jobs:
           echo "Main-menu probe: $PROBE"
           "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u | tee android/main-menu-unresolved.txt
 
+      - name: Report option-menu probe dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          NDK_NM="$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
+          PROBE="$(find android/app -type f -name 'libpokeemerald_option_menu_probe.a' -path '*arm64-v8a*' | head -n 1)"
+          if [ -z "$PROBE" ]; then
+            echo "Option-menu probe archive was not built." >&2
+            exit 1
+          fi
+          "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u > android/option-menu-unresolved.txt
+
+      - name: Upload option-menu dependency report
+        uses: actions/upload-artifact@v4
+        with:
+          name: option-menu-unresolved-${{ github.sha }}
+          path: android/option-menu-unresolved.txt
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
