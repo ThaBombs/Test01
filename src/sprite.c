@@ -1647,6 +1647,7 @@ u32 LoadSpritePalette(const struct SpritePalette *palette)
 
     if (index == 0xFF)
     {
+#ifndef PORT_BOOTSTRAP_NO_OVERWORLD
         if (gMain.callback2 == CB2_Overworld)
         {
             u32 count = GetNumberOfActiveOWEs(OWE_GENERATED);
@@ -1659,6 +1660,7 @@ u32 LoadSpritePalette(const struct SpritePalette *palette)
                     break;
             }
         }
+#endif
         
         if (index == 0xFF)
             return 0xFF;
