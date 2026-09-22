@@ -18,6 +18,7 @@ add_library(
     "${PORT_ROOT}/src/port_gba_renderer.c"
     "${PORT_ROOT}/src/port_gba_rtc.c"
     "${PORT_ROOT}/src/port_gba_flash.c"
+    "${PORT_ROOT}/src/port_gba_audio.c"
     "${REPO_ROOT}/src/gpu_regs.c"
     "${REPO_ROOT}/src/dma3_manager.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"
@@ -94,3 +95,8 @@ add_custom_command(
     COMMENT "Engine probe unresolved symbols"
     VERBATIM
 )
+
+
+# Gradle requests pokeemerald_native specifically. Force the compile-only
+# engine probe to build as part of every APK so CI genuinely validates main.c.
+add_dependencies(pokeemerald_native pokeemerald_engine_probe)

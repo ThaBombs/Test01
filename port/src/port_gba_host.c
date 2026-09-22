@@ -5,6 +5,7 @@
 #include "port_gba_renderer.h"
 #include "port_gba_rtc.h"
 #include "port_gba_flash.h"
+#include "port_gba_audio.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -70,7 +71,8 @@ bool PortGbaHost_SelfTest(void)
         && PortGbaTiming_SelfTest()
         && PortGbaRenderer_SelfTest()
         && PortGbaRtc_SelfTest()
-        && PortGbaFlash_SelfTest();
+        && PortGbaFlash_SelfTest()
+        && PortGbaAudio_SelfTest();
 
     PortGbaHost_Init();
     return passed;
