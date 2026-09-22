@@ -8,11 +8,27 @@ on:
     paths:
       - "android/**"
       - "port/**"
+      - "src/**"
+      - "include/**"
+      - "data/**"
+      - "tools/**"
+      - "Makefile"
+      - "make_tools.mk"
+      - "map_data_rules.mk"
+      - "json_data_rules.mk"
       - ".github/workflows/android-apk.yml"
   pull_request:
     paths:
       - "android/**"
       - "port/**"
+      - "src/**"
+      - "include/**"
+      - "data/**"
+      - "tools/**"
+      - "Makefile"
+      - "make_tools.mk"
+      - "map_data_rules.mk"
+      - "json_data_rules.mk"
       - ".github/workflows/android-apk.yml"
 
 permissions:
@@ -50,6 +66,12 @@ jobs:
           fi
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+
+      - name: Generate pokeemerald headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          make -j2 generated
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
