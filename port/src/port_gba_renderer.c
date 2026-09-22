@@ -349,6 +349,53 @@ void PortGbaRenderer_RenderCompat(uint32_t *pixels)
         RenderSprites(pixels);
 }
 
+bool PortGbaRenderer_RenderSurface(uint32_t *pixels, int width, int height, int stridePixels)
+{
+    if (pixels == NULL || width <= 0 || height <= 0 || stridePixels < width)
+        return false;
+
+    // Keep the diagnostic runtime visible until the game has actually begun
+    // configuring display state or the backdrop palette.
+    if (REG_DISPCNT == 0 && Read16(BG_PLTT) == 0)
+        return false;
+
+    PortGbaRenderer_RenderCompat(sTestFrame);
+
+    const uint32_t black = 0xFF000000u;
+    for (int y = 0; y < height; ++y)
+    {
+        uint32_t *row = pixels + (size_t)y * (size_t)stridePixels;
+        for (int x = 0; x < width; ++x)
+            row[x] = black;
+    }
+
+    int destWidth = width;
+    int destHeight = (destWidth * PORT_GBA_FRAME_HEIGHT) / PORT_GBA_FRAME_WIDTH;
+    if (destHeight > height)
+    {
+        destHeight = height;
+        destWidth = (destHeight * PORT_GBA_FRAME_WIDTH) / PORT_GBA_FRAME_HEIGHT;
+    }
+
+    const int offsetX = (width - destWidth) / 2;
+    const int offsetY = (height - destHeight) / 2;
+
+    for (int y = 0; y < destHeight; ++y)
+    {
+        const int srcY = (y * PORT_GBA_FRAME_HEIGHT) / destHeight;
+        uint32_t *row =
+            pixels + (size_t)(offsetY + y) * (size_t)stridePixels + (size_t)offsetX;
+
+        for (int x = 0; x < destWidth; ++x)
+        {
+            const int srcX = (x * PORT_GBA_FRAME_WIDTH) / destWidth;
+            row[x] = sTestFrame[(size_t)srcY * PORT_GBA_FRAME_WIDTH + (size_t)srcX];
+        }
+    }
+
+    return true;
+}
+
 bool PortGbaRenderer_SelfTest(void)
 {
     memset(gPortVram, 0, VRAM_SIZE);
