@@ -74,7 +74,13 @@ static const u16 sCrc16Table[] =
     0x7BC7, 0x6A4E, 0x58D5, 0x495C, 0x3DE3, 0x2C6A, 0x1EF1, 0x0F78,
 };
 
+#ifdef PLATFORM_ANDROID
+// One transparent 4bpp 8x8 tile. The GBA build keeps generating this from
+// blank.png; Android can use the identical zero-filled tile directly.
+const u8 gMiscBlank_Gfx[32] = {0};
+#else
 const u8 gMiscBlank_Gfx[] = INCGFX_U8("graphics/interface/blank.png", ".4bpp");
+#endif
 
 u8 CreateInvisibleSpriteWithCallback(void (*callback)(struct Sprite *))
 {
