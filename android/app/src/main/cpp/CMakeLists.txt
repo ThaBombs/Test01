@@ -237,6 +237,18 @@ add_custom_command(
 )
 add_dependencies(pokeemerald_native pokeemerald_main_menu_startup_probe)
 
+# These Emerald UI units are internal implementation details of the APK.
+# Hiding their global symbols lets --gc-sections discard menu/text functions
+# that are not reachable from the direct Android start-menu path.
+set_source_files_properties(
+    "${REPO_ROOT}/src/window.c"
+    "${TEXT_ANDROID_C}"
+    "${MENU_ANDROID_C}"
+    "${MAIN_MENU_ANDROID_C}"
+    PROPERTIES
+    COMPILE_OPTIONS "-fvisibility=hidden"
+)
+
 # Integration branch: link the actual direct-menu startup and real main-menu
 # translation unit into the APK so PR CI reports the remaining runtime deps.
 target_sources(
