@@ -1,5 +1,6 @@
 #include "port_runtime.h"
 #include "port_gba_host.h"
+#include "port_gba_renderer.h"
 
 #include <stddef.h>
 
@@ -74,6 +75,9 @@ void PortRuntime_Step(const struct PortInputState *input, double deltaSeconds)
 void PortRuntime_Render(uint32_t *pixels, int width, int height, int stridePixels)
 {
     if (pixels == NULL || width <= 0 || height <= 0 || stridePixels < width)
+        return;
+
+    if (PortGbaRenderer_RenderSurface(pixels, width, height, stridePixels))
         return;
 
     // This deliberately renders at the Android surface resolution rather than
