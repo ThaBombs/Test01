@@ -89,7 +89,7 @@ void EnableVCountIntrAtLine150(void);
 
 #define B_START_SELECT (B_BUTTON | START_BUTTON | SELECT_BUTTON)
 
-void AgbMain(void)
+void Game_Init(void)
 {
     *(vu16 *)BG_PLTT = RGB_WHITE; // Set the backdrop to white on startup
     InitGpuRegManager();
@@ -127,6 +127,49 @@ void AgbMain(void)
     AGBPrintInit();
 #endif
 #endif
+}
+
+void Game_RunFrame(void)
+{
+    ReadKeys();
+
+    if (gSoftResetDisabled == FALSE
+     && JOY_HELD_RAW(A_BUTTON)
+     && JOY_HELD_RAW(B_START_SELECT) == B_START_SELECT)
+    {
+        rfu_REQ_stopMode();
+        rfu_waitREQComplete();
+        DoSoftReset();
+    }
+
+    if (Overworld_SendKeysToLinkIsRunning() == TRUE)
+    {
+        gLinkTransferringData = TRUE;
+        UpdateLinkAndCallCallbacks();
+        gLinkTransferringData = FALSE;
+    }
+    else
+    {
+        gLinkTransferringData = FALSE;
+        UpdateLinkAndCallCallbacks();
+
+        if (Overworld_RecvKeysFromLinkIsRunning() == TRUE)
+        {
+            gMain.newKeys = 0;
+            ClearSpriteCopyRequests();
+            gLinkTransferringData = TRUE;
+            UpdateLinkAndCallCallbacks();
+            gLinkTransferringData = FALSE;
+        }
+    }
+
+    PlayTimeCounter_Update();
+    MapMusicMain();
+}
+
+void AgbMain(void)
+{
+    Game_Init();
     gAgbMainLoop_sp = __builtin_frame_address(0);
     AgbMainLoop();
 }
@@ -135,40 +178,7 @@ void AgbMainLoop(void)
 {
     for (;;)
     {
-        ReadKeys();
-
-        if (gSoftResetDisabled == FALSE
-         && JOY_HELD_RAW(A_BUTTON)
-         && JOY_HELD_RAW(B_START_SELECT) == B_START_SELECT)
-        {
-            rfu_REQ_stopMode();
-            rfu_waitREQComplete();
-            DoSoftReset();
-        }
-
-        if (Overworld_SendKeysToLinkIsRunning() == TRUE)
-        {
-            gLinkTransferringData = TRUE;
-            UpdateLinkAndCallCallbacks();
-            gLinkTransferringData = FALSE;
-        }
-        else
-        {
-            gLinkTransferringData = FALSE;
-            UpdateLinkAndCallCallbacks();
-
-            if (Overworld_RecvKeysFromLinkIsRunning() == TRUE)
-            {
-                gMain.newKeys = 0;
-                ClearSpriteCopyRequests();
-                gLinkTransferringData = TRUE;
-                UpdateLinkAndCallCallbacks();
-                gLinkTransferringData = FALSE;
-            }
-        }
-
-        PlayTimeCounter_Update();
-        MapMusicMain();
+        Game_RunFrame();
         WaitForVBlank();
     }
 }
