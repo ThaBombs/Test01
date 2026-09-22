@@ -307,6 +307,8 @@ set_source_files_properties(
     "${TEXT_WINDOW_ANDROID_C}"
     "${OPTION_MENU_ANDROID_C}"
     "${STRING_UTIL_ANDROID_C}"
+    "${REPO_ROOT}/src/international_string_util.c"
+    "${REPO_ROOT}/src/dynamic_placeholder_text_util.c"
     PROPERTIES
     COMPILE_OPTIONS "-fvisibility=hidden"
 )
