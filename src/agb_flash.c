@@ -1,5 +1,8 @@
 #include "gba/gba.h"
 #include "gba/flash_internal.h"
+#ifdef PORTABLE
+#include "platform.h"
+#endif
 
 static u8 sTimerNum;
 static u16 sTimerCount;
@@ -36,6 +39,9 @@ do {                             \
 
 u16 ReadFlashId(void)
 {
+#ifdef PORTABLE
+    return 0xCCCC;
+#else
     u16 flashId;
     u16 readFlash1Buffer[0x20];
     u8 (*readFlash1)(u8 *);
@@ -60,6 +66,7 @@ u16 ReadFlashId(void)
     DELAY();
 
     return flashId;
+#endif
 }
 
 void FlashTimerIntr(void)
@@ -138,6 +145,10 @@ void ReadFlash_Core(vu8 *src, u8 *dest, u32 size)
 
 void ReadFlash(u16 sectorNum, u32 offset, u8 *dest, u32 size)
 {
+#ifdef PORTABLE
+    Platform_ReadFlash(sectorNum, offset, dest, size);
+    return;
+#else
     u8 *src;
     u16 i;
     vu16 readFlash_Core_Buffer[0x40];
@@ -170,10 +181,14 @@ void ReadFlash(u16 sectorNum, u32 offset, u8 *dest, u32 size)
     src = FLASH_BASE + (sectorNum << gFlash->sector.shift) + offset;
 
     readFlash_Core(src, dest, size);
+#endif
 }
 
 u32 VerifyFlashSector_Core(u8 *src, u8 *tgt, u32 size)
 {
+#ifdef PORTABLE
+    return 0;
+#else
     while (size-- != 0)
     {
         if (*tgt++ != *src++)
@@ -181,6 +196,7 @@ u32 VerifyFlashSector_Core(u8 *src, u8 *tgt, u32 size)
     }
 
     return 0;
+#endif
 }
 
 u32 VerifyFlashSector(u16 sectorNum, u8 *src)
