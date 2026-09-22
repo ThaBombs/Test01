@@ -46,7 +46,9 @@ bool PortGbaHost_SelfTest(void)
         && *(volatile uint16_t *)(gPortIoRegisters + REG_OFFSET_BG0CNT) == 0x1234
         && *(volatile uint16_t *)gPortPaletteRam == 0x7FFF
         && *(volatile uint16_t *)(gPortVram + 2u) == 0x55AA
-        && *(volatile uint16_t *)gPortOam == 0x0F0F;
+        && *(volatile uint16_t *)gPortOam == 0x0F0F
+        && GetGpuReg(REG_OFFSET_BG1CNT) == 0x2468
+        && REG_BG1CNT == 0x2468;
 
     PortGbaHost_Init();
     return passed;
