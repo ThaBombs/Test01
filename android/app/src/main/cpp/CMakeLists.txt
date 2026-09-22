@@ -65,7 +65,7 @@ target_link_options(
 # dependencies are handled subsystem-by-subsystem after source portability is clean.
 add_library(
     pokeemerald_engine_probe
-    OBJECT
+    STATIC
     "${REPO_ROOT}/src/main.c"
 )
 
@@ -84,4 +84,13 @@ target_compile_options(
     -Wextra
     -Wpedantic
     "-iquote${REPO_ROOT}/include"
+)
+
+
+add_custom_command(
+    TARGET pokeemerald_engine_probe
+    POST_BUILD
+    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_engine_probe>"
+    COMMENT "Engine probe unresolved symbols"
+    VERBATIM
 )

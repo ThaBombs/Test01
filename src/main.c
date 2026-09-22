@@ -100,7 +100,9 @@ void Game_Init(void)
     InitIntrHandlers();
     m4aSoundInit();
     EnableVCountIntrAtLine150();
+#ifndef PLATFORM_ANDROID
     InitRFU();
+#endif
     RtcInit();
     CheckForFlashMemory();
     InitMainCallbacks();
@@ -137,11 +139,20 @@ void Game_RunFrame(void)
      && JOY_HELD_RAW(A_BUTTON)
      && JOY_HELD_RAW(B_START_SELECT) == B_START_SELECT)
     {
+#ifndef PLATFORM_ANDROID
         rfu_REQ_stopMode();
         rfu_waitREQComplete();
+#endif
         DoSoftReset();
     }
 
+#ifdef PLATFORM_ANDROID
+    // The first native Android milestone is deliberately single-player.
+    // Link/RFU transport will be replaced by a platform service later rather
+    // than emulating GBA serial hardware just to boot the game.
+    gLinkTransferringData = FALSE;
+    UpdateLinkAndCallCallbacks();
+#else
     if (Overworld_SendKeysToLinkIsRunning() == TRUE)
     {
         gLinkTransferringData = TRUE;
@@ -162,6 +173,7 @@ void Game_RunFrame(void)
             gLinkTransferringData = FALSE;
         }
     }
+#endif
 
     PlayTimeCounter_Update();
     MapMusicMain();
@@ -185,8 +197,12 @@ void AgbMainLoop(void)
 
 static void UpdateLinkAndCallCallbacks(void)
 {
+#ifdef PLATFORM_ANDROID
+    CallCallbacks();
+#else
     if (!HandleLinkConnection())
         CallCallbacks();
+#endif
 }
 
 static void InitMainCallbacks(void)
@@ -361,10 +377,12 @@ void SetSerialCallback(IntrCallback callback)
 
 void Game_VBlank(void)
 {
+#ifndef PLATFORM_ANDROID
     if (gWirelessCommType != 0)
         RfuVSync();
     else if (gLinkVSyncDisabled == FALSE)
         LinkVSync();
+#endif
 
     gMain.vblankCounter1++;
 
@@ -382,12 +400,16 @@ void Game_VBlank(void)
     gPcmDmaCounter = gSoundInfo.pcmDmaCounter;
 
     m4aSoundMain();
+#ifndef PLATFORM_ANDROID
     TryReceiveLinkBattleData();
+#endif
 
     if (!gTestRunnerEnabled && (!gMain.inBattle || !(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER | BATTLE_TYPE_RECORDED))))
         AdvanceRandom();
 
+#ifndef PLATFORM_ANDROID
     UpdateWirelessStatusIndicatorSprite();
+#endif
 
     INTR_CHECK |= INTR_FLAG_VBLANK;
     gMain.intrCheck |= INTR_FLAG_VBLANK;
