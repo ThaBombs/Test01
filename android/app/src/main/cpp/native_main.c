@@ -8,7 +8,7 @@
 #include "port_runtime.h"
 #include "port_gba_timing.h"
 #include "port_gba_flash.h"
-#include "main.h"
+#include "port_game_engine.h"
 
 #define LOG_TAG "PokeemeraldNative"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
