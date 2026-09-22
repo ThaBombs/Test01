@@ -54,7 +54,7 @@ set(SPECIAL_IDS "${CMAKE_BINARY_DIR}/generated/special_ids.inc")
 add_custom_command(
     OUTPUT "${SPECIAL_IDS}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/generated"
-    COMMAND /bin/sh -c "awk '/^[[:space:]]+def_special[[:space:]]/ { printf \".set SPECIAL_%s, %d\\n\", $2, id++ }' '${ROOT}/data/specials.inc' > '${SPECIAL_IDS}'"
+    COMMAND /bin/sh -c "awk '/^[[:space:]]+def_special[[:space:]]/ { name=$2; sub(/,.*/, \"\", name); printf \".set SPECIAL_%s, %d\\n\", name, id++ }' '${ROOT}/data/specials.inc' > '${SPECIAL_IDS}'"
     DEPENDS "${ROOT}/data/specials.inc"
     VERBATIM)
 
