@@ -295,45 +295,6 @@ add_custom_command(
 )
 add_dependencies(pokeemerald_native pokeemerald_main_menu_startup_probe)
 
-
-# Compile-only probe for Emerald's real OPTION menu. This lets CI report the
-# exact remaining symbols without breaking the known-working Android APK link.
-add_library(
-    pokeemerald_option_menu_probe
-    STATIC
-    "${OPTION_MENU_ANDROID_C}"
-)
-target_include_directories(
-    pokeemerald_option_menu_probe
-    PRIVATE
-    "${PORT_ROOT}/include"
-)
-target_compile_features(pokeemerald_option_menu_probe PRIVATE c_std_17)
-target_compile_definitions(
-    pokeemerald_option_menu_probe
-    PRIVATE
-    PLATFORM_ANDROID=1
-    MODERN=1
-    TESTING=0
-    PORT_BOOTSTRAP_MENU_ONLY=1
-)
-target_compile_options(
-    pokeemerald_option_menu_probe
-    PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
-    "-iquote${REPO_ROOT}/include"
-)
-add_custom_command(
-    TARGET pokeemerald_option_menu_probe
-    POST_BUILD
-    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_option_menu_probe>"
-    COMMENT "Option-menu probe unresolved symbols"
-    VERBATIM
-)
-add_dependencies(pokeemerald_native pokeemerald_option_menu_probe)
-
 # These Emerald UI units are internal implementation details of the APK.
 # Hiding their global symbols lets --gc-sections discard menu/text functions
 # that are not reachable from the direct Android start-menu path.
@@ -368,5 +329,6 @@ target_sources(
     "${MAIN_MENU_ANDROID_C}"
     "${FONTS_ANDROID_C}"
     "${TEXT_WINDOW_ANDROID_C}"
+    "${OPTION_MENU_ANDROID_C}"
     "${STRING_UTIL_ANDROID_C}"
 )
