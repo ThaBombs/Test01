@@ -66,3 +66,10 @@ tools/aif2pcm/aif2pcm
 *.smolTM
 __pycache__
 .map_version
+
+
+# Native Android port
+android/.gradle/
+android/.cxx/
+android/local.properties
+android/**/build/
