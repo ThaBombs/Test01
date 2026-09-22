@@ -55,6 +55,9 @@ jobs:
           python3 tools/generate_test01_sprites.py
           python3 tools/apply_test01_swamp.py
           make generated -j"$(nproc)" GAME_VERSION=EMERALD
+          make -j"$(nproc)" GAME_VERSION=EMERALD \
+            src/data/tutor_moves.h \
+            src/data/pokemon/teachable_learnsets.h
 
       - name: Patch SDL2 Android lifecycle
         run: |
