@@ -610,10 +610,14 @@ static u32 InitMainMenu(bool8 returningFromOptionsMenu)
     ResetTasks();
     ResetSpriteData();
     FreeAllSpritePalettes();
+#ifndef PORT_BOOTSTRAP_MENU_ONLY
     if (returningFromOptionsMenu)
         BeginNormalPaletteFade(PALETTES_ALL, 0, 0x10, 0, RGB_BLACK); // fade to black
     else
         BeginNormalPaletteFade(PALETTES_ALL, 0, 0x10, 0, RGB_WHITEALPHA); // fade to white
+#else
+    (void)returningFromOptionsMenu;
+#endif
     ResetBgsAndClearDma3BusyFlags(0);
     InitBgsFromTemplates(0, sMainMenuBgTemplates, ARRAY_COUNT(sMainMenuBgTemplates));
     ChangeBgX(0, 0, BG_COORD_SET);
@@ -657,19 +661,17 @@ static void Task_MainMenuCheckSaveFile(u8 taskId)
     s16 *data = gTasks[taskId].data;
 
 #ifdef PORT_BOOTSTRAP_MENU_ONLY
-    if (!gPaletteFade.active)
-    {
-        // Save loading is the next Android milestone. For the first visible
-        // menu build, behave like a fresh install and keep optional wireless
-        // menu entries out of the dependency graph.
-        tMenuType = HAS_NO_SAVED_GAME;
-        tCurrItem = 0;
-        tItemCount = 2;
-        tIsScrolled = FALSE;
-        tWirelessAdapterConnected = FALSE;
-        sCurrItemAndOptionMenuCheck = 0;
-        gTasks[taskId].func = Task_DisplayMainMenu;
-    }
+    // Save loading is the next Android milestone. For the first visible
+    // menu build, behave like a fresh install and keep optional wireless
+    // menu entries out of the dependency graph. Android also skips the
+    // legacy title fade, so the real menu can be constructed immediately.
+    tMenuType = HAS_NO_SAVED_GAME;
+    tCurrItem = 0;
+    tItemCount = 2;
+    tIsScrolled = FALSE;
+    tWirelessAdapterConnected = FALSE;
+    sCurrItemAndOptionMenuCheck = 0;
+    gTasks[taskId].func = Task_DisplayMainMenu;
 #else
 
     if (!gPaletteFade.active)
@@ -832,8 +834,10 @@ static void Task_DisplayMainMenu(u8 taskId)
         AddTextPrinterParameterized3(1, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuOption);
         PutWindowTilemap(0);
         PutWindowTilemap(1);
-        CopyWindowToVram(0, COPYWIN_GFX);
-        CopyWindowToVram(1, COPYWIN_GFX);
+        // Use full copies for the Android bootstrap so tile graphics and the
+        // associated BG map always reach host VRAM in the same frame.
+        CopyWindowToVram(0, COPYWIN_FULL);
+        CopyWindowToVram(1, COPYWIN_FULL);
         DrawMainMenuWindowBorder(&sWindowTemplates_MainMenu[0], MAIN_MENU_BORDER_TILE);
         DrawMainMenuWindowBorder(&sWindowTemplates_MainMenu[1], MAIN_MENU_BORDER_TILE);
 #else

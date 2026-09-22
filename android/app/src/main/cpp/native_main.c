@@ -18,6 +18,10 @@ struct AndroidEngine
 {
     struct android_app *app;
     struct PortInputState input;
+    uint32_t keyboardButtons;
+    uint32_t touchButtons;
+    int surfaceWidth;
+    int surfaceHeight;
     int animating;
     int64_t lastFrameNanos;
 };
@@ -62,6 +66,11 @@ static uint32_t ButtonForKeyCode(int32_t keyCode)
     }
 }
 
+static void RefreshCombinedButtons(struct AndroidEngine *engine)
+{
+    engine->input.buttons = engine->keyboardButtons | engine->touchButtons;
+}
+
 static int32_t HandleInput(struct android_app *app, AInputEvent *event)
 {
     struct AndroidEngine *engine = (struct AndroidEngine *)app->userData;
@@ -69,12 +78,50 @@ static int32_t HandleInput(struct android_app *app, AInputEvent *event)
 
     if (type == AINPUT_EVENT_TYPE_MOTION)
     {
-        const int32_t action = AMotionEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK;
-        engine->input.pointerX = AMotionEvent_getX(event, 0);
-        engine->input.pointerY = AMotionEvent_getY(event, 0);
-        engine->input.pointerDown =
-            action != AMOTION_EVENT_ACTION_UP
-            && action != AMOTION_EVENT_ACTION_CANCEL;
+        const int32_t rawAction = AMotionEvent_getAction(event);
+        const int32_t action = rawAction & AMOTION_EVENT_ACTION_MASK;
+
+        if (action == AMOTION_EVENT_ACTION_CANCEL)
+        {
+            engine->touchButtons = 0;
+            engine->input.pointerDown = false;
+            RefreshCombinedButtons(engine);
+            return 1;
+        }
+
+        const size_t pointerCount = AMotionEvent_getPointerCount(event);
+        const size_t liftedIndex =
+            (size_t)((rawAction & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK)
+                >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+
+        uint32_t touchButtons = 0;
+        bool havePointer = false;
+
+        for (size_t i = 0; i < pointerCount; ++i)
+        {
+            if ((action == AMOTION_EVENT_ACTION_UP
+                 || action == AMOTION_EVENT_ACTION_POINTER_UP)
+                && i == liftedIndex)
+            {
+                continue;
+            }
+
+            const float x = AMotionEvent_getX(event, i);
+            const float y = AMotionEvent_getY(event, i);
+            touchButtons |= PortRuntime_ButtonsForTouch(
+                x, y, engine->surfaceWidth, engine->surfaceHeight);
+
+            if (!havePointer)
+            {
+                engine->input.pointerX = x;
+                engine->input.pointerY = y;
+                havePointer = true;
+            }
+        }
+
+        engine->touchButtons = touchButtons;
+        engine->input.pointerDown = havePointer;
+        RefreshCombinedButtons(engine);
         return 1;
     }
 
@@ -85,10 +132,11 @@ static int32_t HandleInput(struct android_app *app, AInputEvent *event)
             return 0;
 
         if (AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_DOWN)
-            engine->input.buttons |= button;
+            engine->keyboardButtons |= button;
         else if (AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_UP)
-            engine->input.buttons &= ~button;
+            engine->keyboardButtons &= ~button;
 
+        RefreshCombinedButtons(engine);
         return 1;
     }
 
@@ -105,6 +153,8 @@ static void HandleCommand(struct android_app *app, int32_t command)
         if (app->window != NULL)
         {
             ANativeWindow_setBuffersGeometry(app->window, 0, 0, WINDOW_FORMAT_RGBX_8888);
+            engine->surfaceWidth = ANativeWindow_getWidth(app->window);
+            engine->surfaceHeight = ANativeWindow_getHeight(app->window);
             engine->animating = 1;
             engine->lastFrameNanos = MonotonicNanos();
             LOGI("Native Android surface initialized: %dx%d",
@@ -121,6 +171,8 @@ static void HandleCommand(struct android_app *app, int32_t command)
         break;
     case APP_CMD_LOST_FOCUS:
         engine->input = (struct PortInputState){0};
+        engine->keyboardButtons = 0;
+        engine->touchButtons = 0;
         break;
     default:
         break;
@@ -139,6 +191,9 @@ static void RenderFrame(struct AndroidEngine *engine)
         return;
     }
 
+    engine->surfaceWidth = buffer.width;
+    engine->surfaceHeight = buffer.height;
+
     PortRuntime_Render(
         (uint32_t *)buffer.bits,
         buffer.width,
@@ -155,6 +210,10 @@ void android_main(struct android_app *app)
     struct AndroidEngine engine = {
         .app = app,
         .input = {0},
+        .keyboardButtons = 0,
+        .touchButtons = 0,
+        .surfaceWidth = 0,
+        .surfaceHeight = 0,
         .animating = 0,
         .lastFrameNanos = 0,
     };

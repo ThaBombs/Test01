@@ -29,6 +29,7 @@ struct PortInputState
 void PortRuntime_Init(void);
 void PortRuntime_Step(const struct PortInputState *input, double deltaSeconds);
 void PortRuntime_Render(uint32_t *pixels, int width, int height, int stridePixels);
+uint32_t PortRuntime_ButtonsForTouch(float x, float y, int width, int height);
 uint64_t PortRuntime_GetFrameCount(void);
 bool PortRuntime_IsGbaHostReady(void);
 
