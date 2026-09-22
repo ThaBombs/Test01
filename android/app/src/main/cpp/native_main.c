@@ -20,6 +20,8 @@ struct AndroidEngine
     struct PortInputState input;
     uint32_t keyboardButtons;
     uint32_t touchButtons;
+    uint32_t latchedButtons;
+    uint32_t previousHeldButtons;
     int surfaceWidth;
     int surfaceHeight;
     int animating;
@@ -68,6 +70,15 @@ static uint32_t ButtonForKeyCode(int32_t keyCode)
 
 static void RefreshCombinedButtons(struct AndroidEngine *engine)
 {
+    const uint32_t heldButtons = engine->keyboardButtons | engine->touchButtons;
+    engine->latchedButtons |= heldButtons & ~engine->previousHeldButtons;
+    engine->previousHeldButtons = heldButtons;
+    engine->input.buttons = heldButtons | engine->latchedButtons;
+}
+
+static void ConsumeLatchedButtons(struct AndroidEngine *engine)
+{
+    engine->latchedButtons = 0;
     engine->input.buttons = engine->keyboardButtons | engine->touchButtons;
 }
 
@@ -173,6 +184,8 @@ static void HandleCommand(struct android_app *app, int32_t command)
         engine->input = (struct PortInputState){0};
         engine->keyboardButtons = 0;
         engine->touchButtons = 0;
+        engine->latchedButtons = 0;
+        engine->previousHeldButtons = 0;
         break;
     default:
         break;
@@ -212,6 +225,8 @@ void android_main(struct android_app *app)
         .input = {0},
         .keyboardButtons = 0,
         .touchButtons = 0,
+        .latchedButtons = 0,
+        .previousHeldButtons = 0,
         .surfaceWidth = 0,
         .surfaceHeight = 0,
         .animating = 0,
@@ -273,6 +288,10 @@ void android_main(struct android_app *app)
 
         if (engineReady)
             Game_RunFrame();
+
+        // Preserve a quick tap for one Emerald input sample, then return to
+        // the physical held state for the next frame.
+        ConsumeLatchedButtons(&engine);
 
         PortGbaTiming_EnterVBlank();
 
