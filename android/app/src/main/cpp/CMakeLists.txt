@@ -33,7 +33,6 @@ add_library(
     "${REPO_ROOT}/src/decompress.c"
     "${REPO_ROOT}/src/decompress_error_handler.c"
     "${REPO_ROOT}/src/util.c"
-    "${REPO_ROOT}/src/string_util.c"
     "${REPO_ROOT}/src/international_string_util.c"
     "${REPO_ROOT}/src/dynamic_placeholder_text_util.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"
@@ -235,6 +234,20 @@ add_custom_command(
     VERBATIM
 )
 
+# Encoded-string utility also requires pokeemerald's charmap preprocessor.
+set(STRING_UTIL_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/string_util_android.c")
+add_custom_command(
+    OUTPUT "${STRING_UTIL_ANDROID_C}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    COMMAND /bin/bash -o pipefail -c
+        "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DPORT_BOOTSTRAP_MENU_ONLY=1 '${REPO_ROOT}/src/string_util.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${REPO_ROOT}/src/string_util.c' '${REPO_ROOT}/charmap.txt' > '${STRING_UTIL_ANDROID_C}'"
+    DEPENDS
+        "${REPO_ROOT}/src/string_util.c"
+        "${REPO_ROOT}/tools/preproc/preproc"
+        "${REPO_ROOT}/charmap.txt"
+    VERBATIM
+)
+
 # Real Emerald option menu used by the Android main-menu OPTION entry.
 set(OPTION_MENU_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/option_menu_android.c")
 add_custom_command(
@@ -293,6 +306,7 @@ set_source_files_properties(
     "${FONTS_ANDROID_C}"
     "${TEXT_WINDOW_ANDROID_C}"
     "${OPTION_MENU_ANDROID_C}"
+    "${STRING_UTIL_ANDROID_C}"
     PROPERTIES
     COMPILE_OPTIONS "-fvisibility=hidden"
 )
@@ -312,4 +326,5 @@ target_sources(
     "${FONTS_ANDROID_C}"
     "${TEXT_WINDOW_ANDROID_C}"
     "${OPTION_MENU_ANDROID_C}"
+    "${STRING_UTIL_ANDROID_C}"
 )
