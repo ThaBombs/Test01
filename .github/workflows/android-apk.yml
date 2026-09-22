@@ -94,7 +94,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          make -j2 build/emerald/src/main_menu.o build/emerald/src/text.o build/emerald/src/menu.o
+          make -j2 build/emerald/src/main_menu.o build/emerald/src/text.o build/emerald/src/menu.o build/emerald/src/fonts.o build/emerald/src/text_window.o
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
