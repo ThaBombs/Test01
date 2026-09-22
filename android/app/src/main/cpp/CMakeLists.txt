@@ -155,4 +155,12 @@ target_compile_options(
     -Wpedantic
     "-iquote${REPO_ROOT}/include"
 )
+add_custom_command(
+    TARGET pokeemerald_intro_probe
+    POST_BUILD
+    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_intro_probe>"
+    COMMENT "Intro probe unresolved symbols"
+    VERBATIM
+)
+
 add_dependencies(pokeemerald_native pokeemerald_intro_probe)
