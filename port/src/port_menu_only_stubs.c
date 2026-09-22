@@ -48,3 +48,11 @@ void TrySpawnAndShowNamebox(const u8 *speaker, u32 tileNum)
     (void)speaker;
     (void)tileNum;
 }
+
+
+void SetPokemonCryStereo(u32 val)
+{
+    // Audio output is not connected yet. Keep the real Emerald option menu
+    // functional and preserve the selected preference in gSaveBlock2.
+    (void)val;
+}
