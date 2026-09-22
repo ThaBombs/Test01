@@ -35,7 +35,7 @@ bool gVoxelModeEnabled = false;
 #include "platform/dma.h"
 #include "platform/framedraw.h"
 
-extern void (*const gIntrTable[])(void);
+extern void (*gIntrTable[])(void);
 
 SDL_Thread *mainLoopThread;
 SDL_Window *sdlWindow;
