@@ -2,6 +2,7 @@
 #include "port_gba_bios.h"
 #include "port_gba_dma.h"
 #include "port_gba_timing.h"
+#include "port_gba_renderer.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -63,7 +64,8 @@ bool PortGbaHost_SelfTest(void)
         && REG_BG1CNT == 0x2468
         && PortGbaBios_SelfTest()
         && PortGbaDma_SelfTest()
-        && PortGbaTiming_SelfTest();
+        && PortGbaTiming_SelfTest()
+        && PortGbaRenderer_SelfTest();
 
     PortGbaHost_Init();
     return passed;
