@@ -1,4 +1,5 @@
 #include "port_runtime.h"
+#include "port_gba_host.h"
 
 #include <stddef.h>
 
@@ -7,6 +8,7 @@ struct PortRuntimeState
     struct PortInputState input;
     uint64_t frameCount;
     double elapsedSeconds;
+    bool gbaHostReady;
 };
 
 static struct PortRuntimeState sPortState;
@@ -49,12 +51,16 @@ static void FillRect(
 void PortRuntime_Init(void)
 {
     sPortState = (struct PortRuntimeState){0};
+    PortGbaHost_Init();
+    sPortState.gbaHostReady = PortGbaHost_SelfTest();
 }
 
 void PortRuntime_Step(const struct PortInputState *input, double deltaSeconds)
 {
     if (input != NULL)
         sPortState.input = *input;
+
+    PortGbaHost_SetButtons(sPortState.input.buttons);
 
     if (deltaSeconds < 0.0)
         deltaSeconds = 0.0;
@@ -137,14 +143,16 @@ void PortRuntime_Render(uint32_t *pixels, int width, int height, int stridePixel
         PORT_BUTTON_LEFT,
         PORT_BUTTON_UP,
         PORT_BUTTON_DOWN,
+        PORT_BUTTON_R,
+        PORT_BUTTON_L,
     };
 
     const int barGap = line * 2;
-    const int barWidth = ((cardRight - cardLeft) - (9 * barGap)) / 8;
+    const int barWidth = ((cardRight - cardLeft) - (11 * barGap)) / 10;
     const int barTop = cardBottom - margin * 2;
     const int barBottom = cardBottom - margin;
 
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         const int left = cardLeft + barGap + i * (barWidth + barGap);
         const uint32_t color = (sPortState.input.buttons & buttonBits[i])
@@ -158,4 +166,9 @@ void PortRuntime_Render(uint32_t *pixels, int width, int height, int stridePixel
 uint64_t PortRuntime_GetFrameCount(void)
 {
     return sPortState.frameCount;
+}
+
+bool PortRuntime_IsGbaHostReady(void)
+{
+    return sPortState.gbaHostReady;
 }

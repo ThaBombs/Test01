@@ -2,21 +2,32 @@
 #define GUARD_GBA_DEFINES_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #define TRUE   1
 #define FALSE  0
 
+#ifdef PLATFORM_ANDROID
+#define IWRAM_DATA
+#define EWRAM_DATA
+#define IWRAM_INIT
+#define EWRAM_INIT
+#define COMMON_DATA
+#define KEEP_SECTION
+#define ARM_FUNC
+#else
 #define IWRAM_DATA __attribute__((section(".bss")))
 #define EWRAM_DATA __attribute__((section(".sbss")))
 #define IWRAM_INIT __attribute__((section(".iwram")))
 #define EWRAM_INIT __attribute__((section(".ewram")))
 #define COMMON_DATA __attribute__((section("common_data")))
+#define KEEP_SECTION __attribute__((section(".text.consts")))
+#define ARM_FUNC __attribute__((target("arm")))
+#endif
+
 #define UNUSED __attribute__((unused))
 #define USED __attribute__((used))
-#define KEEP_SECTION __attribute__((section(".text.consts")))
 #define DEPRECATED(msg) __attribute__((deprecated(msg)))
-
-#define ARM_FUNC __attribute__((target("arm")))
 
 #if MODERN
 #define NOINLINE __attribute__((noinline))
@@ -30,9 +41,16 @@
 #define ALWAYS_INLINE inline __attribute__((always_inline))
 #define NONNULL __attribute__((__nonnull__))
 
+#ifdef PLATFORM_ANDROID
+struct SoundInfo;
+extern struct SoundInfo *SOUND_INFO_PTR;
+extern uint16_t INTR_CHECK;
+extern void *INTR_VECTOR;
+#else
 #define SOUND_INFO_PTR (*(struct SoundInfo **)0x3007FF0)
 #define INTR_CHECK     (*(u16 *)0x3007FF8)
 #define INTR_VECTOR    (*(void **)0x3007FFC)
+#endif
 
 #define ROM_START 0x8000000
 #define ROM_END 0xA000000
@@ -42,15 +60,26 @@
 #define IWRAM_START 0x03000000
 #define IWRAM_END   (IWRAM_START + 0x8000)
 
-#define PLTT          0x5000000
-#define BG_PLTT       PLTT
 #define BG_PLTT_SIZE  0x200
-#define OBJ_PLTT      (PLTT + BG_PLTT_SIZE)
 #define OBJ_PLTT_SIZE 0x200
 #define PLTT_SIZE     (BG_PLTT_SIZE + OBJ_PLTT_SIZE)
 
-#define VRAM      0x6000000
+#ifdef PLATFORM_ANDROID
+extern unsigned char gPortPaletteRam[];
+#define PLTT ((uintptr_t)gPortPaletteRam)
+#else
+#define PLTT 0x5000000
+#endif
+#define BG_PLTT  PLTT
+#define OBJ_PLTT (PLTT + BG_PLTT_SIZE)
+
 #define VRAM_SIZE 0x18000
+#ifdef PLATFORM_ANDROID
+extern unsigned char gPortVram[];
+#define VRAM ((uintptr_t)gPortVram)
+#else
+#define VRAM 0x6000000
+#endif
 
 #define BG_VRAM           VRAM
 #define BG_VRAM_SIZE      0x10000
@@ -72,8 +101,13 @@
 #define OBJ_VRAM1      (VRAM + 0x14000)
 #define OBJ_VRAM1_SIZE 0x4000
 
-#define OAM      0x7000000
 #define OAM_SIZE 0x400
+#ifdef PLATFORM_ANDROID
+extern unsigned char gPortOam[];
+#define OAM ((uintptr_t)gPortOam)
+#else
+#define OAM 0x7000000
+#endif
 
 #define ROM_HEADER_SIZE   0xC0
 

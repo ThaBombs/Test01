@@ -11,6 +11,7 @@ add_library(
     SHARED
     native_main.c
     "${PORT_ROOT}/src/port_runtime.c"
+    "${PORT_ROOT}/src/port_gba_host.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"
 )
 
@@ -18,11 +19,12 @@ target_include_directories(
     pokeemerald_native
     PRIVATE
     "${PORT_ROOT}/include"
+    "${REPO_ROOT}/include"
     "${NATIVE_APP_GLUE}"
 )
 
 target_compile_features(pokeemerald_native PRIVATE c_std_17)
-target_compile_definitions(pokeemerald_native PRIVATE PLATFORM_ANDROID=1)
+target_compile_definitions(pokeemerald_native PRIVATE PLATFORM_ANDROID=1 MODERN=1)
 target_compile_options(pokeemerald_native PRIVATE -Wall -Wextra -Wpedantic)
 
 find_library(ANDROID_LIB android)

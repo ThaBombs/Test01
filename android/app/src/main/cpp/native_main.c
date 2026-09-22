@@ -50,6 +50,10 @@ static uint32_t ButtonForKeyCode(int32_t keyCode)
         return PORT_BUTTON_UP;
     case AKEYCODE_DPAD_DOWN:
         return PORT_BUTTON_DOWN;
+    case AKEYCODE_BUTTON_R1:
+        return PORT_BUTTON_R;
+    case AKEYCODE_BUTTON_L1:
+        return PORT_BUTTON_L;
     default:
         return 0;
     }
@@ -154,6 +158,8 @@ void android_main(struct android_app *app)
 
     PortRuntime_Init();
     LOGI("Native runtime started; no GBA ROM or emulator core is embedded.");
+    LOGI("GBA host-memory compatibility layer: %s",
+         PortRuntime_IsGbaHostReady() ? "ready" : "SELF-TEST FAILED");
 
     while (1)
     {

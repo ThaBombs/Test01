@@ -1,7 +1,14 @@
 #ifndef GUARD_GBA_IO_REG_H
 #define GUARD_GBA_IO_REG_H
 
+#include <stdint.h>
+
+#ifdef PLATFORM_ANDROID
+extern unsigned char gPortIoRegisters[0x400];
+#define REG_BASE ((uintptr_t)gPortIoRegisters)
+#else
 #define REG_BASE 0x4000000 // I/O register base address
+#endif
 
 // I/O register offsets
 
