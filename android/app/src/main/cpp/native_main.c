@@ -186,14 +186,14 @@ void android_main(struct android_app *app)
         if (!engine.animating)
             continue;
 
+        PortGbaTiming_WaitForNextFrame();
+        PortGbaTiming_BeginVisibleFrame();
+
         const int64_t now = MonotonicNanos();
         double deltaSeconds = 1.0 / 60.0;
         if (engine.lastFrameNanos != 0)
             deltaSeconds = (double)(now - engine.lastFrameNanos) / 1000000000.0;
         engine.lastFrameNanos = now;
-
-        PortGbaTiming_WaitForNextFrame();
-        PortGbaTiming_BeginVisibleFrame();
 
         PortRuntime_Step(&engine.input, deltaSeconds);
         RenderFrame(&engine);
