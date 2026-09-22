@@ -126,7 +126,7 @@ void Game_Init(void)
 
     gLinkTransferringData = FALSE;
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) && !defined(PLATFORM_ANDROID)
 #if (LOG_HANDLER == LOG_HANDLER_MGBA_PRINT)
     (void) MgbaOpen();
 #elif (LOG_HANDLER == LOG_HANDLER_AGB_PRINT)
@@ -376,7 +376,11 @@ void SetHBlankCallback(IntrCallback callback)
 void RestoreSerialTimer3IntrHandlers(void)
 {
     gIntrTable[1] = SerialIntr;
+#ifdef PLATFORM_ANDROID
+    gIntrTable[2] = IntrDummy;
+#else
     gIntrTable[2] = Timer3Intr;
+#endif
 }
 
 void SetSerialCallback(IntrCallback callback)
