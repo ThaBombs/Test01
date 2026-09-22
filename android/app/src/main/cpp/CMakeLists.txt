@@ -33,6 +33,9 @@ add_library(
     "${REPO_ROOT}/src/decompress.c"
     "${REPO_ROOT}/src/decompress_error_handler.c"
     "${REPO_ROOT}/src/util.c"
+    "${REPO_ROOT}/src/string_util.c"
+    "${REPO_ROOT}/src/international_string_util.c"
+    "${REPO_ROOT}/src/dynamic_placeholder_text_util.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"
 )
 

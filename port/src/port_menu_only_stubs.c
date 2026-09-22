@@ -56,3 +56,14 @@ void SetPokemonCryStereo(u32 val)
     // functional and preserve the selected preference in gSaveBlock2.
     (void)val;
 }
+
+
+u32 GetGlyphWidth_Braille(u16 glyphId, bool32 isJapanese)
+{
+    // Normal menu text never selects the Braille font. text.c still keeps a
+    // Braille width-function entry in its static dispatch table, so provide
+    // the bootstrap symbol until the full Braille asset subsystem is linked.
+    (void)glyphId;
+    (void)isJapanese;
+    return 0;
+}
