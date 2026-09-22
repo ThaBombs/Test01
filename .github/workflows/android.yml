@@ -62,6 +62,10 @@ jobs:
           # its own dependency graph before the native CMake build consumes them.
           make -j"$(nproc)" GAME_VERSION=EMERALD build/emerald/data/sound_data.o
 
+      - name: Prime Expansion converted assets
+        run: |
+          make modern -j"$(nproc)" GAME_VERSION=EMERALD
+
       - name: Patch SDL2 Android lifecycle
         run: |
           if git -C android/SDL2 apply --check ../patches/sdl2-android-lifecycle.patch; then
