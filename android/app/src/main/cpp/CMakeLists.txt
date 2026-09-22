@@ -206,3 +206,12 @@ add_custom_command(
     VERBATIM
 )
 add_dependencies(pokeemerald_native pokeemerald_main_menu_startup_probe)
+
+# Integration branch: link the actual direct-menu startup and real main-menu
+# translation unit into the APK so PR CI reports the remaining runtime deps.
+target_sources(
+    pokeemerald_native
+    PRIVATE
+    "${PORT_ROOT}/src/port_main_menu_startup.c"
+    "${MAIN_MENU_ANDROID_C}"
+)
