@@ -60,10 +60,8 @@ void SetPokemonCryStereo(u32 val)
 
 u32 GetGlyphWidth_Braille(u16 glyphId, bool32 isJapanese)
 {
-    // Normal menu text never selects the Braille font. text.c still keeps a
-    // Braille width-function entry in its static dispatch table, so provide
-    // the bootstrap symbol until the full Braille asset subsystem is linked.
+    // Emerald's Braille font is fixed-width at 16 pixels.
     (void)glyphId;
     (void)isJapanese;
-    return 0;
+    return 16;
 }
