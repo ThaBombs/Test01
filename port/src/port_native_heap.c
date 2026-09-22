@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "global.h"
+#include "decompress.h"
 #include "malloc.h"
 
 ALIGNED(4) u8 gHeap[HEAP_SIZE] = {0};
@@ -59,4 +60,18 @@ const char *MemBlockLocation(const struct MemBlock *block)
 {
     (void)block;
     return NULL;
+}
+
+
+void *malloc_and_decompress(const void *src, u32 *size)
+{
+    const u32 decompressedSize = GetDecompressedDataSize(src);
+    if (size != NULL)
+        *size = decompressedSize;
+
+    void *buffer = Alloc(decompressedSize);
+    if (buffer != NULL)
+        DecompressDataWithHeaderWram(src, buffer);
+
+    return buffer;
 }
