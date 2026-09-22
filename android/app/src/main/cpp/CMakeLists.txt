@@ -44,7 +44,16 @@ target_include_directories(
 )
 
 target_compile_features(pokeemerald_native PRIVATE c_std_17)
-target_compile_definitions(pokeemerald_native PRIVATE PLATFORM_ANDROID=1 MODERN=1 TESTING=0)
+target_compile_definitions(
+    pokeemerald_native
+    PRIVATE
+    PLATFORM_ANDROID=1
+    MODERN=1
+    TESTING=0
+    PORT_BOOTSTRAP_NO_WEATHER=1
+    PORT_BOOTSTRAP_NO_OVERWORLD=1
+    PORT_BOOTSTRAP_NO_POKEMON_PICS=1
+)
 target_compile_options(
     pokeemerald_native
     PRIVATE
