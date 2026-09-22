@@ -1,0 +1,106 @@
+name: Android Native Port
+
+on:
+  push:
+    branches:
+      - test-starter-overhaul
+  workflow_dispatch:
+
+concurrency:
+  group: android-native-port-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ANDROID_HOME: /usr/local/lib/android/sdk
+  ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout game and SDL2
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install native build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev python3 python3-pil ninja-build
+
+      - name: Install Android SDK components
+        run: |
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -n 1)"
+          test -x "$SDKMANAGER"
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platforms;android-36" "build-tools;36.0.0" "ndk;26.3.11579264" "cmake;3.22.1"
+
+      - name: Build Expansion preprocessing tools
+        run: |
+          make -f make_tools.mk -j"$(nproc)"
+          make generated -j"$(nproc)" GAME_VERSION=EMERALD
+
+      - name: Apply Aquarius test content generators
+        run: |
+          python3 tools/generate_test01_sprites.py
+          python3 tools/apply_test01_swamp.py
+          make generated -j"$(nproc)" GAME_VERSION=EMERALD
+          make -j"$(nproc)" GAME_VERSION=EMERALD \
+            src/data/tutor_moves.h \
+            src/data/pokemon/teachable_learnsets.h
+
+          # Generate every audio binary from its source file using Expansion's
+          # own Make rules. This is more robust than parsing .incbin directives.
+          mapfile -t AUDIO_BINS < <(
+            {
+              find sound -type f -name '*.wav' -print | sed 's/\.wav$/.bin/'
+              find sound/direct_sound_samples/cries -type f -name 'uncomp_*.aif' -print | sed 's/\.aif$/.bin/'
+            } | sort -u
+          )
+          echo "Generating ${#AUDIO_BINS[@]} audio sample binaries"
+          if ((${#AUDIO_BINS[@]})); then
+            make NODEP=1 -j"$(nproc)" GAME_VERSION=EMERALD "${AUDIO_BINS[@]}"
+          fi
+          test -f sound/direct_sound_samples/sc88pro_glockenspiel.bin
+
+          # Generate MIDI-derived song assembly before CMake evaluates its
+          # source glob, otherwise those songs are invisible to the native build.
+          mapfile -t SONG_ASM < <(find sound/songs/midi -type f -name '*.mid' -print | sed 's/\.mid$/.s/' | sort)
+          echo "Generating ${#SONG_ASM[@]} MIDI song assembly files"
+          if ((${#SONG_ASM[@]})); then
+            make NODEP=1 -j"$(nproc)" GAME_VERSION=EMERALD "${SONG_ASM[@]}"
+          fi
+
+      - name: Patch SDL2 Android lifecycle
+        run: |
+          if git -C android/SDL2 apply --check ../patches/sdl2-android-lifecycle.patch; then
+            git -C android/SDL2 apply ../patches/sdl2-android-lifecycle.patch
+          fi
+
+      - name: Build debug APK
+        run: |
+          chmod +x android/SDL2/android-project/gradlew
+          android/SDL2/android-project/gradlew -p android :app:assembleDebug --stacktrace
+
+      - name: Stage APK
+        if: success()
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Aquarius-native-debug.apk
+
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aquarius-native-apk-${{ github.sha }}
+          path: Aquarius-native-debug.apk
+          if-no-files-found: error
+          retention-days: 30

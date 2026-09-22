@@ -1,0 +1,107 @@
+name: Android Native APK
+
+on:
+  push:
+    branches:
+      - test-starter-overhaul
+  workflow_dispatch:
+
+concurrency:
+  group: android-native-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ANDROID_HOME: /usr/local/lib/android/sdk
+  ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout game and SDL2
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install native build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi \
+            libpng-dev python3 python3-pil ninja-build
+
+      - name: Install Android SDK components
+        run: |
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -n 1)"
+          test -x "$SDKMANAGER"
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platforms;android-36" "build-tools;36.0.0" "ndk;26.3.11579264" "cmake;3.22.1"
+
+      - name: Build Expansion preprocessing tools
+        run: |
+          make -f make_tools.mk -j"$(nproc)"
+          make generated -j"$(nproc)" GAME_VERSION=EMERALD
+
+      - name: Apply Aquarius test content generators
+        run: |
+          python3 tools/generate_test01_sprites.py
+          python3 tools/apply_test01_swamp.py
+          make generated -j"$(nproc)" GAME_VERSION=EMERALD
+          make -j"$(nproc)" GAME_VERSION=EMERALD \
+            src/data/tutor_moves.h \
+            src/data/pokemon/teachable_learnsets.h
+          # Materialize Expansion's lazily generated graphics/audio assets using
+          # its own dependency graph before the native CMake build consumes them.
+          make -j"$(nproc)" GAME_VERSION=EMERALD build/emerald/data/sound_data.o
+
+      - name: Prime Expansion converted assets
+        run: |
+          make modern -j"$(nproc)" GAME_VERSION=EMERALD
+
+      - name: Patch SDL2 Android lifecycle
+        run: |
+          if git -C android/SDL2 apply --check ../patches/sdl2-android-lifecycle.patch; then
+            git -C android/SDL2 apply ../patches/sdl2-android-lifecycle.patch
+          fi
+
+      - name: Build debug APK
+        run: |
+          chmod +x android/SDL2/android-project/gradlew
+          android/SDL2/android-project/gradlew -p android :app:assembleDebug --stacktrace
+
+      - name: Native link diagnostics
+        if: failure()
+        run: |
+          echo "=== generated tilesets source ==="
+          find android/app/.cxx -path '*/generated/src/tilesets.c' -print -exec grep -n -m 5 'gTileset_General' {} \; || true
+          echo "=== tilesets object symbols ==="
+          TILE_OBJ="$(find android/app/.cxx -name 'tilesets.c.o' | head -n 1)"
+          if [ -n "$TILE_OBJ" ]; then
+            "$ANDROID_HOME/ndk/26.3.11579264/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm" "$TILE_OBJ" | grep 'gTileset_' | head -n 80 || true
+          fi
+          echo "=== remaining 16-bit relocations ==="
+          DATA_OBJ="$(find android/app/.cxx -name 'game_data.o' | head -n 1)"
+          if [ -n "$DATA_OBJ" ]; then
+            arm-none-eabi-readelf -r "$DATA_OBJ" | grep -E 'R_ARM_ABS16|B_MSG_' | head -n 100 || true
+          fi
+
+      - name: Stage APK
+        if: success()
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Aquarius-native-debug.apk
+
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aquarius-native-apk-${{ github.sha }}
+          path: Aquarius-native-debug.apk
+          if-no-files-found: error
+          retention-days: 30

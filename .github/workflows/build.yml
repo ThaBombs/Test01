@@ -8,6 +8,10 @@ on:
       - upcoming
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: true
+
 env:
   GAME_REVISION: 0
   GAME_LANGUAGE: ENGLISH
@@ -26,7 +30,7 @@ jobs:
       - name: Install binutils
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi libpng-dev python3
+          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi libpng-dev python3 python3-pil
 
       - name: Cache build tools
         uses: actions/cache@v4
@@ -48,16 +52,46 @@ jobs:
             tools/wav2agb/wav2agb
           key: tools-${{ runner.os }}-${{ hashFiles('tools/*/Makefile', 'tools/**/*.c', 'tools/**/*.cpp', 'tools/**/*.h') }}
 
+
+      - name: Install Test01 finished starter art
+        run: python3 tools/generate_test01_sprites.py
+
+      - name: Apply Test01 swamp map
+        run: python3 tools/apply_test01_swamp.py
+
+      - name: Upload Mireglen visual development assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: mireglen-visual-assets-${{ github.sha }}
+          path: |
+            graphics/pokemon/torchic
+            graphics/pokemon/combusken
+            graphics/pokemon/blaziken
+            graphics/pokemon/mudkip
+            graphics/pokemon/marshtomp
+            graphics/pokemon/swampert
+            tools/test01_sprite_data
+            data/layouts/LittlerootTown
+            data/layouts/Route101
+            data/layouts/Route102
+            data/layouts/Route103
+            data/tilesets/primary/general
+            data/tilesets/secondary/petalburg
+          if-no-files-found: error
+          retention-days: 7
+
       - name: ROM (Emerald)
         env:
           GAME_VERSION: EMERALD
-        run: make -j$(nproc) -O all
+        run: |
+          make -j$(nproc) -O all
+          cp pokeemerald.gba Mireglen.gba
 
       - name: Upload Emerald ROM
         uses: actions/upload-artifact@v4
         with:
-          name: pokeemerald-${{ github.sha }}
-          path: pokeemerald.gba
+          name: Mireglen
+          path: Mireglen.gba
           if-no-files-found: error
           retention-days: 30
 

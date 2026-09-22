@@ -5139,6 +5139,29 @@ static void Cmd_setprotectlike(void)
         gBattleCommunication[MULTISTRING_CHOOSER] = B_MSG_PROTECTED_ITSELF;
     }
 
+    if (gCurrentMove == MOVE_TIDAL_GUARD)
+    {
+        // Tidal Guard previews the incoming damaging move in singles and
+        // establishes the matching weather while retaining Protect's own
+        // message selector. The actual shield is still normal Protect.
+        // Physical -> rain; special -> sun. Status moves do not change weather.
+        enum BattlerId foe = GetOppositeBattler(gBattlerAttacker);
+        enum Move incomingMove = gChosenMoveByBattler[foe];
+        u8 protectMessage = gBattleCommunication[MULTISTRING_CHOOSER];
+
+        if (incomingMove != MOVE_NONE && !IsBattleMoveStatus(incomingMove))
+        {
+            if (IsBattleMovePhysical(incomingMove))
+                TryChangeBattleWeather(gBattlerAttacker, BATTLE_WEATHER_RAIN, ABILITY_NONE);
+            else if (IsBattleMoveSpecial(incomingMove))
+                TryChangeBattleWeather(gBattlerAttacker, BATTLE_WEATHER_SUN, ABILITY_NONE);
+        }
+
+        // TryChangeBattleWeather uses the same communication byte for its
+        // weather message. Restore it so the Protect script prints correctly.
+        gBattleCommunication[MULTISTRING_CHOOSER] = protectMessage;
+    }
+
     gBattleMons[gBattlerAttacker].volatiles.consecutiveMoveUses++;
     gBattlescriptCurrInstr = cmd->nextInstr;
 }

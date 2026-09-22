@@ -906,8 +906,11 @@ enum __attribute__((packed)) Move
     MOVES_COUNT_GEN9,
 
     // Add any custom moves here, not further down!
+    MOVE_BOILING_TIDE = MOVES_COUNT_GEN9,
+    MOVE_TIDAL_GUARD,
+    MOVE_CRAB_RAVE,
 
-    MOVES_COUNT = MOVES_COUNT_GEN9,
+    MOVES_COUNT,
 
     // Z Moves
     FIRST_Z_MOVE = MOVES_COUNT,

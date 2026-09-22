@@ -12,6 +12,9 @@
 #include "trainer_hill.h"
 #include "link.h"
 #include "constants/game_stat.h"
+#ifdef PORTABLE
+#include "platform.h"
+#endif
 
 static u16 CalculateChecksum(void *, u16);
 static bool8 ReadFlashSector(u8, struct SaveSector *);
@@ -231,7 +234,11 @@ static u8 HandleWriteSectorNBytes(u8 sectorId, u8 *data, u16 size)
 
 static u8 TryWriteSector(u8 sector, u8 *data)
 {
+#ifdef PORTABLE
+    if (ProgramFlashSector_DUMMY(sector, data)) // is damaged?
+#else
     if (ProgramFlashSectorAndVerify(sector, data)) // is damaged?
+#endif
     {
         // Failed
         SetDamagedSectorBits(ENABLE, sector);
@@ -766,6 +773,9 @@ u8 HandleSavingData(u8 saveType)
         WriteSaveSectorOrSlot(FULL_SAVE_SLOT, gRamSaveSectorLocations);
         break;
     }
+#ifdef PORTABLE
+    Platform_StoreSaveFile();
+#endif
     gTrainerHillVBlankCounter = backupVar;
     return 0;
 }
@@ -781,6 +791,9 @@ u8 TrySavingData(u8 saveType)
     HandleSavingData(saveType);
     if (!gDamagedSaveSectors)
     {
+#ifdef PORTABLE
+        Platform_StoreSaveFile();
+#endif
         gSaveAttemptStatus = SAVE_STATUS_OK;
         return SAVE_STATUS_OK;
     }

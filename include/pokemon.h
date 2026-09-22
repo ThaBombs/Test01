@@ -131,10 +131,12 @@ enum MonData {
 
 struct PokemonSubstruct0
 {
-    enum Species species:11; // 2047 species.
-    enum Type teraType:5; // 30 types.
-    enum Item heldItem:10; // 1023 items.
-    u16 unused_02:6;
+    // Mireglen save-layout reset: repack these four fields into the same 32 bits.
+    // This keeps the substruct size stable while allowing far more custom content.
+    u32 species:12; // 4095 species IDs.
+    u32 teraType:5; // 30 types.
+    u32 heldItem:11; // 2047 item IDs.
+    u32 unused_02:4;
     u32 experience:21;
     u32 nickname11:8; // 11th character of nickname.
     u32 unused_04:3;
@@ -147,16 +149,18 @@ struct PokemonSubstruct0
 
 struct PokemonSubstruct1
 {
-    enum Move move1:11; // 2047 moves.
-    u16 evolutionTracker1:5;
-    enum Move move2:11; // 2047 moves.
-    u16 evolutionTracker2:5;
-    enum Move move3:11; // 2047 moves.
-    u16 unused_04:5;
-    enum Move move4:11; // 2047 moves.
-    u16 unused_06:3;
-    u16 hyperTrainedHP:1;
-    u16 hyperTrainedAttack:1;
+    // Mireglen save-layout reset: 12-bit move IDs (4095 possible) while
+    // preserving the same 64-bit footprint used by the first four words.
+    u32 move1:12;
+    u32 evolutionTracker1:5;
+    u32 move2:12;
+    u32 unused_02:3;
+    u32 evolutionTracker2:5;
+    u32 move3:12;
+    u32 move4:12;
+    u32 hyperTrainedHP:1;
+    u32 hyperTrainedAttack:1;
+    u32 unused_06:1;
     u8 pp1:7; // 127 PP.
     u8 hyperTrainedDefense:1;
     u8 pp2:7; // 127 PP.

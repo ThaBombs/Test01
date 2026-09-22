@@ -2556,4 +2556,12 @@ const struct AbilityInfo gAbilitiesInfo[ABILITIES_COUNT] =
         .name = _("Aura Guard"),
         .description = COMPOUND_STRING("Unimplemented."),
     },
+    [ABILITY_TIDAL_FLAME] =
+    {
+        .name = _("Tidal Flame"),
+        .description = COMPOUND_STRING("Fire/Water ignore hostile weather."),
+        .aiRating = 8,
+        .breakable = TRUE,
+    },
+
 };

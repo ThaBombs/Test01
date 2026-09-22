@@ -22103,6 +22103,79 @@ const struct MoveInfo gMovesInfo[MOVES_COUNT_ALL] =
         .battleAnimScript = gBattleAnimMove_MalignantChain,
     },
 
+    [MOVE_BOILING_TIDE] =
+    {
+        .name = COMPOUND_STRING("Boiling Tide"),
+        .description = COMPOUND_STRING(
+            "A scalding wave that grows\n"
+            "stronger in harsh sunlight."),
+        .effect = EFFECT_HYDRO_STEAM,
+        .power = 65,
+        .type = TYPE_WATER,
+        .accuracy = 100,
+        .pp = 15,
+        .target = TARGET_SELECTED,
+        .priority = 0,
+        .category = DAMAGE_CATEGORY_SPECIAL,
+        .thawsUser = TRUE,
+        .additionalEffects = ADDITIONAL_EFFECTS({
+            .moveEffect = MOVE_EFFECT_BURN,
+            .chance = 30,
+        }),
+        .battleAnimScript = gBattleAnimMove_HydroSteam,
+    },
+
+
+    [MOVE_TIDAL_GUARD] =
+    {
+        .name = COMPOUND_STRING("Tidal Guard"),
+        .description = COMPOUND_STRING(
+            "Guards itself. Physical hits\n"
+            "call rain; special hits call sun."),
+        .effect = EFFECT_PROTECT,
+        .power = 0,
+        .type = TYPE_WATER,
+        .accuracy = 0,
+        .pp = 10,
+        .target = TARGET_USER,
+        .priority = 4,
+        .category = DAMAGE_CATEGORY_STATUS,
+        .argument = { .protectMethod = PROTECT_NORMAL },
+        .ignoresProtect = TRUE,
+        .mirrorMoveBanned = TRUE,
+        .metronomeBanned = TRUE,
+        .copycatBanned = TRUE,
+        .assistBanned = TRUE,
+        .battleAnimScript = gBattleAnimMove_Protect,
+    },
+
+    [MOVE_CRAB_RAVE] =
+    {
+        .name = COMPOUND_STRING("Crab Rave"),
+        .description = COMPOUND_STRING(
+            "A lively claw dance raises\n"
+            "Attack, Sp. Atk and Speed."),
+        .effect = EFFECT_STAT_CHANGE,
+        .power = 0,
+        .type = TYPE_WATER,
+        .accuracy = 0,
+        .pp = 15,
+        .target = TARGET_USER,
+        .priority = 0,
+        .category = DAMAGE_CATEGORY_STATUS,
+        .danceMove = TRUE,
+        .snatchAffected = TRUE,
+        .ignoresProtect = TRUE,
+        .mirrorMoveBanned = TRUE,
+        .additionalEffects = ADDITIONAL_EFFECTS({
+            .moveEffect = STAT_CHANGE_EFFECT_PLUS,
+            .attack = 1,
+            .spAtk = 1,
+            .speed = 1,
+        }),
+        .battleAnimScript = gBattleAnimMove_DragonDance,
+    },
+
     // Z-Moves
     [MOVE_BREAKNECK_BLITZ] =
     {
