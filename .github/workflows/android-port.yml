@@ -59,6 +59,20 @@ jobs:
             src/data/tutor_moves.h \
             src/data/pokemon/teachable_learnsets.h
 
+          # Expansion keeps audio sources as WAV/AIF and generates the binary
+          # sample payloads consumed by data/sound_data.s.
+          mapfile -t AUDIO_BINS < <(grep -RhoE 'sound/[A-Za-z0-9_./-]+\\.bin' sound data/sound_data.s | sort -u)
+          if ((${#AUDIO_BINS[@]})); then
+            make -j"$(nproc)" GAME_VERSION=EMERALD "${AUDIO_BINS[@]}"
+          fi
+
+          # Generate MIDI-derived song assembly before CMake evaluates its
+          # source glob, otherwise those songs are invisible to the native build.
+          mapfile -t SONG_ASM < <(find sound/songs/midi -type f -name '*.mid' | sed 's/\\.mid$/.s/' | sort)
+          if ((${#SONG_ASM[@]})); then
+            make -j"$(nproc)" GAME_VERSION=EMERALD "${SONG_ASM[@]}"
+          fi
+
       - name: Patch SDL2 Android lifecycle
         run: |
           if git -C android/SDL2 apply --check ../patches/sdl2-android-lifecycle.patch; then
