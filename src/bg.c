@@ -1202,10 +1202,19 @@ static u32 GetBgType(u32 bg)
 
 bool32 IsTileMapOutsideWram(u32 bg)
 {
+#ifdef PLATFORM_ANDROID
+    // On the GBA, tilemap buffers are expected to live in EWRAM/IWRAM and
+    // comparing their addresses against IWRAM_END is meaningful. Android
+    // allocates these buffers from the normal process heap, whose virtual
+    // addresses are unrelated to the GBA memory map. Rejecting every pointer
+    // above 0x03008000 therefore discards all valid Android window tilemaps.
+    return sGpuBgConfigs2[bg].tilemap == NULL;
+#else
     if (sGpuBgConfigs2[bg].tilemap > (void *)IWRAM_END)
         return TRUE;
     else if (sGpuBgConfigs2[bg].tilemap == NULL)
         return TRUE;
     else
         return FALSE;
+#endif
 }
