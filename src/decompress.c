@@ -245,6 +245,7 @@ u32 LoadCompressedSpriteSheetByTemplate(const struct SpriteTemplate *template, s
 
 }
 
+#ifndef PORT_BOOTSTRAP_NO_POKEMON_PICS
 void HandleLoadSpecialPokePic(bool32 isFrontPic, void *dest, enum Species species, u32 personality)
 {
     LoadSpecialPokePicIsEgg(dest, species, personality, isFrontPic, FALSE);
@@ -254,6 +255,7 @@ void HandleLoadSpecialPokePicIsEgg(bool32 isFrontPic, void *dest, enum Species s
 {
     LoadSpecialPokePicIsEgg(dest, species, personality, isFrontPic, isEgg);
 }
+#endif
 
 //  Wrapper function for all decompression calls using formats with headers
 //  calls the correct decompression function depending on the header
@@ -1148,6 +1150,7 @@ static bool32 isModeSymDelta(enum CompressionMode mode)
     return FALSE;
 }
 
+#ifndef PORT_BOOTSTRAP_NO_POKEMON_PICS
 void LoadSpecialPokePic(void *dest, enum Species species, u32 personality, bool8 isFrontPic)
 {
     LoadSpecialPokePicIsEgg(dest, species, personality, isFrontPic, FALSE);
@@ -1196,6 +1199,8 @@ void LoadSpecialPokePicIsEgg(void *dest, enum Species species, u32 personality, 
         DrawPokemonSpotsBothFrames(personality, species, dest);
     }
 }
+
+#endif
 
 void Unused_DecompressDataWithHeaderWramIndirect(const void **src, void *dest)
 {
