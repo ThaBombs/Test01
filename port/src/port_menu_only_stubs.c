@@ -65,3 +65,28 @@ u32 GetGlyphWidth_Braille(u16 glyphId, bool32 isJapanese)
     (void)isJapanese;
     return 16;
 }
+
+
+u8 gStringVar1[0x100] = {0};
+u8 gStringVar2[0x100] = {0};
+u8 gStringVar3[0x100] = {0};
+
+const u8 *DynamicPlaceholderTextUtil_GetPlaceholderPtr(u8 idx)
+{
+    static const u8 sEmptyPlaceholder[] = { EOS };
+    (void)idx;
+    return sEmptyPlaceholder;
+}
+
+u32 GetGlyphWidth_Braille(u16 glyphId, bool32 isJapanese)
+{
+    (void)glyphId;
+    (void)isJapanese;
+    return 16;
+}
+
+int GetStringRightAlignXOffset(int fontId, const u8 *str, int totalWidth)
+{
+    const int stringWidth = GetStringWidth(fontId, str, 0);
+    return totalWidth > stringWidth ? totalWidth - stringWidth : 0;
+}
