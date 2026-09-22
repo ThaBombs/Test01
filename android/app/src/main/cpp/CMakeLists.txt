@@ -17,6 +17,7 @@ add_library(
     "${PORT_ROOT}/src/port_gba_timing.c"
     "${PORT_ROOT}/src/port_gba_renderer.c"
     "${PORT_ROOT}/src/port_gba_rtc.c"
+    "${PORT_ROOT}/src/port_gba_flash.c"
     "${REPO_ROOT}/src/gpu_regs.c"
     "${REPO_ROOT}/src/dma3_manager.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"

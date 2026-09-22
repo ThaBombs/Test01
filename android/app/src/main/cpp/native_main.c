@@ -7,6 +7,7 @@
 
 #include "port_runtime.h"
 #include "port_gba_timing.h"
+#include "port_gba_flash.h"
 
 #define LOG_TAG "PokeemeraldNative"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -158,6 +159,7 @@ void android_main(struct android_app *app)
     app->onInputEvent = HandleInput;
 
     PortRuntime_Init();
+    PortGbaFlash_Init(app->activity->internalDataPath);
     LOGI("Native runtime started; no GBA ROM or emulator core is embedded.");
     LOGI("GBA host-memory compatibility layer: %s",
          PortRuntime_IsGbaHostReady() ? "ready" : "SELF-TEST FAILED");

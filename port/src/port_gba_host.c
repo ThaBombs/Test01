@@ -4,6 +4,7 @@
 #include "port_gba_timing.h"
 #include "port_gba_renderer.h"
 #include "port_gba_rtc.h"
+#include "port_gba_flash.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -29,6 +30,7 @@ void PortGbaHost_Init(void)
     memset(gPortOam, 0, sizeof(gPortOam));
     PortGbaDma_Init();
     PortGbaTiming_Init();
+    PortGbaFlash_Init(NULL);
 
     SOUND_INFO_PTR = NULL;
     INTR_CHECK = 0;
@@ -67,7 +69,8 @@ bool PortGbaHost_SelfTest(void)
         && PortGbaDma_SelfTest()
         && PortGbaTiming_SelfTest()
         && PortGbaRenderer_SelfTest()
-        && PortGbaRtc_SelfTest();
+        && PortGbaRtc_SelfTest()
+        && PortGbaFlash_SelfTest();
 
     PortGbaHost_Init();
     return passed;
