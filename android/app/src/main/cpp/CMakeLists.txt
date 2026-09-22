@@ -25,6 +25,14 @@ add_library(
     "${REPO_ROOT}/src/random.c"
     "${REPO_ROOT}/src/gpu_regs.c"
     "${REPO_ROOT}/src/dma3_manager.c"
+    "${REPO_ROOT}/src/task.c"
+    "${REPO_ROOT}/src/bg.c"
+    "${REPO_ROOT}/src/palette.c"
+    "${REPO_ROOT}/src/sprite.c"
+    "${REPO_ROOT}/src/trig.c"
+    "${REPO_ROOT}/src/decompress.c"
+    "${REPO_ROOT}/src/decompress_error_handler.c"
+    "${REPO_ROOT}/src/util.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"
 )
 
@@ -43,6 +51,8 @@ target_compile_options(
     -Wall
     -Wextra
     -Wpedantic
+    -ffunction-sections
+    -fdata-sections
     "-iquote${REPO_ROOT}/include"
 )
 
@@ -63,6 +73,7 @@ target_link_options(
     PRIVATE
     "-Wl,--undefined=ANativeActivity_onCreate"
     "-Wl,--error-limit=0"
+    "-Wl,--gc-sections"
 )
 
 

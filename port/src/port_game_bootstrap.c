@@ -47,12 +47,6 @@ void PlayTimeCounter_Update(void)
     // save before one has been initialized.
 }
 
-void ResetBgs(void)
-{
-    const u16 display = GetGpuReg(REG_OFFSET_DISPCNT);
-    SetGpuReg(REG_OFFSET_DISPCNT, display & ~(DISPCNT_BG_ALL_ON | 0x7));
-}
-
 void SetDefaultFontsPointer(void)
 {
     // Font tables are initialized when the text/UI stack is brought online.
