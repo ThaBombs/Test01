@@ -58,6 +58,9 @@ jobs:
           make -j"$(nproc)" GAME_VERSION=EMERALD \
             src/data/tutor_moves.h \
             src/data/pokemon/teachable_learnsets.h
+          # Materialize Expansion's lazily generated graphics/audio assets using
+          # its own dependency graph before the native CMake build consumes them.
+          make -j"$(nproc)" GAME_VERSION=EMERALD build/emerald/data/sound_data.o
 
       - name: Patch SDL2 Android lifecycle
         run: |
