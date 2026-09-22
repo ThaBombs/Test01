@@ -25,7 +25,7 @@ target_include_directories(
 
 target_compile_features(pokeemerald_native PRIVATE c_std_17)
 target_compile_definitions(pokeemerald_native PRIVATE PLATFORM_ANDROID=1 MODERN=1)
-target_compile_options(pokeemerald_native PRIVATE -Wall -Wextra -Wpedantic)
+target_compile_options(pokeemerald_native PRIVATE\n    -Wall\n    -Wextra\n    -Wpedantic\n    "-iquote${REPO_ROOT}/include"\n)
 
 find_library(ANDROID_LIB android)
 find_library(LOG_LIB log)
