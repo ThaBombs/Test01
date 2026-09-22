@@ -12,6 +12,7 @@ add_library(
     native_main.c
     "${PORT_ROOT}/src/port_runtime.c"
     "${PORT_ROOT}/src/port_gba_host.c"
+    "${PORT_ROOT}/src/port_gba_bios.c"
     "${REPO_ROOT}/src/gpu_regs.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"
 )
@@ -36,12 +37,14 @@ target_compile_options(
 
 find_library(ANDROID_LIB android)
 find_library(LOG_LIB log)
+find_library(M_LIB m)
 
 target_link_libraries(
     pokeemerald_native
     PRIVATE
     ${ANDROID_LIB}
     ${LOG_LIB}
+    ${M_LIB}
 )
 
 target_link_options(

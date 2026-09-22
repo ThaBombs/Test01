@@ -1,4 +1,5 @@
 #include "port_gba_host.h"
+#include "port_gba_bios.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -55,7 +56,8 @@ bool PortGbaHost_SelfTest(void)
         && *(volatile uint16_t *)(gPortVram + 2u) == 0x55AA
         && *(volatile uint16_t *)gPortOam == 0x0F0F
         && GetGpuReg(REG_OFFSET_BG1CNT) == 0x2468
-        && REG_BG1CNT == 0x2468;
+        && REG_BG1CNT == 0x2468
+        && PortGbaBios_SelfTest();
 
     PortGbaHost_Init();
     return passed;
