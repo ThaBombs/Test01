@@ -90,6 +90,12 @@ jobs:
           set -euo pipefail
           make -j2 generated
 
+      - name: Prepare intro compatibility assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          make -j2 build/emerald/src/intro.o
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -110,6 +116,19 @@ jobs:
           fi
           echo "Engine probe: $PROBE"
           "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u | tee android/engine-unresolved.txt
+
+      - name: Report intro probe dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          NDK_NM="$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
+          PROBE="$(find android/app -type f -name 'libpokeemerald_intro_probe.a' -path '*arm64-v8a*' | head -n 1)"
+          if [ -z "$PROBE" ]; then
+            echo "Intro probe archive was not built." >&2
+            exit 1
+          fi
+          echo "Intro probe: $PROBE"
+          "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u | tee android/intro-unresolved.txt
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

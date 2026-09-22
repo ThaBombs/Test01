@@ -105,3 +105,43 @@ add_custom_command(
 # Gradle requests pokeemerald_native specifically. Force the compile-only
 # engine probe to build as part of every APK so CI genuinely validates main.c.
 add_dependencies(pokeemerald_native pokeemerald_engine_probe)
+
+
+# Native compile probe for the real Emerald copyright/title intro source.
+# The normal ROM build prepares the converted graphics under build/assets;
+# here we re-run only the C preprocessing step with PLATFORM_ANDROID so GBA
+# hardware macros resolve through the host compatibility layer.
+set(INTRO_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/intro_android.c")
+add_custom_command(
+    OUTPUT "${INTRO_ANDROID_C}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    COMMAND /bin/bash -o pipefail -c
+        "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 '${REPO_ROOT}/src/intro.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${REPO_ROOT}/src/intro.c' '${REPO_ROOT}/charmap.txt' > '${INTRO_ANDROID_C}'"
+    DEPENDS
+        "${REPO_ROOT}/src/intro.c"
+        "${REPO_ROOT}/tools/preproc/preproc"
+        "${REPO_ROOT}/charmap.txt"
+    VERBATIM
+)
+
+add_library(
+    pokeemerald_intro_probe
+    STATIC
+    "${INTRO_ANDROID_C}"
+)
+target_include_directories(
+    pokeemerald_intro_probe
+    PRIVATE
+    "${PORT_ROOT}/include"
+)
+target_compile_features(pokeemerald_intro_probe PRIVATE c_std_17)
+target_compile_definitions(pokeemerald_intro_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1)
+target_compile_options(
+    pokeemerald_intro_probe
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    "-iquote${REPO_ROOT}/include"
+)
+add_dependencies(pokeemerald_native pokeemerald_intro_probe)
