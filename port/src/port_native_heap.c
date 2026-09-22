@@ -1,0 +1,62 @@
+#include "global.h"
+#include "malloc.h"
+
+#include <stdlib.h>
+
+ALIGNED(4) u8 gHeap[HEAP_SIZE] = {0};
+
+void InitHeap(void *heapStart, u32 heapSize)
+{
+    // Native builds are not constrained to the GBA's fixed EWRAM heap.
+    // Keep the API so existing game code remains unchanged.
+    (void)heapStart;
+    (void)heapSize;
+}
+
+void *AllocUnchecked_(u32 size, const char *location)
+{
+    (void)location;
+    return malloc(size == 0 ? 1u : (size_t)size);
+}
+
+void *Alloc_(u32 size, const char *location)
+{
+    void *memory = AllocUnchecked_(size, location);
+    if (memory == NULL)
+        abort();
+    return memory;
+}
+
+void *AllocZeroedUnchecked_(u32 size, const char *location)
+{
+    (void)location;
+    return calloc(1u, size == 0 ? 1u : (size_t)size);
+}
+
+void *AllocZeroed_(u32 size, const char *location)
+{
+    void *memory = AllocZeroedUnchecked_(size, location);
+    if (memory == NULL)
+        abort();
+    return memory;
+}
+
+void Free(void *pointer)
+{
+    free(pointer);
+}
+
+void PrintHeap(void)
+{
+}
+
+const struct MemBlock *HeapHead(void)
+{
+    return NULL;
+}
+
+const char *MemBlockLocation(const struct MemBlock *block)
+{
+    (void)block;
+    return NULL;
+}

@@ -25,6 +25,9 @@
 #include "trainer_hill.h"
 #include "test_runner.h"
 #include "constants/rgb.h"
+#ifdef PLATFORM_ANDROID
+#include "port_game_bootstrap.h"
+#endif
 
 void Game_VBlank(void);
 static void HBlankIntr(void);
@@ -218,7 +221,7 @@ static void InitMainCallbacks(void)
     gMain.vblankCounter2 = 0;
     gMain.callback1 = NULL;
 #ifdef PLATFORM_ANDROID
-    SetMainCallback2(CB2_InitCopyrightScreenAfterBootup);
+    SetMainCallback2(PortGame_InitialCallback);
 #else
     SetMainCallback2(gInitialMainCB2);
 #endif

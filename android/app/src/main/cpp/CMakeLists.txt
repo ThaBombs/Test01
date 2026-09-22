@@ -11,6 +11,8 @@ add_library(
     SHARED
     native_main.c
     "${PORT_ROOT}/src/port_runtime.c"
+    "${PORT_ROOT}/src/port_native_heap.c"
+    "${PORT_ROOT}/src/port_game_bootstrap.c"
     "${PORT_ROOT}/src/port_gba_host.c"
     "${PORT_ROOT}/src/port_gba_bios.c"
     "${PORT_ROOT}/src/port_gba_dma.c"
@@ -20,6 +22,7 @@ add_library(
     "${PORT_ROOT}/src/port_gba_flash.c"
     "${PORT_ROOT}/src/port_gba_audio.c"
     "${REPO_ROOT}/src/main.c"
+    "${REPO_ROOT}/src/random.c"
     "${REPO_ROOT}/src/gpu_regs.c"
     "${REPO_ROOT}/src/dma3_manager.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"
@@ -59,6 +62,7 @@ target_link_options(
     pokeemerald_native
     PRIVATE
     "-Wl,--undefined=ANativeActivity_onCreate"
+    "-Wl,--error-limit=0"
 )
 
 

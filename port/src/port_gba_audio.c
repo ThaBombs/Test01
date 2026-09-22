@@ -4,14 +4,28 @@
 
 #include "global.h"
 #include "m4a.h"
+#include "sound.h"
 
 struct MusicPlayerInfo gMPlayInfo_BGM;
 struct MusicPlayerInfo gMPlayInfo_SE1;
 struct MusicPlayerInfo gMPlayInfo_SE2;
 struct MusicPlayerInfo gMPlayInfo_SE3;
 struct SoundInfo gSoundInfo;
+struct PokemonCrySong gPokemonCrySongs[MAX_POKEMON_CRIES];
 
 static bool sVSyncEnabled;
+
+void InitMapMusic(void)
+{
+}
+
+void MapMusicMain(void)
+{
+}
+
+void ResetMapMusic(void)
+{
+}
 
 static void ResetAudioState(void)
 {

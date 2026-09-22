@@ -5,6 +5,7 @@
 
 #include "gba/types.h"
 #include "siirtc.h"
+#include "rtc.h"
 #include "constants/siirtc.h"
 
 static bool sLocked;
@@ -101,6 +102,55 @@ bool8 SiiRtcGetTime(struct SiiRtcInfo *rtc)
 
     FillHostDateTime(rtc, true);
     return TRUE;
+}
+
+
+static u32 BcdToBinary(u8 value)
+{
+    return (u32)(((value >> 4) & 0xFu) * 10u + (value & 0xFu));
+}
+
+static bool IsLeapYearHost(u32 year)
+{
+    return ((year % 4u == 0u && year % 100u != 0u) || year % 400u == 0u);
+}
+
+void RtcInit(void)
+{
+    sLocked = false;
+    sStatus = SIIRTCINFO_24HOUR;
+}
+
+void RtcGetInfo(struct SiiRtcInfo *rtc)
+{
+    FillHostDateTime(rtc, false);
+}
+
+u16 RtcGetDayCount(struct SiiRtcInfo *rtc)
+{
+    if (rtc == NULL)
+        return 0;
+
+    static const u8 monthDays[12] =
+        {31,28,31,30,31,30,31,31,30,31,30,31};
+
+    const u32 year = BcdToBinary(rtc->year);
+    const u32 month = BcdToBinary(rtc->month);
+    const u32 day = BcdToBinary(rtc->day);
+    u32 count = 0;
+
+    for (u32 y = 0; y < year; ++y)
+        count += 365u + (IsLeapYearHost(y) ? 1u : 0u);
+
+    for (u32 m = 1; m < month && m <= 12u; ++m)
+    {
+        count += monthDays[m - 1u];
+        if (m == 2u && IsLeapYearHost(year))
+            ++count;
+    }
+
+    count += day;
+    return (u16)count;
 }
 
 bool PortGbaRtc_SelfTest(void)
