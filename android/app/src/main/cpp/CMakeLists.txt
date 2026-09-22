@@ -16,6 +16,7 @@ add_library(
     "${PORT_ROOT}/src/port_gba_dma.c"
     "${PORT_ROOT}/src/port_gba_timing.c"
     "${PORT_ROOT}/src/port_gba_renderer.c"
+    "${PORT_ROOT}/src/port_gba_rtc.c"
     "${REPO_ROOT}/src/gpu_regs.c"
     "${REPO_ROOT}/src/dma3_manager.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"
@@ -55,4 +56,31 @@ target_link_options(
     pokeemerald_native
     PRIVATE
     "-Wl,--undefined=ANativeActivity_onCreate"
+)
+
+
+# Compile-only portability probe for the real Emerald main engine source.
+# This target intentionally is not linked into the APK yet; unresolved runtime
+# dependencies are handled subsystem-by-subsystem after source portability is clean.
+add_library(
+    pokeemerald_engine_probe
+    OBJECT
+    "${REPO_ROOT}/src/main.c"
+)
+
+target_include_directories(
+    pokeemerald_engine_probe
+    PRIVATE
+    "${PORT_ROOT}/include"
+)
+
+target_compile_features(pokeemerald_engine_probe PRIVATE c_std_17)
+target_compile_definitions(pokeemerald_engine_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1)
+target_compile_options(
+    pokeemerald_engine_probe
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    "-iquote${REPO_ROOT}/include"
 )

@@ -3,6 +3,7 @@
 #include "port_gba_dma.h"
 #include "port_gba_timing.h"
 #include "port_gba_renderer.h"
+#include "port_gba_rtc.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -65,7 +66,8 @@ bool PortGbaHost_SelfTest(void)
         && PortGbaBios_SelfTest()
         && PortGbaDma_SelfTest()
         && PortGbaTiming_SelfTest()
-        && PortGbaRenderer_SelfTest();
+        && PortGbaRenderer_SelfTest()
+        && PortGbaRtc_SelfTest();
 
     PortGbaHost_Init();
     return passed;
