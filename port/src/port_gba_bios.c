@@ -5,8 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "gba/types.h"
-#include "gba/syscall.h"
+#include "gba/gba.h"
 
 // The modern headers wrap CpuSet/CpuFastSet in compile-time alignment macros.
 // The host implementation must provide the underlying function symbols.
