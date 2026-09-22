@@ -11,7 +11,7 @@
 
 #ifdef __ANDROID__
 #include <jni.h>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #else
 #include <SDL2/SDL.h>
 #endif
