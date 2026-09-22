@@ -46,7 +46,11 @@ const IntrFunc gIntrTableTemplate[] =
 {
     VCountIntr, // V-count interrupt
     SerialIntr, // Serial interrupt
+#ifdef PLATFORM_ANDROID
+    IntrDummy,  // Timer 3 interrupt (GBA timer hardware is not used on Android)
+#else
     Timer3Intr, // Timer 3 interrupt
+#endif
     HBlankIntr, // H-blank interrupt
     Game_VBlank, // V-blank interrupt
     IntrDummy,  // Timer 0 interrupt
@@ -343,7 +347,12 @@ void InitIntrHandlers(void)
     for (i = 0; i < INTR_COUNT; i++)
         gIntrTable[i] = gIntrTableTemplate[i];
 
+#ifdef PLATFORM_ANDROID
+    // Android drives VBlank explicitly through Game_VBlank/host timing.
+    INTR_VECTOR = NULL;
+#else
     INTR_VECTOR = IntrMain;
+#endif
 
     SetVBlankCallback(NULL);
     SetHBlankCallback(NULL);
@@ -455,6 +464,9 @@ static void WaitForVBlank(void)
 {
     gMain.intrCheck &= ~INTR_FLAG_VBLANK;
 
+#ifdef PLATFORM_ANDROID
+    VBlankIntrWait();
+#else
     if (gWirelessCommType != 0)
     {
         // Desynchronization may occur if wireless adapter is connected
@@ -466,6 +478,7 @@ static void WaitForVBlank(void)
     {
         VBlankIntrWait();
     }
+#endif
 }
 
 void SetTrainerHillVBlankCounter(u32 *counter)

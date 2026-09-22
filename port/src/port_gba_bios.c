@@ -45,6 +45,35 @@ static void WriteU16(void *ptr, uint16_t value)
     memcpy(ptr, &value, sizeof(value));
 }
 
+
+void RegisterRamReset(u32 resetFlags)
+{
+    if ((resetFlags & RESET_PALETTE) != 0)
+        memset(gPortPaletteRam, 0, PLTT_SIZE);
+    if ((resetFlags & RESET_VRAM) != 0)
+        memset(gPortVram, 0, VRAM_SIZE);
+    if ((resetFlags & RESET_OAM) != 0)
+        memset(gPortOam, 0, OAM_SIZE);
+
+    if ((resetFlags & RESET_REGS) != 0)
+        memset(gPortIoRegisters, 0, sizeof(gPortIoRegisters));
+
+    // EWRAM/IWRAM are represented by normal process globals in the native
+    // build. Resetting those wholesale would also destroy C runtime state, so
+    // their game-owned data is reinitialized by Game_Init instead.
+}
+
+void SoftReset(u32 resetFlags)
+{
+    RegisterRamReset(resetFlags);
+}
+
+int MultiBoot(struct MultiBootParam *mp)
+{
+    (void)mp;
+    return -1;
+}
+
 void CpuSet(const void *src, void *dest, u32 control)
 {
     const uint32_t count = control & BIOS_COPY_COUNT_MASK;

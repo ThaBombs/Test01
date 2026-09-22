@@ -98,6 +98,19 @@ jobs:
       - name: Build debug APK
         run: gradle -p android :app:assembleDebug --stacktrace
 
+      - name: Report engine probe dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          NDK_NM="$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
+          PROBE="$(find android/app -type f -name 'libpokeemerald_engine_probe.a' -path '*arm64-v8a*' | head -n 1)"
+          if [ -z "$PROBE" ]; then
+            echo "Engine probe archive was not built." >&2
+            exit 1
+          fi
+          echo "Engine probe: $PROBE"
+          "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u | tee android/engine-unresolved.txt
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
