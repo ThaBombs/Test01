@@ -1,6 +1,9 @@
 name: Android Native APK
 
 on:
+  push:
+    branches:
+      - test-starter-overhaul
   workflow_dispatch:
 
 concurrency:
