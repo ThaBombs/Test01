@@ -295,6 +295,86 @@ add_custom_command(
 )
 add_dependencies(pokeemerald_native pokeemerald_main_menu_startup_probe)
 
+
+# Compile-only probes for the next Android milestone: NEW GAME -> overworld.
+# These do not alter the known-good APK link; they expose the exact dependency
+# boundary for fresh-game initialization and map loading.
+add_library(
+    pokeemerald_new_game_probe
+    STATIC
+    "${REPO_ROOT}/src/new_game.c"
+)
+target_include_directories(
+    pokeemerald_new_game_probe
+    PRIVATE
+    "${PORT_ROOT}/include"
+)
+target_compile_features(pokeemerald_new_game_probe PRIVATE c_std_17)
+target_compile_definitions(
+    pokeemerald_new_game_probe
+    PRIVATE
+    PLATFORM_ANDROID=1
+    MODERN=1
+    TESTING=0
+    PORT_BOOTSTRAP_MENU_ONLY=1
+    PORT_BOOTSTRAP_NO_OVERWORLD=1
+)
+target_compile_options(
+    pokeemerald_new_game_probe
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    "-iquote${REPO_ROOT}/include"
+)
+add_custom_command(
+    TARGET pokeemerald_new_game_probe
+    POST_BUILD
+    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_new_game_probe>"
+    COMMENT "New-game probe unresolved symbols"
+    VERBATIM
+)
+add_dependencies(pokeemerald_native pokeemerald_new_game_probe)
+
+add_library(
+    pokeemerald_overworld_probe
+    STATIC
+    "${REPO_ROOT}/src/overworld.c"
+)
+target_include_directories(
+    pokeemerald_overworld_probe
+    PRIVATE
+    "${PORT_ROOT}/include"
+)
+target_compile_features(pokeemerald_overworld_probe PRIVATE c_std_17)
+target_compile_definitions(
+    pokeemerald_overworld_probe
+    PRIVATE
+    PLATFORM_ANDROID=1
+    MODERN=1
+    TESTING=0
+    PORT_BOOTSTRAP_MENU_ONLY=1
+    PORT_BOOTSTRAP_NO_OVERWORLD=1
+    PORT_BOOTSTRAP_NO_WEATHER=1
+    PORT_BOOTSTRAP_NO_POKEMON_PICS=1
+)
+target_compile_options(
+    pokeemerald_overworld_probe
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    "-iquote${REPO_ROOT}/include"
+)
+add_custom_command(
+    TARGET pokeemerald_overworld_probe
+    POST_BUILD
+    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_overworld_probe>"
+    COMMENT "Overworld probe unresolved symbols"
+    VERBATIM
+)
+add_dependencies(pokeemerald_native pokeemerald_overworld_probe)
+
 # These Emerald UI units are internal implementation details of the APK.
 # Hiding their global symbols lets --gc-sections discard menu/text functions
 # that are not reachable from the direct Android start-menu path.
