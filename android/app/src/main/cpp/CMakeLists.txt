@@ -118,37 +118,37 @@ add_custom_command(
 add_dependencies(pokeemerald_native pokeemerald_engine_probe)
 
 
-# Native compile probe for the real Emerald copyright/title intro source.
-# The normal ROM build prepares the converted graphics under build/assets;
-# here we re-run only the C preprocessing step with PLATFORM_ANDROID so GBA
-# hardware macros resolve through the host compatibility layer.
-set(INTRO_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/intro_android.c")
+# Native compile probe for the actual CONTINUE / NEW GAME / OPTION menu.
+# Android intentionally skips the copyright screen, intro movie, and Press Start
+# title screen. The normal graphics preprocessing step is still required because
+# main_menu.c embeds converted interface assets through INCGFX_* macros.
+set(MAIN_MENU_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/main_menu_android.c")
 add_custom_command(
-    OUTPUT "${INTRO_ANDROID_C}"
+    OUTPUT "${MAIN_MENU_ANDROID_C}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
     COMMAND /bin/bash -o pipefail -c
-        "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 '${REPO_ROOT}/src/intro.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${REPO_ROOT}/src/intro.c' '${REPO_ROOT}/charmap.txt' > '${INTRO_ANDROID_C}'"
+        "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 '${REPO_ROOT}/src/main_menu.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${REPO_ROOT}/src/main_menu.c' '${REPO_ROOT}/charmap.txt' > '${MAIN_MENU_ANDROID_C}'"
     DEPENDS
-        "${REPO_ROOT}/src/intro.c"
+        "${REPO_ROOT}/src/main_menu.c"
         "${REPO_ROOT}/tools/preproc/preproc"
         "${REPO_ROOT}/charmap.txt"
     VERBATIM
 )
 
 add_library(
-    pokeemerald_intro_probe
+    pokeemerald_main_menu_probe
     STATIC
-    "${INTRO_ANDROID_C}"
+    "${MAIN_MENU_ANDROID_C}"
 )
 target_include_directories(
-    pokeemerald_intro_probe
+    pokeemerald_main_menu_probe
     PRIVATE
     "${PORT_ROOT}/include"
 )
-target_compile_features(pokeemerald_intro_probe PRIVATE c_std_17)
-target_compile_definitions(pokeemerald_intro_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1)
+target_compile_features(pokeemerald_main_menu_probe PRIVATE c_std_17)
+target_compile_definitions(pokeemerald_main_menu_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1)
 target_compile_options(
-    pokeemerald_intro_probe
+    pokeemerald_main_menu_probe
     PRIVATE
     -Wall
     -Wextra
@@ -156,11 +156,11 @@ target_compile_options(
     "-iquote${REPO_ROOT}/include"
 )
 add_custom_command(
-    TARGET pokeemerald_intro_probe
+    TARGET pokeemerald_main_menu_probe
     POST_BUILD
-    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_intro_probe>"
-    COMMENT "Intro probe unresolved symbols"
+    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_main_menu_probe>"
+    COMMENT "Main-menu probe unresolved symbols"
     VERBATIM
 )
 
-add_dependencies(pokeemerald_native pokeemerald_intro_probe)
+add_dependencies(pokeemerald_native pokeemerald_main_menu_probe)
