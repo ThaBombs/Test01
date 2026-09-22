@@ -1,6 +1,7 @@
 #include "port_main_menu_startup.h"
 
 #include "global.h"
+#include "gba/m4a_internal.h"
 #include "load_save.h"
 #include "main.h"
 #include "main_menu.h"
