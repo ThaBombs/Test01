@@ -44,7 +44,7 @@ target_include_directories(
 )
 
 target_compile_features(pokeemerald_native PRIVATE c_std_17)
-target_compile_definitions(pokeemerald_native PRIVATE PLATFORM_ANDROID=1 MODERN=1)
+target_compile_definitions(pokeemerald_native PRIVATE PLATFORM_ANDROID=1 MODERN=1 TESTING=0)
 target_compile_options(
     pokeemerald_native
     PRIVATE
@@ -93,7 +93,7 @@ target_include_directories(
 )
 
 target_compile_features(pokeemerald_engine_probe PRIVATE c_std_17)
-target_compile_definitions(pokeemerald_engine_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1)
+target_compile_definitions(pokeemerald_engine_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1 TESTING=0)
 target_compile_options(
     pokeemerald_engine_probe
     PRIVATE
@@ -146,7 +146,7 @@ target_include_directories(
     "${PORT_ROOT}/include"
 )
 target_compile_features(pokeemerald_main_menu_probe PRIVATE c_std_17)
-target_compile_definitions(pokeemerald_main_menu_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1)
+target_compile_definitions(pokeemerald_main_menu_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1 TESTING=0)
 target_compile_options(
     pokeemerald_main_menu_probe
     PRIVATE
@@ -180,7 +180,7 @@ target_include_directories(
     "${PORT_ROOT}/include"
 )
 target_compile_features(pokeemerald_main_menu_startup_probe PRIVATE c_std_17)
-target_compile_definitions(pokeemerald_main_menu_startup_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1)
+target_compile_definitions(pokeemerald_main_menu_startup_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1 TESTING=0)
 target_compile_options(
     pokeemerald_main_menu_startup_probe
     PRIVATE
