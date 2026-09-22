@@ -1,7 +1,7 @@
+#include <stdlib.h>
+
 #include "global.h"
 #include "malloc.h"
-
-#include <stdlib.h>
 
 ALIGNED(4) u8 gHeap[HEAP_SIZE] = {0};
 
