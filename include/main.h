@@ -55,6 +55,8 @@ extern IntrFunc gIntrTable[];
 extern u8 gLinkVSyncDisabled;
 extern s8 gPcmDmaCounter;
 
+void Game_Init(void);
+void Game_RunFrame(void);
 void AgbMain(void);
 void AgbMainLoop(void);
 void SetMainCallback2(MainCallback callback);
