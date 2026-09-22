@@ -646,6 +646,24 @@ static void Task_MainMenuCheckSaveFile(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
 
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+    if (!gPaletteFade.active)
+    {
+        // Save loading is the next Android milestone. For the first visible
+        // menu build, behave like a fresh install and keep optional wireless
+        // menu entries out of the dependency graph.
+        tMenuType = HAS_NO_SAVED_GAME;
+        tCurrItem = 0;
+        tItemCount = 2;
+        tIsScrolled = FALSE;
+        tWirelessAdapterConnected = FALSE;
+        sCurrItemAndOptionMenuCheck = 0;
+        gTasks[taskId].func = Task_DisplayMainMenu;
+    }
+#else
+
+    s16 *data = gTasks[taskId].data;
+
     if (!gPaletteFade.active)
     {
         SetGpuReg(REG_OFFSET_WIN0H, 0);
@@ -709,6 +727,8 @@ static void Task_MainMenuCheckSaveFile(u8 taskId)
         tCurrItem = sCurrItemAndOptionMenuCheck;
         tItemCount = tMenuType + 2;
     }
+
+#endif
 }
 
 static void Task_WaitForSaveFileErrorWindow(u8 taskId)
@@ -797,6 +817,18 @@ static void Task_DisplayMainMenu(u8 taskId)
             LoadPalette(&palette, BG_PLTT_ID(15) + 1, PLTT_SIZEOF(1));
         }
 
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+        FillWindowPixelBuffer(0, PIXEL_FILL(0xA));
+        FillWindowPixelBuffer(1, PIXEL_FILL(0xA));
+        AddTextPrinterParameterized3(0, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuNewGame);
+        AddTextPrinterParameterized3(1, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuOption);
+        PutWindowTilemap(0);
+        PutWindowTilemap(1);
+        CopyWindowToVram(0, COPYWIN_GFX);
+        CopyWindowToVram(1, COPYWIN_GFX);
+        DrawMainMenuWindowBorder(&sWindowTemplates_MainMenu[0], MAIN_MENU_BORDER_TILE);
+        DrawMainMenuWindowBorder(&sWindowTemplates_MainMenu[1], MAIN_MENU_BORDER_TILE);
+#else
         switch (gTasks[taskId].tMenuType)
         {
         case HAS_NO_SAVED_GAME:
@@ -891,6 +923,7 @@ static void Task_DisplayMainMenu(u8 taskId)
             }
             break;
         }
+#endif
         gTasks[taskId].func = Task_HighlightSelectedMainMenuItem;
     }
 }
@@ -907,18 +940,26 @@ static bool8 HandleMainMenuInput(u8 taskId)
 
     if (JOY_NEW(A_BUTTON))
     {
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+        gTasks[taskId].func = Task_HandleMainMenuAPressed;
+#else
         PlaySE(SE_SELECT);
         IsWirelessAdapterConnected();   // why bother calling this here? debug? Task_HandleMainMenuAPressed will check too
         BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_BLACK);
         gTasks[taskId].func = Task_HandleMainMenuAPressed;
+#endif
     }
     else if (JOY_NEW(B_BUTTON))
     {
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+        gTasks[taskId].func = Task_HandleMainMenuBPressed;
+#else
         PlaySE(SE_SELECT);
         BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_WHITEALPHA);
         SetGpuReg(REG_OFFSET_WIN0H, WIN_RANGE(0, DISPLAY_WIDTH));
         SetGpuReg(REG_OFFSET_WIN0V, WIN_RANGE(0, DISPLAY_HEIGHT));
         gTasks[taskId].func = Task_HandleMainMenuBPressed;
+#endif
     }
     else if ((JOY_NEW(DPAD_UP)) && tCurrItem > 0)
     {
@@ -955,6 +996,12 @@ static void Task_HandleMainMenuInput(u8 taskId)
 
 static void Task_HandleMainMenuAPressed(u8 taskId)
 {
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+    // Selection routing is intentionally deferred until the menu renderer and
+    // navigation are proven on-device. Keep the highlighted real menu alive.
+    gTasks[taskId].func = Task_HighlightSelectedMainMenuItem;
+#else
+
     bool8 wirelessAdapterConnected;
     u8 action;
 
@@ -1136,10 +1183,16 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
         else
             sCurrItemAndOptionMenuCheck |= OPTION_MENU_FLAG;  // entering the options menu
     }
+
+#endif
 }
 
 static void Task_HandleMainMenuBPressed(u8 taskId)
 {
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+    gTasks[taskId].func = Task_HighlightSelectedMainMenuItem;
+#else
+
     if (!gPaletteFade.active)
     {
         if (gTasks[taskId].tMenuType == HAS_MYSTERY_EVENTS)
@@ -1149,6 +1202,8 @@ static void Task_HandleMainMenuBPressed(u8 taskId)
         SetMainCallback2(CB2_InitTitleScreen);
         DestroyTask(taskId);
     }
+
+#endif
 }
 
 static void Task_DisplayMainMenuInvalidActionError(u8 taskId)
