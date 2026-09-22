@@ -5,6 +5,7 @@
 
 #include "gba/types.h"
 #include "gba/io_reg.h"
+#include "gpu_regs.h"
 
 struct SoundInfo *SOUND_INFO_PTR = NULL;
 uint16_t INTR_CHECK = 0;
@@ -39,6 +40,12 @@ bool PortGbaHost_SelfTest(void)
     *(volatile uint16_t *)BG_PLTT = 0x7FFF;
     *(volatile uint16_t *)(VRAM + 2u) = 0x55AA;
     *(volatile uint16_t *)OAM = 0x0F0F;
+
+    // Exercise original pokeemerald GPU register management code against the
+    // host-backed register block. Forced blank makes SetGpuReg write through.
+    InitGpuRegManager();
+    REG_DISPCNT = DISPCNT_FORCED_BLANK;
+    SetGpuReg(REG_OFFSET_BG1CNT, 0x2468);
 
     const bool passed =
         REG_BG0CNT == 0x1234
