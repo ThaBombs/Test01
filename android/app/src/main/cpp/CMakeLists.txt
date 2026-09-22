@@ -53,6 +53,7 @@ target_compile_definitions(
     PORT_BOOTSTRAP_NO_WEATHER=1
     PORT_BOOTSTRAP_NO_OVERWORLD=1
     PORT_BOOTSTRAP_NO_POKEMON_PICS=1
+    PORT_BOOTSTRAP_MENU_ONLY=1
 )
 target_compile_options(
     pokeemerald_native
@@ -136,7 +137,7 @@ add_custom_command(
     OUTPUT "${MAIN_MENU_ANDROID_C}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
     COMMAND /bin/bash -o pipefail -c
-        "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 '${REPO_ROOT}/src/main_menu.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${REPO_ROOT}/src/main_menu.c' '${REPO_ROOT}/charmap.txt' > '${MAIN_MENU_ANDROID_C}'"
+        "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DPORT_BOOTSTRAP_MENU_ONLY=1 '${REPO_ROOT}/src/main_menu.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${REPO_ROOT}/src/main_menu.c' '${REPO_ROOT}/charmap.txt' > '${MAIN_MENU_ANDROID_C}'"
     DEPENDS
         "${REPO_ROOT}/src/main_menu.c"
         "${REPO_ROOT}/tools/preproc/preproc"
