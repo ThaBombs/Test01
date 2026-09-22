@@ -121,8 +121,10 @@ void Game_Init(void)
 
     gSoftResetDisabled = FALSE;
 
+#ifndef PLATFORM_ANDROID
     if (gFlashMemoryPresent != TRUE)
         SetMainCallback2(CB2_FlashNotDetectedScreen);
+#endif
 
     gLinkTransferringData = FALSE;
 
