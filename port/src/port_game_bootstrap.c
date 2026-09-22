@@ -1,4 +1,5 @@
 #include "port_game_bootstrap.h"
+#include "port_main_menu_startup.h"
 
 #include <android/log.h>
 #include <stdarg.h>
@@ -67,8 +68,10 @@ void PortGame_InitialCallback(void)
             "Emerald main callback reached from Android frame loop.");
     }
 
-    // Intentionally minimal first native callback. Replacing this with the
-    // original intro/title callback is the next engine-integration milestone.
+    // Android skips the copyright, intro, and Press Start presentation.
+    // Preserve the legacy boot side effects, then hand control directly to
+    // the real CONTINUE / NEW GAME / OPTION menu.
+    PortGame_StartMainMenu();
 }
 
 void AssertfCrashScreen(const void *return0, const char *fmt, ...)
