@@ -26,7 +26,7 @@
 #include "test_runner.h"
 #include "constants/rgb.h"
 
-static void VBlankIntr(void);
+void Game_VBlank(void);
 static void HBlankIntr(void);
 static void VCountIntr(void);
 static void SerialIntr(void);
@@ -48,7 +48,7 @@ const IntrFunc gIntrTableTemplate[] =
     SerialIntr, // Serial interrupt
     Timer3Intr, // Timer 3 interrupt
     HBlankIntr, // H-blank interrupt
-    VBlankIntr, // V-blank interrupt
+    Game_VBlank, // V-blank interrupt
     IntrDummy,  // Timer 0 interrupt
     IntrDummy,  // Timer 1 interrupt
     IntrDummy,  // Timer 2 interrupt
@@ -359,7 +359,7 @@ void SetSerialCallback(IntrCallback callback)
     gMain.serialCallback = callback;
 }
 
-static void VBlankIntr(void)
+void Game_VBlank(void)
 {
     if (gWirelessCommType != 0)
         RfuVSync();
