@@ -1044,10 +1044,12 @@ static void LoadCopyrightGraphics(u16 tilesetAddress, u16 tilemapAddress, u16 pa
     LoadPalette(gIntroCopyright_Pal, paletteOffset, PLTT_SIZE_4BPP);
 }
 
+#ifndef PLATFORM_ANDROID
 static void SerialCB_CopyrightScreen(void)
 {
     GameCubeMultiBoot_HandleSerialInterrupt(&gMultibootProgramStruct);
 }
+#endif
 
 static u8 SetUpCopyrightScreen(void)
 {
@@ -1083,8 +1085,10 @@ static u8 SetUpCopyrightScreen(void)
         EnableInterrupts(INTR_FLAG_VBLANK);
         SetVBlankCallback(VBlankCB_Intro);
         REG_DISPCNT = DISPCNT_MODE_0 | DISPCNT_OBJ_1D_MAP | DISPCNT_BG0_ON;
+#ifndef PLATFORM_ANDROID
         SetSerialCallback(SerialCB_CopyrightScreen);
         GameCubeMultiBoot_Init(&gMultibootProgramStruct);
+#endif
     // REG_DISPCNT needs to be overwritten the second time, because otherwise the intro won't show up on VBA 1.7.2 and John GBA Lite emulators.
     // The REG_DISPCNT overwrite is NOT needed in m-GBA, No$GBA, VBA 1.8.0, My Boy and Pizza Boy GBA emulators.
     case COPYRIGHT_EMULATOR_BLEND:
@@ -1092,15 +1096,18 @@ static u8 SetUpCopyrightScreen(void)
     default:
         UpdatePaletteFade();
         gMain.state++;
+#ifndef PLATFORM_ANDROID
         GameCubeMultiBoot_Main(&gMultibootProgramStruct);
+#endif
         break;
     case COPYRIGHT_START_FADE:
+#ifndef PLATFORM_ANDROID
         GameCubeMultiBoot_Main(&gMultibootProgramStruct);
-        if (gMultibootProgramStruct.gcmb_field_2 != 1)
-        {
-            BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
-            gMain.state++;
-        }
+        if (gMultibootProgramStruct.gcmb_field_2 == 1)
+            break;
+#endif
+        BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
+        gMain.state++;
         break;
     case COPYRIGHT_START_INTRO:
         if (UpdatePaletteFade())
@@ -1112,6 +1119,7 @@ static u8 SetUpCopyrightScreen(void)
         CreateTask(Task_Scene1_Load, 0);
         SetMainCallback2(MainCB2_Intro);
 #endif
+#ifndef PLATFORM_ANDROID
         if (gMultibootProgramStruct.gcmb_field_2 != 0)
         {
             if (gMultibootProgramStruct.gcmb_field_2 == 2)
@@ -1130,6 +1138,7 @@ static u8 SetUpCopyrightScreen(void)
             GameCubeMultiBoot_Quit();
             SetSerialCallback(SerialCB);
         }
+#endif
         return 0;
     }
 
