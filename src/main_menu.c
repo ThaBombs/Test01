@@ -672,8 +672,6 @@ static void Task_MainMenuCheckSaveFile(u8 taskId)
     }
 #else
 
-    s16 *data = gTasks[taskId].data;
-
     if (!gPaletteFade.active)
     {
         SetGpuReg(REG_OFFSET_WIN0H, 0);
