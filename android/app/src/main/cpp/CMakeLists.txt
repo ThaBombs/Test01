@@ -13,7 +13,9 @@ add_library(
     "${PORT_ROOT}/src/port_runtime.c"
     "${PORT_ROOT}/src/port_gba_host.c"
     "${PORT_ROOT}/src/port_gba_bios.c"
+    "${PORT_ROOT}/src/port_gba_dma.c"
     "${REPO_ROOT}/src/gpu_regs.c"
+    "${REPO_ROOT}/src/dma3_manager.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"
 )
 

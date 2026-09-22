@@ -1,6 +1,10 @@
 #ifndef GUARD_GBA_MACRO_H
 #define GUARD_GBA_MACRO_H
 
+#ifdef PLATFORM_ANDROID
+#include "port_gba_dma.h"
+#endif
+
 #define CPU_FILL_UNCHECKED(value, dest, size, bit)                                          \
 {                                                                                 \
     vu##bit tmp = (vu##bit)(value);                                               \
@@ -90,6 +94,10 @@
 
 #define CpuFastCopy(src, dest, size) CpuFastSet(src, dest, ((size)/(32/8) & 0x1FFFFF))
 
+#ifdef PLATFORM_ANDROID
+#define DmaSetUnchecked(dmaNum, src, dest, control) \
+    PortGbaDma_Set((dmaNum), (src), (dest), (control))
+#else
 #define DmaSetUnchecked(dmaNum, src, dest, control) \
 {                                                 \
     vu32 *dmaRegs = (vu32 *)REG_ADDR_DMA##dmaNum; \
@@ -99,6 +107,7 @@
     dmaRegs[2];                                   \
 }
 
+#endif
 #if MODERN
 // NOTE: Assumes 16-bit DMAs.
 #define DmaSet(dmaNum, src, dest, control) \
@@ -266,6 +275,9 @@
 #define DmaClear16Defvars(dmaNum, dest, size) DmaClearDefvars(dmaNum, dest, size, 16)
 #define DmaClear32Defvars(dmaNum, dest, size) DmaClearDefvars(dmaNum, dest, size, 32)
 
+#ifdef PLATFORM_ANDROID
+#define DmaStop(dmaNum) PortGbaDma_Stop((dmaNum))
+#else
 #define DmaStop(dmaNum)                                         \
 {                                                               \
     vu16 *dmaRegs = (vu16 *)REG_ADDR_DMA##dmaNum;               \
@@ -274,6 +286,7 @@
     dmaRegs[5];                                                 \
 }
 
+#endif
 #define IntrEnable(flags)                                       \
 {                                                               \
     u16 imeTemp;                                                \
