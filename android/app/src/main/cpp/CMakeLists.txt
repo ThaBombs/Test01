@@ -219,7 +219,7 @@ target_include_directories(
     "${PORT_ROOT}/include"
 )
 target_compile_features(pokeemerald_main_menu_startup_probe PRIVATE c_std_17)
-target_compile_definitions(pokeemerald_main_menu_startup_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1 TESTING=0)
+target_compile_definitions(pokeemerald_main_menu_startup_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1 TESTING=0 PORT_BOOTSTRAP_MENU_ONLY=1)
 target_compile_options(
     pokeemerald_main_menu_startup_probe
     PRIVATE
