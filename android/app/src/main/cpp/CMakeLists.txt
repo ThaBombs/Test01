@@ -19,7 +19,6 @@ target_include_directories(
     pokeemerald_native
     PRIVATE
     "${PORT_ROOT}/include"
-    "${REPO_ROOT}/include"
     "${NATIVE_APP_GLUE}"
 )
 
