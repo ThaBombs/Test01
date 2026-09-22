@@ -56,7 +56,7 @@ jobs:
       - name: Prepare generated assets
         run: |
           make -j2 generated
-          make -j2 build/emerald/src/main_menu.o
+          make -j2 build/emerald/src/main_menu.o build/emerald/src/text.o build/emerald/src/menu.o
 
       - name: Build Android debug APK
         run: |
