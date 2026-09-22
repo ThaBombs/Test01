@@ -48,11 +48,6 @@ void PlayTimeCounter_Update(void)
     // save before one has been initialized.
 }
 
-void SetDefaultFontsPointer(void)
-{
-    // Font tables are initialized when the text/UI stack is brought online.
-}
-
 void ScanlineEffect_Stop(void)
 {
     // Host rendering has no GBA scanline DMA running during bootstrap.
