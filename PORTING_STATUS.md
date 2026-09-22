@@ -95,33 +95,48 @@ Still incomplete:
 
 The GBA-compatible renderer is a bootstrap bridge, not the desired long-term graphics ceiling.
 
+## Android boot target
+
+Android deliberately skips all three legacy presentation layers:
+
+- copyright screen
+- Emerald intro movie
+- "Press Start" title screen
+
+The desired Android launch path is:
+
+`Game_Init() -> Android startup/save initialization -> CB2_InitMainMenu()`
+
+`CB2_InitMainMenu()` is the existing Emerald menu containing CONTINUE / NEW GAME / OPTION.
+
+The old copyright callback also performed important non-visual startup work after its animation completed. That work must be preserved even though the screen itself is skipped:
+
+- establish save-block pointers
+- reset menu/mon globals
+- reset save counters
+- load the normal save
+- initialize defaults for empty/corrupt saves
+- apply saved audio options
+- reinitialize the game heap
+
+Do not route Android through the copyright or title callbacks just to obtain those side effects. Move/reuse the initialization directly in the Android startup path.
+
 ## Current boot blocker
 
-The Emerald engine itself is running, but Android intentionally does **not** enter the real Emerald intro/title callback yet.
+The original main menu source (`src/main_menu.c`) is not linked into the Android runtime yet. The Android build now compiles it as the active portability probe and reports unresolved symbols.
 
-In `src/main.c`, Android currently sets:
-
-`PortGame_InitialCallback`
-
-instead of the normal boot callback.
-
-`PortGame_InitialCallback` is presently a minimal no-op callback used to prove that the real Emerald main loop is executing safely.
-
-The original intro source (`src/intro.c`) is already compiled by the Android build as a portability probe, but is not linked into the APK runtime yet.
+The temporary `PortGame_InitialCallback` remains in place only until the real main-menu dependency set is linked cleanly. Once that is true, its job is to perform the non-visual startup/save initialization above and transfer control to `CB2_InitMainMenu()`.
 
 ## Next milestone
 
-Connect Android to the original copyright / intro / title boot path.
+1. Keep the Android main-menu probe compiling on every CI build.
+2. Use its unresolved-symbol report to link only the real subsystems needed by `CB2_InitMainMenu()`.
+3. Preserve save initialization independently of the skipped copyright flow.
+4. Replace the temporary Android callback with the direct startup -> `CB2_InitMainMenu()` handoff.
+5. Verify that the APK opens directly on CONTINUE / NEW GAME / OPTION.
+6. Verify NEW GAME enters the normal new-game path and CONTINUE detects an Android-persisted save.
 
-Do this incrementally:
-
-1. Produce and inspect the unresolved-symbol list for the compiled Android `intro.c` probe. The CMake probe now prints this list during Android builds (commit `2e8fe5f2eb9b4c04eff136bc3bde8d6cfdadf27a`).
-2. Group missing symbols by subsystem rather than stubbing them blindly.
-3. Link the smallest real supporting modules required for the copyright screen.
-4. Keep GBA-only serial/GameCube multiboot behavior disabled or replaced on Android where appropriate.
-5. Switch the Android initial callback from `PortGame_InitialCallback` to `CB2_InitCopyrightScreenAfterBootup` only after that callback's reachable dependency set links cleanly.
-6. Verify the copyright screen is actually visible in the APK.
-7. Continue from copyright -> intro -> title -> new game / load game.
+The intro/title sources are no longer Android-port milestones.
 
 ## Working rules
 
