@@ -175,6 +175,35 @@ add_custom_command(
 
 add_dependencies(pokeemerald_native pokeemerald_main_menu_probe)
 
+# Android-preprocessed Emerald UI sources needed by the real main menu.
+# text.c and menu.c contain INCGFX assets, so they must pass through the same
+# pokeemerald preprocessor used for main_menu.c.
+set(TEXT_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/text_android.c")
+add_custom_command(
+    OUTPUT "${TEXT_ANDROID_C}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    COMMAND /bin/bash -o pipefail -c
+        "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DPORT_BOOTSTRAP_MENU_ONLY=1 '${REPO_ROOT}/src/text.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${REPO_ROOT}/src/text.c' '${REPO_ROOT}/charmap.txt' > '${TEXT_ANDROID_C}'"
+    DEPENDS
+        "${REPO_ROOT}/src/text.c"
+        "${REPO_ROOT}/tools/preproc/preproc"
+        "${REPO_ROOT}/charmap.txt"
+    VERBATIM
+)
+
+set(MENU_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/menu_android.c")
+add_custom_command(
+    OUTPUT "${MENU_ANDROID_C}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    COMMAND /bin/bash -o pipefail -c
+        "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DPORT_BOOTSTRAP_MENU_ONLY=1 '${REPO_ROOT}/src/menu.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${REPO_ROOT}/src/menu.c' '${REPO_ROOT}/charmap.txt' > '${MENU_ANDROID_C}'"
+    DEPENDS
+        "${REPO_ROOT}/src/menu.c"
+        "${REPO_ROOT}/tools/preproc/preproc"
+        "${REPO_ROOT}/charmap.txt"
+    VERBATIM
+)
+
 # Compile-only probe for the Android boot handoff that replaces the skipped
 # copyright/intro/title presentation flow. Once its dependencies are linked,
 # this source becomes part of pokeemerald_native and PortGame_InitialCallback
@@ -214,5 +243,8 @@ target_sources(
     pokeemerald_native
     PRIVATE
     "${PORT_ROOT}/src/port_main_menu_startup.c"
+    "${REPO_ROOT}/src/window.c"
+    "${TEXT_ANDROID_C}"
+    "${MENU_ANDROID_C}"
     "${MAIN_MENU_ANDROID_C}"
 )
