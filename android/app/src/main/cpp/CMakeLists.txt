@@ -94,7 +94,6 @@ set_source_files_properties("${GAME_DATA_OBJECT}" PROPERTIES GENERATED TRUE EXTE
 add_library(main SHARED ${GENERATED_C} ${PLATFORM_C} "${GAME_DATA_OBJECT}")
 target_include_directories(main PRIVATE
     "${ROOT}"
-    "${ROOT}/include"
     "${ROOT}/sound"
     "${ROOT}/android/SDL2/include")
 target_compile_definitions(main PRIVATE
