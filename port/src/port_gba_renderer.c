@@ -356,7 +356,7 @@ bool PortGbaRenderer_RenderSurface(uint32_t *pixels, int width, int height, int 
 
     // Keep the diagnostic runtime visible until the game has actually begun
     // configuring display state or the backdrop palette.
-    if (REG_DISPCNT == 0 && Read16(BG_PLTT) == 0)
+    if ((REG_DISPCNT & (DISPCNT_BG_ALL_ON | DISPCNT_OBJ_ON)) == 0)
         return false;
 
     PortGbaRenderer_RenderCompat(sTestFrame);

@@ -8,6 +8,7 @@
 #include "port_runtime.h"
 #include "port_gba_timing.h"
 #include "port_gba_flash.h"
+#include "main.h"
 
 #define LOG_TAG "PokeemeraldNative"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -114,6 +115,10 @@ static void HandleCommand(struct android_app *app, int32_t command)
     case APP_CMD_TERM_WINDOW:
         engine->animating = 0;
         break;
+    case APP_CMD_PAUSE:
+    case APP_CMD_STOP:
+        (void)PortGbaFlash_Flush();
+        break;
     case APP_CMD_LOST_FOCUS:
         engine->input = (struct PortInputState){0};
         break;
@@ -161,8 +166,15 @@ void android_main(struct android_app *app)
     PortRuntime_Init();
     PortGbaFlash_Init(app->activity->internalDataPath);
     LOGI("Native runtime started; no GBA ROM or emulator core is embedded.");
+    const bool engineReady = PortRuntime_IsGbaHostReady();
     LOGI("GBA host-memory compatibility layer: %s",
-         PortRuntime_IsGbaHostReady() ? "ready" : "SELF-TEST FAILED");
+         engineReady ? "ready" : "SELF-TEST FAILED");
+
+    if (engineReady)
+    {
+        Game_Init();
+        LOGI("Emerald Game_Init completed; Android now owns the outer frame loop.");
+    }
 
     while (1)
     {
@@ -176,6 +188,7 @@ void android_main(struct android_app *app)
 
             if (app->destroyRequested != 0)
             {
+                (void)PortGbaFlash_Flush();
                 LOGI("Native runtime stopped after %llu frames.",
                      (unsigned long long)PortRuntime_GetFrameCount());
                 return;
@@ -198,9 +211,16 @@ void android_main(struct android_app *app)
         engine.lastFrameNanos = now;
 
         PortRuntime_Step(&engine.input, deltaSeconds);
-        RenderFrame(&engine);
+
+        if (engineReady)
+            Game_RunFrame();
 
         PortGbaTiming_EnterVBlank();
+
+        if (engineReady)
+            Game_VBlank();
+
+        RenderFrame(&engine);
         PortGbaTiming_LeaveVBlank();
     }
 }

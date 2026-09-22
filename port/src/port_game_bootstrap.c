@@ -17,6 +17,8 @@
 
 #define LOG_TAG "PokeemeraldEngine"
 
+static u64 sBootstrapFrameCount;
+
 struct SaveBlock3 gSaveblock3 = {0};
 struct SaveBlock2ASLR gSaveblock2 = {0};
 struct SaveBlock1ASLR gSaveblock1 = {0};
@@ -63,6 +65,14 @@ void ScanlineEffect_Stop(void)
 
 void PortGame_InitialCallback(void)
 {
+    if (sBootstrapFrameCount++ == 0)
+    {
+        __android_log_print(
+            ANDROID_LOG_INFO,
+            LOG_TAG,
+            "Emerald main callback reached from Android frame loop.");
+    }
+
     // Intentionally minimal first native callback. Replacing this with the
     // original intro/title callback is the next engine-integration milestone.
 }
