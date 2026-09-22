@@ -17,6 +17,7 @@
         - [CYGWIN](./install/windows/CYGWIN.md)
         - [MSYS2](./install/windows/MSYS2.md)
         - [WSL](./install/windows/WSL.md)
+- [Native Android Port](./android-port.md)
 - [Run documentation site locally](local_mdbook/index.md)
     - [Ubuntu WSL1/WSL2](local_mdbook/ubuntu_WSL.md)
 - [Contributing](./CONTRIBUTING.md)
