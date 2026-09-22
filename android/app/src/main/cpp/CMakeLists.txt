@@ -164,3 +164,36 @@ add_custom_command(
 )
 
 add_dependencies(pokeemerald_native pokeemerald_main_menu_probe)
+
+# Compile-only probe for the Android boot handoff that replaces the skipped
+# copyright/intro/title presentation flow. Once its dependencies are linked,
+# this source becomes part of pokeemerald_native and PortGame_InitialCallback
+# can transfer control directly to the real main menu.
+add_library(
+    pokeemerald_main_menu_startup_probe
+    STATIC
+    "${PORT_ROOT}/src/port_main_menu_startup.c"
+)
+target_include_directories(
+    pokeemerald_main_menu_startup_probe
+    PRIVATE
+    "${PORT_ROOT}/include"
+)
+target_compile_features(pokeemerald_main_menu_startup_probe PRIVATE c_std_17)
+target_compile_definitions(pokeemerald_main_menu_startup_probe PRIVATE PLATFORM_ANDROID=1 MODERN=1)
+target_compile_options(
+    pokeemerald_main_menu_startup_probe
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    "-iquote${REPO_ROOT}/include"
+)
+add_custom_command(
+    TARGET pokeemerald_main_menu_startup_probe
+    POST_BUILD
+    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_main_menu_startup_probe>"
+    COMMENT "Direct main-menu startup unresolved symbols"
+    VERBATIM
+)
+add_dependencies(pokeemerald_native pokeemerald_main_menu_startup_probe)
