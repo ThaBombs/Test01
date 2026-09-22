@@ -48,7 +48,9 @@ No GBA ROM or emulator core is embedded in the native runtime.
 
 ## Ported / linked engine pieces
 
-As of commit `2ba5937b1bbf09355af2d3b7f220c25a777e4392`, the native Android library directly includes:
+The core rendering/engine integration reached commit `2ba5937b1bbf09355af2d3b7f220c25a777e4392`. Current Android-port head after dependency cleanup is `6d02cf342a6ff6d8cc4a11cec9a0d4549fdb86c9`.
+
+The native Android library directly includes:
 
 - `src/main.c`
 - `src/random.c`
@@ -69,6 +71,7 @@ Android-specific changes already remove or bypass several GBA-only assumptions, 
 - GBA timer interrupt dependency
 - IWRAM self-copy execution in decompression
 - GBA-only RNG implementation path
+- GameCube multiboot / serial copyright-screen behavior on Android
 
 ## Rendering status
 
@@ -112,7 +115,7 @@ Connect Android to the original copyright / intro / title boot path.
 
 Do this incrementally:
 
-1. Produce and inspect the unresolved-symbol list for the compiled Android `intro.c` probe.
+1. Produce and inspect the unresolved-symbol list for the compiled Android `intro.c` probe. The CMake probe now prints this list during Android builds (commit `2e8fe5f2eb9b4c04eff136bc3bde8d6cfdadf27a`).
 2. Group missing symbols by subsystem rather than stubbing them blindly.
 3. Link the smallest real supporting modules required for the copyright screen.
 4. Keep GBA-only serial/GameCube multiboot behavior disabled or replaced on Android where appropriate.
