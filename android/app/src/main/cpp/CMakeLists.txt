@@ -20,6 +20,8 @@ add_subdirectory("${ROOT}/android/SDL2" "${CMAKE_BINARY_DIR}/SDL2")
 
 file(GLOB_RECURSE GAME_C CONFIGURE_DEPENDS "${ROOT}/src/*.c")
 list(FILTER GAME_C EXCLUDE REGEX "\\.inc\\.c$")
+file(GLOB PLATFORM_C CONFIGURE_DEPENDS "${ROOT}/src/platform/*.c")
+list(FILTER GAME_C EXCLUDE REGEX "/src/platform/")
 
 set(PORTABLE_DEFINES
     -DEMERALD
@@ -89,7 +91,7 @@ add_custom_command(
     VERBATIM)
 set_source_files_properties("${GAME_DATA_OBJECT}" PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
 
-add_library(main SHARED ${GENERATED_C} "${GAME_DATA_OBJECT}")
+add_library(main SHARED ${GENERATED_C} ${PLATFORM_C} "${GAME_DATA_OBJECT}")
 target_include_directories(main PRIVATE
     "${ROOT}"
     "${ROOT}/include"
