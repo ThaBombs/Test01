@@ -12,6 +12,7 @@ add_library(
     native_main.c
     "${PORT_ROOT}/src/port_runtime.c"
     "${PORT_ROOT}/src/port_gba_host.c"
+    "${REPO_ROOT}/src/gpu_regs.c"
     "${NATIVE_APP_GLUE}/android_native_app_glue.c"
 )
 
