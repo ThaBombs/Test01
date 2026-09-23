@@ -245,17 +245,16 @@ uint32_t PortRuntime_ButtonsForTouch(float x, float y, int width, int height)
 
     const int dx = (int)x - layout.dpadX;
     const int dy = (int)y - layout.dpadY;
-    if (AbsInt(dx) <= layout.dpadRadius && AbsInt(dy) <= layout.dpadRadius)
+    const int dist2 = dx * dx + dy * dy;
+    if (dist2 <= layout.dpadRadius * layout.dpadRadius
+     && dist2 >= layout.dpadDead * layout.dpadDead)
     {
-        if (dx < -layout.dpadDead)
-            buttons |= PORT_BUTTON_LEFT;
-        else if (dx > layout.dpadDead)
-            buttons |= PORT_BUTTON_RIGHT;
-
-        if (dy < -layout.dpadDead)
-            buttons |= PORT_BUTTON_UP;
-        else if (dy > layout.dpadDead)
-            buttons |= PORT_BUTTON_DOWN;
+        // Circular virtual stick, cardinalized for Emerald's four-direction
+        // movement. Dominant axis prevents accidental diagonals near corners.
+        if (AbsInt(dx) > AbsInt(dy))
+            buttons |= (dx < 0) ? PORT_BUTTON_LEFT : PORT_BUTTON_RIGHT;
+        else
+            buttons |= (dy < 0) ? PORT_BUTTON_UP : PORT_BUTTON_DOWN;
     }
 
     if (PointInCircle(x, y, layout.aX, layout.aY, layout.faceRadius))
@@ -380,38 +379,28 @@ static void DrawTouchControls(uint32_t *pixels, int width, int height, int strid
     const uint8_t idleAlpha = 145;
     const uint8_t activeAlpha = 205;
 
-    const int arm = layout.dpadRadius;
-    const int thick = arm * 2 / 5;
+    const int stickRadius = layout.dpadRadius;
+    const int knobRadius = stickRadius * 45 / 100;
+    int knobX = layout.dpadX;
+    int knobY = layout.dpadY;
+    const int knobTravel = stickRadius * 48 / 100;
 
-    BlendFillRect(pixels, width, height, stridePixels,
-                  layout.dpadX - thick, layout.dpadY - arm,
-                  layout.dpadX + thick, layout.dpadY + arm,
-                  idle, idleAlpha);
-    BlendFillRect(pixels, width, height, stridePixels,
-                  layout.dpadX - arm, layout.dpadY - thick,
-                  layout.dpadX + arm, layout.dpadY + thick,
-                  idle, idleAlpha);
-
-    if (held & PORT_BUTTON_UP)
-        BlendFillRect(pixels, width, height, stridePixels,
-                      layout.dpadX - thick, layout.dpadY - arm,
-                      layout.dpadX + thick, layout.dpadY - layout.dpadDead,
-                      active, activeAlpha);
-    if (held & PORT_BUTTON_DOWN)
-        BlendFillRect(pixels, width, height, stridePixels,
-                      layout.dpadX - thick, layout.dpadY + layout.dpadDead,
-                      layout.dpadX + thick, layout.dpadY + arm,
-                      active, activeAlpha);
     if (held & PORT_BUTTON_LEFT)
-        BlendFillRect(pixels, width, height, stridePixels,
-                      layout.dpadX - arm, layout.dpadY - thick,
-                      layout.dpadX - layout.dpadDead, layout.dpadY + thick,
-                      active, activeAlpha);
-    if (held & PORT_BUTTON_RIGHT)
-        BlendFillRect(pixels, width, height, stridePixels,
-                      layout.dpadX + layout.dpadDead, layout.dpadY - thick,
-                      layout.dpadX + arm, layout.dpadY + thick,
-                      active, activeAlpha);
+        knobX -= knobTravel;
+    else if (held & PORT_BUTTON_RIGHT)
+        knobX += knobTravel;
+    if (held & PORT_BUTTON_UP)
+        knobY -= knobTravel;
+    else if (held & PORT_BUTTON_DOWN)
+        knobY += knobTravel;
+
+    BlendCircle(pixels, width, height, stridePixels,
+                layout.dpadX, layout.dpadY, stickRadius,
+                idle, idleAlpha);
+    BlendCircle(pixels, width, height, stridePixels,
+                knobX, knobY, knobRadius,
+                (held & (PORT_BUTTON_UP | PORT_BUTTON_DOWN | PORT_BUTTON_LEFT | PORT_BUTTON_RIGHT)) ? active : idle,
+                (held & (PORT_BUTTON_UP | PORT_BUTTON_DOWN | PORT_BUTTON_LEFT | PORT_BUTTON_RIGHT)) ? activeAlpha : 205);
 
     BlendCircle(pixels, width, height, stridePixels,
                 layout.aX, layout.aY, layout.faceRadius,
