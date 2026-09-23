@@ -15,6 +15,7 @@
 #define PORT_NPC_PAL_TAG_1 0x7F11
 #define PORT_NPC_PAL_TAG_2 0x7F12
 #define PORT_NPC_PAL_TAG_3 0x7F13
+#define PORT_NPC_PAL_TAG_4 0x7F14
 
 enum
 {
@@ -34,6 +35,12 @@ static const u32 sPortScientist1Gfx[] =
     INCGFX_U32("graphics/object_events/pics/people/scientist_1.png", ".4bpp", "-mwidth 2 -mheight 4");
 static const u32 sPortYoungsterGfx[] =
     INCGFX_U32("graphics/object_events/pics/people/youngster.png", ".4bpp", "-mwidth 2 -mheight 4");
+static const u32 sPortProfBirchGfx[] =
+    INCGFX_U32("graphics/object_events/pics/people/prof_birch.png", ".4bpp", "-mwidth 2 -mheight 4");
+static const u32 sPortBirchsBagGfx[] =
+    INCGFX_U32("graphics/object_events/pics/misc/birchs_bag.png", ".4bpp", "-mwidth 2 -mheight 2");
+static const u32 sPortEnemyZigzagoonGfx[] =
+    INCGFX_U32("graphics/object_events/pics/pokemon_old/enemy_zigzagoon.png", ".4bpp", "-mwidth 4 -mheight 4");
 
 static const u16 sPortNpc1Palette[] =
     INCGFX_U16("graphics/object_events/palettes/npc_1.pal", ".gbapal");
@@ -41,6 +48,8 @@ static const u16 sPortNpc2Palette[] =
     INCGFX_U16("graphics/object_events/palettes/npc_2.pal", ".gbapal");
 static const u16 sPortNpc3Palette[] =
     INCGFX_U16("graphics/object_events/palettes/npc_3.pal", ".gbapal");
+static const u16 sPortEnemyZigzagoonPalette[] =
+    INCGFX_U16("graphics/object_events/palettes/enemy_zigzagoon.pal", ".gbapal");
 
 static const struct SpriteFrameImage sPortTwinFrames[] =
 {
@@ -62,11 +71,35 @@ static const struct SpriteFrameImage sPortYoungsterFrames[] =
 {
     overworld_ascending_frames(sPortYoungsterGfx, 2, 4),
 };
+static const struct SpriteFrameImage sPortProfBirchFrames[] =
+{
+    overworld_ascending_frames(sPortProfBirchGfx, 2, 4),
+};
+static const struct SpriteFrameImage sPortBirchsBagFrames[] =
+{
+    overworld_frame(sPortBirchsBagGfx, 2, 2, 0),
+};
+static const struct SpriteFrameImage sPortEnemyZigzagoonFrames[] =
+{
+    overworld_ascending_frames(sPortEnemyZigzagoonGfx, 4, 4),
+};
 
 static const struct OamData sPortNpcOam =
 {
     .shape = SPRITE_SHAPE(16x32),
     .size = SPRITE_SIZE(16x32),
+    .priority = 2,
+};
+static const struct OamData sPortNpcSmallOam =
+{
+    .shape = SPRITE_SHAPE(16x16),
+    .size = SPRITE_SIZE(16x16),
+    .priority = 2,
+};
+static const struct OamData sPortNpcLargeOam =
+{
+    .shape = SPRITE_SHAPE(32x32),
+    .size = SPRITE_SIZE(32x32),
     .priority = 2,
 };
 
@@ -135,6 +168,17 @@ static const union AnimCmd *const sPortNpcAnims[] =
     [4 + PORT_NPC_FACE_EAST] = sPortNpcWalkEast,
 };
 
+static const union AnimCmd sPortNpcStaticAnim[] =
+{
+    ANIMCMD_FRAME(0, 16),
+    ANIMCMD_JUMP(0),
+};
+static const union AnimCmd *const sPortNpcStaticAnims[] =
+{
+    sPortNpcStaticAnim,
+};
+
+
 static const struct SpritePalette sPortNpcPalette1 =
 {
     .data = sPortNpc1Palette,
@@ -149,6 +193,11 @@ static const struct SpritePalette sPortNpcPalette3 =
 {
     .data = sPortNpc3Palette,
     .tag = PORT_NPC_PAL_TAG_3,
+};
+static const struct SpritePalette sPortNpcPalette4 =
+{
+    .data = sPortEnemyZigzagoonPalette,
+    .tag = PORT_NPC_PAL_TAG_4,
 };
 
 static const struct SpriteTemplate sPortTwinTemplate =
@@ -201,6 +250,37 @@ static const struct SpriteTemplate sPortYoungsterTemplate =
     .affineAnims = gDummySpriteAffineAnimTable,
     .callback = SpriteCallbackDummy,
 };
+static const struct SpriteTemplate sPortProfBirchTemplate =
+{
+    .tileTag = TAG_NONE,
+    .paletteTag = PORT_NPC_PAL_TAG_3,
+    .oam = &sPortNpcOam,
+    .anims = sPortNpcAnims,
+    .images = sPortProfBirchFrames,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
+};
+static const struct SpriteTemplate sPortBirchsBagTemplate =
+{
+    .tileTag = TAG_NONE,
+    .paletteTag = PORT_NPC_PAL_TAG_2,
+    .oam = &sPortNpcSmallOam,
+    .anims = sPortNpcStaticAnims,
+    .images = sPortBirchsBagFrames,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
+};
+static const struct SpriteTemplate sPortEnemyZigzagoonTemplate =
+{
+    .tileTag = TAG_NONE,
+    .paletteTag = PORT_NPC_PAL_TAG_4,
+    .oam = &sPortNpcLargeOam,
+    .anims = sPortNpcAnims,
+    .images = sPortEnemyZigzagoonFrames,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
+};
+
 
 struct PortNpcRuntime
 {
@@ -265,6 +345,12 @@ static const struct SpriteTemplate *GetPortNpcSpriteTemplate(u16 graphicsId)
         return &sPortScientist1Template;
     case OBJ_EVENT_GFX_YOUNGSTER:
         return &sPortYoungsterTemplate;
+    case OBJ_EVENT_GFX_PROF_BIRCH:
+        return &sPortProfBirchTemplate;
+    case OBJ_EVENT_GFX_BIRCHS_BAG:
+        return &sPortBirchsBagTemplate;
+    case OBJ_EVENT_GFX_ZIGZAGOON_1:
+        return &sPortEnemyZigzagoonTemplate;
     default:
         return NULL;
     }
@@ -335,6 +421,7 @@ void PortTestNpc_LoadMap(void)
     LoadSpritePalette(&sPortNpcPalette1);
     LoadSpritePalette(&sPortNpcPalette2);
     LoadSpritePalette(&sPortNpcPalette3);
+    LoadSpritePalette(&sPortNpcPalette4);
 
     for (u32 i = 0; i < events->objectEventCount && sPortNpcCount < PORT_NPC_MAX; ++i)
     {
