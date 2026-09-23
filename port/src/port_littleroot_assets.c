@@ -217,9 +217,9 @@ static const struct WarpEvent sPortLittlerootWarps[] =
 };
 
 static const u8 sPortText_LittlerootTownSign[] =
-    _("LITTLEROOT TOWN\\nA small town with big dreams.");
+    _("LITTLEROOT TOWN");
 static const u8 sPortText_BirchLabSign[] =
-    _("PROF. BIRCH'S\\nPOKEMON LAB");
+    _("PROF. BIRCH'S POKEMON LAB");
 static const u8 sPortText_BrendanHouseSign[] =
     _("BRENDAN'S HOUSE");
 static const u8 sPortText_MayHouseSign[] =
