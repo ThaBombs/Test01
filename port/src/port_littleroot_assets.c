@@ -228,11 +228,11 @@ static const u8 sPortText_MayHouseSign[] =
     _("PROF. BIRCH'S HOUSE");
 
 static const u8 sPortText_LittlerootTwin[] =
-    _("If you go into the grass, wild\\nPOKéMON will jump out!");
+    _("If you go into the grass, wild\nPOKéMON will jump out!");
 static const u8 sPortText_LittlerootFatMan[] =
     _("The power of science is staggering!");
 static const u8 sPortText_LittlerootBoy[] =
-    _("PROF. BIRCH studies POKéMON in his LAB\\nand out in the wild.");
+    _("PROF. BIRCH studies POKéMON in his LAB\nand out in the wild.");
 
 static const struct ObjectEventTemplate sPortLittlerootObjectEvents[] =
 {
