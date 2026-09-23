@@ -93,12 +93,17 @@ static const u8 gText_ButtonTypeNormal[]   = _("NORMAL");
 static const u8 gText_ButtonTypeLR[]       = _("LR");
 static const u8 gText_ButtonTypeLEqualsA[] = _("L=A");
 static const u8 gText_ButtonEdit[]         = _("EDIT");
-static const u8 gText_SelectedMarker[]     = _("▶");
 static const u8 sAndroidTextColors[] =
 {
     TEXT_COLOR_WHITE,
     TEXT_COLOR_DARK_GRAY,
     TEXT_COLOR_WHITE,
+};
+static const u8 sAndroidSelectedTextColors[] =
+{
+    4,
+    TEXT_COLOR_DARK_GRAY,
+    4,
 };
 
 static const u16 sOptionMenuText_Pal[] =
@@ -106,6 +111,7 @@ static const u16 sOptionMenuText_Pal[] =
     [TEXT_COLOR_WHITE] = RGB_WHITE,
     [TEXT_COLOR_DARK_GRAY] = RGB_BLACK,
     [TEXT_COLOR_LIGHT_GRAY] = RGB_WHITE,
+    [4] = RGB(24, 24, 24),
 };
 #else
 static const u8 gText_TextSpeedSlow[]      = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}SLOW");
@@ -450,24 +456,36 @@ static void Task_OptionMenuFadeOut(u8 taskId)
 static void HighlightOptionMenuItem(u8 index)
 {
 #ifdef PLATFORM_ANDROID
-    // The cursor owns a dedicated 12-pixel margin. Labels start at x=16, so
-    // moving the cursor can never erase or overwrite their first glyph.
+    // Refresh only the label column. The selected row gets a soft highlight,
+    // while values on the right remain untouched.
     FillWindowPixelRect(
         WIN_OPTIONS,
         PIXEL_FILL(TEXT_COLOR_WHITE),
         0,
         0,
-        12,
+        100,
         MENUITEM_COUNT * 16);
 
-    AddTextPrinterParameterized3(
+    FillWindowPixelRect(
         WIN_OPTIONS,
-        FONT_NORMAL,
-        2,
-        index * 16 + 1,
-        sAndroidTextColors,
-        TEXT_SKIP_DRAW,
-        gText_SelectedMarker);
+        PIXEL_FILL(4),
+        4,
+        index * 16,
+        94,
+        16);
+
+    for (u8 i = 0; i < MENUITEM_COUNT; ++i)
+    {
+        AddTextPrinterParameterized3(
+            WIN_OPTIONS,
+            FONT_NORMAL,
+            12,
+            i * 16 + 1,
+            i == index ? sAndroidSelectedTextColors : sAndroidTextColors,
+            TEXT_SKIP_DRAW,
+            sOptionMenuItemsNames[i]);
+    }
+
     CopyWindowToVram(WIN_OPTIONS, COPYWIN_GFX);
 #else
     SetGpuReg(REG_OFFSET_WIN0H, WIN_RANGE(16, DISPLAY_WIDTH - 16));
@@ -851,7 +869,7 @@ static void DrawOptionMenuTexts(void)
         AddTextPrinterParameterized3(
             WIN_OPTIONS,
             FONT_NORMAL,
-            18,
+            12,
             (i * 16) + 1,
             sAndroidTextColors,
             TEXT_SKIP_DRAW,
