@@ -6,9 +6,9 @@
 #include "fieldmap.h"
 #include "gpu_regs.h"
 #include "main.h"
-#include "metatile_behavior.h"
 #include "sprite.h"
 #include "constants/maps.h"
+#include "constants/metatile_behaviors.h"
 
 #define PORT_PLAYER_PAL_TAG 0x7F01
 
@@ -145,6 +145,40 @@ static bool32 IsWarpEventAt(s16 x, s16 y)
     return FALSE;
 }
 
+static bool32 PortMetatileBlocksNorth(u8 behavior)
+{
+    return behavior == MB_IMPASSABLE_NORTH
+        || behavior == MB_IMPASSABLE_NORTHEAST
+        || behavior == MB_IMPASSABLE_NORTHWEST
+        || behavior == MB_IMPASSABLE_SOUTH_AND_NORTH;
+}
+
+static bool32 PortMetatileBlocksSouth(u8 behavior)
+{
+    return behavior == MB_IMPASSABLE_SOUTH
+        || behavior == MB_IMPASSABLE_SOUTHEAST
+        || behavior == MB_IMPASSABLE_SOUTHWEST
+        || behavior == MB_IMPASSABLE_SOUTH_AND_NORTH;
+}
+
+static bool32 PortMetatileBlocksWest(u8 behavior)
+{
+    return behavior == MB_IMPASSABLE_WEST
+        || behavior == MB_IMPASSABLE_NORTHWEST
+        || behavior == MB_IMPASSABLE_SOUTHWEST
+        || behavior == MB_IMPASSABLE_WEST_AND_EAST
+        || behavior == MB_SECRET_BASE_BREAKABLE_DOOR;
+}
+
+static bool32 PortMetatileBlocksEast(u8 behavior)
+{
+    return behavior == MB_IMPASSABLE_EAST
+        || behavior == MB_IMPASSABLE_NORTHEAST
+        || behavior == MB_IMPASSABLE_SOUTHEAST
+        || behavior == MB_IMPASSABLE_WEST_AND_EAST
+        || behavior == MB_SECRET_BASE_BREAKABLE_DOOR;
+}
+
 static bool32 IsDirectionBlockedByMetatile(
     s16 currentGridX,
     s16 currentGridY,
@@ -159,17 +193,17 @@ static bool32 IsDirectionBlockedByMetatile(
         MapGridGetMetatileBehaviorAt(targetGridX, targetGridY);
 
     if (dy > 0)
-        return MetatileBehavior_IsSouthBlocked(currentBehavior)
-            || MetatileBehavior_IsNorthBlocked(targetBehavior);
+        return PortMetatileBlocksSouth(currentBehavior)
+            || PortMetatileBlocksNorth(targetBehavior);
     if (dy < 0)
-        return MetatileBehavior_IsNorthBlocked(currentBehavior)
-            || MetatileBehavior_IsSouthBlocked(targetBehavior);
+        return PortMetatileBlocksNorth(currentBehavior)
+            || PortMetatileBlocksSouth(targetBehavior);
     if (dx < 0)
-        return MetatileBehavior_IsWestBlocked(currentBehavior)
-            || MetatileBehavior_IsEastBlocked(targetBehavior);
+        return PortMetatileBlocksWest(currentBehavior)
+            || PortMetatileBlocksEast(targetBehavior);
     if (dx > 0)
-        return MetatileBehavior_IsEastBlocked(currentBehavior)
-            || MetatileBehavior_IsWestBlocked(targetBehavior);
+        return PortMetatileBlocksEast(currentBehavior)
+            || PortMetatileBlocksWest(targetBehavior);
 
     return FALSE;
 }
