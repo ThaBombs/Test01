@@ -664,8 +664,9 @@ void PortTestPlayer_Update(void)
                 gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
             if (PortGame_TryTestWarpAt(playerX, playerY))
             {
-                gFieldCamera.movementSpeedX = 0;
-                gFieldCamera.movementSpeedY = 0;
+                // Regular warps reset camera speed while loading. Stair warps
+                // may immediately begin their one-tile exit step, so do not
+                // overwrite the speed that PortGame_TryTestWarpAt just set.
                 return;
             }
 
