@@ -4,9 +4,12 @@
 
 #include "global.h"
 #include "field_camera.h"
+#include "fieldmap.h"
 #include "main.h"
 #include "sprite.h"
+#include "constants/event_object_movement.h"
 #include "constants/event_objects.h"
+#include "constants/metatile_behaviors.h"
 
 #define PORT_NPC_MAX 8
 #define PORT_NPC_PAL_TAG_1 0x7F11
@@ -72,6 +75,38 @@ static const union AnimCmd sPortNpcFaceEast[] =
     ANIMCMD_FRAME(2, 16, .hFlip = TRUE),
     ANIMCMD_JUMP(0),
 };
+static const union AnimCmd sPortNpcWalkSouth[] =
+{
+    ANIMCMD_FRAME(3, 4),
+    ANIMCMD_FRAME(0, 4),
+    ANIMCMD_FRAME(4, 4),
+    ANIMCMD_FRAME(0, 4),
+    ANIMCMD_JUMP(0),
+};
+static const union AnimCmd sPortNpcWalkNorth[] =
+{
+    ANIMCMD_FRAME(5, 4),
+    ANIMCMD_FRAME(1, 4),
+    ANIMCMD_FRAME(6, 4),
+    ANIMCMD_FRAME(1, 4),
+    ANIMCMD_JUMP(0),
+};
+static const union AnimCmd sPortNpcWalkWest[] =
+{
+    ANIMCMD_FRAME(7, 4),
+    ANIMCMD_FRAME(2, 4),
+    ANIMCMD_FRAME(8, 4),
+    ANIMCMD_FRAME(2, 4),
+    ANIMCMD_JUMP(0),
+};
+static const union AnimCmd sPortNpcWalkEast[] =
+{
+    ANIMCMD_FRAME(7, 4, .hFlip = TRUE),
+    ANIMCMD_FRAME(2, 4, .hFlip = TRUE),
+    ANIMCMD_FRAME(8, 4, .hFlip = TRUE),
+    ANIMCMD_FRAME(2, 4, .hFlip = TRUE),
+    ANIMCMD_JUMP(0),
+};
 
 static const union AnimCmd *const sPortNpcAnims[] =
 {
@@ -79,6 +114,10 @@ static const union AnimCmd *const sPortNpcAnims[] =
     [PORT_NPC_FACE_NORTH] = sPortNpcFaceNorth,
     [PORT_NPC_FACE_WEST] = sPortNpcFaceWest,
     [PORT_NPC_FACE_EAST] = sPortNpcFaceEast,
+    [4 + PORT_NPC_FACE_SOUTH] = sPortNpcWalkSouth,
+    [4 + PORT_NPC_FACE_NORTH] = sPortNpcWalkNorth,
+    [4 + PORT_NPC_FACE_WEST] = sPortNpcWalkWest,
+    [4 + PORT_NPC_FACE_EAST] = sPortNpcWalkEast,
 };
 
 static const struct SpritePalette sPortNpcPalette1 =
@@ -127,10 +166,28 @@ struct PortNpcRuntime
 {
     const struct ObjectEventTemplate *event;
     u8 spriteId;
+    s16 originX;
+    s16 originY;
+    s16 x;
+    s16 y;
+    s16 targetX;
+    s16 targetY;
+    u16 idleFrames;
+    u8 stepFrames;
+    s8 stepDx;
+    s8 stepDy;
+    u8 facing;
 };
 
 static struct PortNpcRuntime sPortNpcs[PORT_NPC_MAX];
 static u8 sPortNpcCount;
+static u32 sPortNpcRng = 0x51F15EEDu;
+
+static u32 PortNpcNextRandom(void)
+{
+    sPortNpcRng = sPortNpcRng * 1664525u + 1013904223u;
+    return sPortNpcRng;
+}
 
 static const struct SpriteTemplate *GetPortNpcSpriteTemplate(u16 graphicsId)
 {
@@ -168,9 +225,9 @@ static void PositionNpcFromMap(struct PortNpcRuntime *npc)
 
     struct Sprite *sprite = &gSprites[npc->spriteId];
     sprite->x = DISPLAY_WIDTH / 2
-        + (npc->event->x - playerX) * 16;
+        + (npc->x - playerX) * 16;
     sprite->y = DISPLAY_HEIGHT / 2
-        + (npc->event->y - playerY) * 16;
+        + (npc->y - playerY) * 16;
 
     UpdateNpcVisibility(npc);
 }
@@ -214,8 +271,21 @@ void PortTestNpc_LoadMap(void)
         if (spriteId >= MAX_SPRITES)
             continue;
 
-        sPortNpcs[sPortNpcCount].event = event;
-        sPortNpcs[sPortNpcCount].spriteId = spriteId;
+        struct PortNpcRuntime *npc = &sPortNpcs[sPortNpcCount];
+        npc->event = event;
+        npc->spriteId = spriteId;
+        npc->originX = event->x;
+        npc->originY = event->y;
+        npc->x = event->x;
+        npc->y = event->y;
+        npc->targetX = event->x;
+        npc->targetY = event->y;
+        npc->idleFrames = 24 + sPortNpcCount * 17;
+        npc->stepFrames = 0;
+        npc->stepDx = 0;
+        npc->stepDy = 0;
+        npc->facing = PORT_NPC_FACE_SOUTH;
+        StartSpriteAnimIfDifferent(&gSprites[spriteId], npc->facing);
         ++sPortNpcCount;
     }
 
@@ -248,12 +318,225 @@ void PortTestNpc_ApplyCameraDelta(s16 dx, s16 dy)
     }
 }
 
+
+static bool32 PortNpcMetatileBlocksNorth(u8 behavior)
+{
+    return behavior == MB_IMPASSABLE_NORTH
+        || behavior == MB_IMPASSABLE_NORTHEAST
+        || behavior == MB_IMPASSABLE_NORTHWEST
+        || behavior == MB_IMPASSABLE_SOUTH_AND_NORTH;
+}
+
+static bool32 PortNpcMetatileBlocksSouth(u8 behavior)
+{
+    return behavior == MB_IMPASSABLE_SOUTH
+        || behavior == MB_IMPASSABLE_SOUTHEAST
+        || behavior == MB_IMPASSABLE_SOUTHWEST
+        || behavior == MB_IMPASSABLE_SOUTH_AND_NORTH;
+}
+
+static bool32 PortNpcMetatileBlocksWest(u8 behavior)
+{
+    return behavior == MB_IMPASSABLE_WEST
+        || behavior == MB_IMPASSABLE_NORTHWEST
+        || behavior == MB_IMPASSABLE_SOUTHWEST
+        || behavior == MB_IMPASSABLE_WEST_AND_EAST
+        || behavior == MB_SECRET_BASE_BREAKABLE_DOOR;
+}
+
+static bool32 PortNpcMetatileBlocksEast(u8 behavior)
+{
+    return behavior == MB_IMPASSABLE_EAST
+        || behavior == MB_IMPASSABLE_NORTHEAST
+        || behavior == MB_IMPASSABLE_SOUTHEAST
+        || behavior == MB_IMPASSABLE_WEST_AND_EAST
+        || behavior == MB_SECRET_BASE_BREAKABLE_DOOR;
+}
+
+static bool32 PortNpcDirectionBlocked(s16 x, s16 y, s16 targetX, s16 targetY, s16 dx, s16 dy)
+{
+    const u8 currentBehavior =
+        MapGridGetMetatileBehaviorAt(x + MAP_OFFSET, y + MAP_OFFSET);
+    const u8 targetBehavior =
+        MapGridGetMetatileBehaviorAt(targetX + MAP_OFFSET, targetY + MAP_OFFSET);
+
+    if (dy > 0)
+        return PortNpcMetatileBlocksSouth(currentBehavior)
+            || PortNpcMetatileBlocksNorth(targetBehavior);
+    if (dy < 0)
+        return PortNpcMetatileBlocksNorth(currentBehavior)
+            || PortNpcMetatileBlocksSouth(targetBehavior);
+    if (dx < 0)
+        return PortNpcMetatileBlocksWest(currentBehavior)
+            || PortNpcMetatileBlocksEast(targetBehavior);
+    if (dx > 0)
+        return PortNpcMetatileBlocksEast(currentBehavior)
+            || PortNpcMetatileBlocksWest(targetBehavior);
+
+    return FALSE;
+}
+
+static bool32 PortNpcIsWarpTile(s16 x, s16 y)
+{
+    const struct MapEvents *events = gMapHeader.events;
+    if (events == NULL || events->warps == NULL)
+        return FALSE;
+
+    for (u32 i = 0; i < events->warpCount; ++i)
+    {
+        if (events->warps[i].x == x && events->warps[i].y == y)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+static bool32 PortNpcTileReservedByOther(u32 npcIndex, s16 x, s16 y)
+{
+    for (u32 i = 0; i < sPortNpcCount; ++i)
+    {
+        if (i == npcIndex)
+            continue;
+
+        const struct PortNpcRuntime *other = &sPortNpcs[i];
+        if ((other->x == x && other->y == y)
+         || (other->stepFrames != 0
+          && other->targetX == x
+          && other->targetY == y))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+static bool32 PortNpcCanStartStep(
+    u32 npcIndex,
+    s16 dx,
+    s16 dy,
+    s16 playerX,
+    s16 playerY)
+{
+    const struct PortNpcRuntime *npc = &sPortNpcs[npcIndex];
+    const s16 targetX = npc->x + dx;
+    const s16 targetY = npc->y + dy;
+    const s16 rangeX = npc->event->movementRangeX;
+    const s16 rangeY = npc->event->movementRangeY;
+
+    if (targetX < npc->originX - rangeX || targetX > npc->originX + rangeX)
+        return FALSE;
+    if (targetY < npc->originY - rangeY || targetY > npc->originY + rangeY)
+        return FALSE;
+
+    if (targetX == playerX && targetY == playerY)
+        return FALSE;
+    if (PortNpcTileReservedByOther(npcIndex, targetX, targetY))
+        return FALSE;
+    if (PortNpcIsWarpTile(targetX, targetY))
+        return FALSE;
+
+    if (MapGridGetCollisionAt(targetX + MAP_OFFSET, targetY + MAP_OFFSET) != 0)
+        return FALSE;
+
+    if (PortNpcDirectionBlocked(npc->x, npc->y, targetX, targetY, dx, dy))
+        return FALSE;
+
+    return TRUE;
+}
+
+static bool32 PortNpcSupportsWandering(const struct PortNpcRuntime *npc)
+{
+    return npc->event != NULL
+        && (npc->event->movementType == MOVEMENT_TYPE_WANDER_AROUND
+         || npc->event->movementType == MOVEMENT_TYPE_WANDER_AROUND_SLOWER);
+}
+
+static void PortNpcTryBeginStep(u32 npcIndex, s16 playerX, s16 playerY)
+{
+    static const s8 sDx[4] = {0, 0, -1, 1};
+    static const s8 sDy[4] = {1, -1, 0, 0};
+
+    struct PortNpcRuntime *npc = &sPortNpcs[npcIndex];
+    const u32 start = PortNpcNextRandom() & 3u;
+
+    for (u32 attempt = 0; attempt < 4; ++attempt)
+    {
+        const u32 direction = (start + attempt) & 3u;
+        const s16 dx = sDx[direction];
+        const s16 dy = sDy[direction];
+
+        if (!PortNpcCanStartStep(npcIndex, dx, dy, playerX, playerY))
+            continue;
+
+        npc->stepDx = dx;
+        npc->stepDy = dy;
+        npc->targetX = npc->x + dx;
+        npc->targetY = npc->y + dy;
+        npc->stepFrames = 8;
+        npc->facing = (u8)direction;
+
+        if (npc->spriteId < MAX_SPRITES)
+            StartSpriteAnimIfDifferent(
+                &gSprites[npc->spriteId],
+                4 + npc->facing);
+        return;
+    }
+
+    npc->idleFrames = 18 + (PortNpcNextRandom() & 31u);
+}
+
+void PortTestNpc_UpdateMovement(s16 playerX, s16 playerY)
+{
+    for (u32 i = 0; i < sPortNpcCount; ++i)
+    {
+        struct PortNpcRuntime *npc = &sPortNpcs[i];
+
+        if (npc->spriteId >= MAX_SPRITES || npc->event == NULL)
+            continue;
+
+        if (npc->stepFrames != 0)
+        {
+            gSprites[npc->spriteId].x += npc->stepDx * 2;
+            gSprites[npc->spriteId].y += npc->stepDy * 2;
+            --npc->stepFrames;
+
+            if (npc->stepFrames == 0)
+            {
+                npc->x = npc->targetX;
+                npc->y = npc->targetY;
+                npc->stepDx = 0;
+                npc->stepDy = 0;
+                npc->idleFrames = 28 + (PortNpcNextRandom() & 63u);
+                StartSpriteAnimIfDifferent(
+                    &gSprites[npc->spriteId],
+                    npc->facing);
+            }
+
+            UpdateNpcVisibility(npc);
+            continue;
+        }
+
+        if (!PortNpcSupportsWandering(npc))
+            continue;
+
+        if (npc->idleFrames != 0)
+        {
+            --npc->idleFrames;
+            continue;
+        }
+
+        PortNpcTryBeginStep(i, playerX, playerY);
+    }
+}
+
 bool32 PortTestNpc_BlocksTile(s16 x, s16 y)
 {
     for (u32 i = 0; i < sPortNpcCount; ++i)
     {
-        const struct ObjectEventTemplate *event = sPortNpcs[i].event;
-        if (event != NULL && event->x == x && event->y == y)
+        const struct PortNpcRuntime *npc = &sPortNpcs[i];
+        if ((npc->x == x && npc->y == y)
+         || (npc->stepFrames != 0
+          && npc->targetX == x
+          && npc->targetY == y))
             return TRUE;
     }
 
@@ -266,19 +549,24 @@ bool32 PortTestNpc_TryInteractAt(s16 x, s16 y, s16 playerX, s16 playerY)
     {
         struct PortNpcRuntime *npc = &sPortNpcs[i];
         const struct ObjectEventTemplate *event = npc->event;
-        if (event == NULL || event->x != x || event->y != y)
+        if (event == NULL
+         || npc->stepFrames != 0
+         || npc->x != x
+         || npc->y != y)
             continue;
 
         u8 faceAnim = PORT_NPC_FACE_SOUTH;
-        if (playerY < event->y)
+        if (playerY < npc->y)
             faceAnim = PORT_NPC_FACE_NORTH;
-        else if (playerY > event->y)
+        else if (playerY > npc->y)
             faceAnim = PORT_NPC_FACE_SOUTH;
-        else if (playerX < event->x)
+        else if (playerX < npc->x)
             faceAnim = PORT_NPC_FACE_WEST;
-        else if (playerX > event->x)
+        else if (playerX > npc->x)
             faceAnim = PORT_NPC_FACE_EAST;
 
+        npc->facing = faceAnim;
+        npc->idleFrames = 60;
         if (npc->spriteId < MAX_SPRITES)
             StartSpriteAnimIfDifferent(&gSprites[npc->spriteId], faceAnim);
 

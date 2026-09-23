@@ -27,17 +27,12 @@ const u8 gText_SelectorArrow3[] = _("▶");
 
 static const u8 sTextOption[] = _("OPTION");
 static const u8 sTextClose[] = _("CLOSE");
+static const u8 sTextCursor[] = _("▶");
 static const u8 sTextColors[] =
 {
     TEXT_COLOR_WHITE,
     TEXT_COLOR_DARK_GRAY,
     TEXT_COLOR_WHITE,
-};
-static const u8 sSelectedTextColors[] =
-{
-    4,
-    TEXT_COLOR_DARK_GRAY,
-    4,
 };
 
 static const u16 sFieldMenuPalette[16] =
@@ -46,7 +41,7 @@ static const u16 sFieldMenuPalette[16] =
     RGB_WHITE,
     RGB_BLACK,
     RGB_WHITE,
-    RGB(24, 24, 24),
+    RGB_WHITE,
     RGB_WHITE,
     RGB_WHITE,
     RGB_WHITE,
@@ -80,31 +75,16 @@ static u8 sSelection;
 static void DrawFieldMenuContents(void)
 {
     FillWindowPixelBuffer(0, PIXEL_FILL(TEXT_COLOR_WHITE));
-
-    FillWindowPixelRect(
-        0,
-        PIXEL_FILL(4),
-        4,
-        sSelection * 16,
-        56,
-        16);
-
+    AddTextPrinterParameterized3(0, FONT_NORMAL, 16, 1, sTextColors, TEXT_SKIP_DRAW, sTextOption);
+    AddTextPrinterParameterized3(0, FONT_NORMAL, 16, 17, sTextColors, TEXT_SKIP_DRAW, sTextClose);
     AddTextPrinterParameterized3(
         0,
         FONT_NORMAL,
-        12,
-        1,
-        sSelection == PORT_FIELD_MENU_OPTION ? sSelectedTextColors : sTextColors,
+        2,
+        sSelection * 16 + 1,
+        sTextColors,
         TEXT_SKIP_DRAW,
-        sTextOption);
-    AddTextPrinterParameterized3(
-        0,
-        FONT_NORMAL,
-        12,
-        17,
-        sSelection == PORT_FIELD_MENU_CLOSE ? sSelectedTextColors : sTextColors,
-        TEXT_SKIP_DRAW,
-        sTextClose);
+        sTextCursor);
 }
 
 static void DrawFieldMenu(void)

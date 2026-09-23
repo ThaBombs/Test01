@@ -781,35 +781,42 @@ static u32 OffsetCurrGlyph(u32 shiftWidth)
 
 inline static void GLYPH_COPY(u8 *windowTiles, u32 widthOffset, u32 x0, u32 y0, u32 *glyphPixels, s32 width, s32 height)
 {
-    if (width <= 0 || height <= 0)
+    if (width <= 0)
         return;
 
-    const u32 xEnd = x0 + (u32)width;
-    const u32 yEnd = y0 + (u32)height;
-    const u32 startX = x0;
+    // Avoid undefined 32-bit shifts on native hosts. The original GBA
+    // implementation relies on ARM behavior here: an 8-pixel glyph needs a
+    // full 32-bit mask, and a glyph aligned to an 8-pixel tile boundary must
+    // not spill into the tile to its right.
+    const u32 widthMask = width >= 8
+        ? 0xFFFFFFFFu
+        : ((1u << (width * 4)) - 1u);
 
-    // Use Emerald's original per-pixel tiled 4bpp copy semantics. This is
-    // slower than wide host shifts but avoids edge corruption at tile seams.
-    for (u32 y = y0; y < yEnd; ++y)
+    const u32 shift0 = (x0 % 8) * 4;
+
+    u32 *alignedWindowTilesX = (u32 *)(windowTiles + ((x0 / 8) * TILE_SIZE_4BPP));
+
+    u32 y1 = y0 + height;
+    for (u32 y = y0; y < y1; y++)
     {
-        u32 pixelData = *glyphPixels++;
+        u32 pixels = *glyphPixels++ & widthMask;
 
-        for (u32 x = startX; x < xEnd; ++x)
-        {
-            const u32 color = pixelData & 0xFu;
-            if (color != 0)
-            {
-                u8 *dst = windowTiles
-                    + ((x / 8u) * 32u)
-                    + ((x % 8u) / 2u)
-                    + ((y / 8u) * widthOffset)
-                    + ((y % 8u) * 4u);
-                const u32 shift = (x & 1u) * 4u;
-                *dst = (u8)((color << shift) | (*dst & (0xF0u >> shift)));
-            }
+        u32 mask = pixels;
+        mask = mask | (mask >> 2);
+        mask = mask | (mask >> 1);
+        mask = mask & 0x11111111;
+        mask = mask * 0xF;
 
-            pixelData >>= 4;
-        }
+        const u32 pixels0 = pixels << shift0;
+        const u32 mask0 = mask << shift0;
+        const u32 pixels8 = shift0 == 0 ? 0 : pixels >> (32 - shift0);
+        const u32 mask8 = shift0 == 0 ? 0 : mask >> (32 - shift0);
+
+        u32 *alignedWindowTiles = (u32 *)((u8 *)alignedWindowTilesX + ((y / 8) * widthOffset) + ((y % 8) * 4));
+
+        alignedWindowTiles[0] = (alignedWindowTiles[0] & ~mask0) | pixels0;
+        if (mask8 != 0)
+            alignedWindowTiles[8] = (alignedWindowTiles[8] & ~mask8) | pixels8;
     }
 }
 
