@@ -7,6 +7,7 @@
 #include "constants/maps.h"
 #include "constants/event_object_movement.h"
 #include "constants/event_objects.h"
+#include "constants/event_bg.h"
 
 const u16 ALIGNED(4) gPortTilesetPalettes_General[][16] =
 {
@@ -341,10 +342,63 @@ static const struct WarpEvent sPortBirchLabWarps[] =
     { .x = 7, .y = 12, .elevation = 0, .warpId = 2, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
 };
 
+static const u8 sPortText_BirchLabAide[] =
+    _("Hunh? PROF. BIRCH?\nThe PROF's away on fieldwork.\nErgo, he isn't here.\nHe prefers fieldwork to desk work.");
+static const u8 sPortText_BirchLabMachine[] =
+    _("It's a serious-looking machine.\nThe PROF must use this for research.");
+static const u8 sPortText_BirchLabPc[] =
+    _("It's a PC used for research.\nBetter not mess around with it.");
+static const u8 sPortText_BirchLabBookshelf[] =
+    _("It's crammed with books on POKéMON.");
+static const u8 sPortText_BirchLabBook[] =
+    _("It's a book that's too hard to read.");
+
+static const struct ObjectEventTemplate sPortBirchLabObjectEvents[] =
+{
+    {
+        .localId = 1,
+        .graphicsId = OBJ_EVENT_GFX_SCIENTIST_1,
+        .kind = 0,
+        .x = 9,
+        .y = 8,
+        .elevation = 3,
+        .movementType = MOVEMENT_TYPE_WANDER_AROUND,
+        .movementRangeX = 1,
+        .movementRangeY = 1,
+        .trainerType = 0,
+        .trainerRange_berryTreeId = 0,
+        .script = sPortText_BirchLabAide,
+        .flagId = 0,
+    },
+};
+
+static const struct BgEvent sPortBirchLabBgEvents[] =
+{
+    { .x = 10, .y = 7,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_NORTH, .bgUnion.script = sPortText_BirchLabMachine },
+    { .x = 11, .y = 7,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_NORTH, .bgUnion.script = sPortText_BirchLabMachine },
+    { .x = 7,  .y = 1,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabBook },
+    { .x = 8,  .y = 1,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabBook },
+    { .x = 1,  .y = 1,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabBookshelf },
+    { .x = 0,  .y = 7,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabBookshelf },
+    { .x = 1,  .y = 7,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabBookshelf },
+    { .x = 2,  .y = 7,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabBookshelf },
+    { .x = 3,  .y = 7,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabBookshelf },
+    { .x = 4,  .y = 1,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabPc },
+    { .x = 3,  .y = 1,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabPc },
+    { .x = 1,  .y = 10, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabPc },
+    { .x = 1,  .y = 9,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabPc },
+    { .x = 11, .y = 10, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabPc },
+    { .x = 11, .y = 9,  .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BirchLabPc },
+};
+
 static const struct MapEvents sPortBirchLabEvents =
 {
+    .objectEventCount = ARRAY_COUNT(sPortBirchLabObjectEvents),
     .warpCount = ARRAY_COUNT(sPortBirchLabWarps),
+    .bgEventCount = ARRAY_COUNT(sPortBirchLabBgEvents),
+    .objectEvents = sPortBirchLabObjectEvents,
     .warps = sPortBirchLabWarps,
+    .bgEvents = sPortBirchLabBgEvents,
 };
 
 const struct MapLayout gPortLittlerootLayout =
