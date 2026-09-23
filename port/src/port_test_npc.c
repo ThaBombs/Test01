@@ -356,6 +356,18 @@ static const struct SpriteTemplate *GetPortNpcSpriteTemplate(u16 graphicsId)
     }
 }
 
+static bool32 PortNpcIsInanimateGraphics(u16 graphicsId)
+{
+    return graphicsId == OBJ_EVENT_GFX_BIRCHS_BAG;
+}
+
+static s16 PortNpcVisualYOffset(u16 graphicsId)
+{
+    // 16x16 inanimate objects are centered within their map tile. The regular
+    // 16x32 people sprites are anchored at the tile's upper edge instead.
+    return graphicsId == OBJ_EVENT_GFX_BIRCHS_BAG ? 8 : 0;
+}
+
 static void UpdateNpcVisibility(struct PortNpcRuntime *npc)
 {
     if (npc->spriteId >= MAX_SPRITES)
@@ -379,7 +391,8 @@ static void PositionNpcFromMap(struct PortNpcRuntime *npc)
     sprite->x = DISPLAY_WIDTH / 2
         + (npc->x - playerX) * 16;
     sprite->y = DISPLAY_HEIGHT / 2
-        + (npc->y - playerY) * 16;
+        + (npc->y - playerY) * 16
+        + PortNpcVisualYOffset(npc->event->graphicsId);
 
     // Preserve exact sub-tile progress when returning from a scene rebuild
     // such as the Options menu.
@@ -471,9 +484,12 @@ void PortTestNpc_LoadMap(void)
             npc->facing = saved->facing;
         }
 
-        StartSpriteAnimIfDifferent(
-            &gSprites[spriteId],
-            npc->stepFrames != 0 ? 4 + npc->facing : npc->facing);
+        if (PortNpcIsInanimateGraphics(event->graphicsId))
+            StartSpriteAnimIfDifferent(&gSprites[spriteId], 0);
+        else
+            StartSpriteAnimIfDifferent(
+                &gSprites[spriteId],
+                npc->stepFrames != 0 ? 4 + npc->facing : npc->facing);
         ++sPortNpcCount;
     }
 
@@ -784,20 +800,23 @@ bool32 PortTestNpc_TryInteractAt(s16 x, s16 y, s16 playerX, s16 playerY)
          || npc->y != y)
             continue;
 
-        u8 faceAnim = PORT_NPC_FACE_SOUTH;
-        if (playerY < npc->y)
-            faceAnim = PORT_NPC_FACE_NORTH;
-        else if (playerY > npc->y)
-            faceAnim = PORT_NPC_FACE_SOUTH;
-        else if (playerX < npc->x)
-            faceAnim = PORT_NPC_FACE_WEST;
-        else if (playerX > npc->x)
-            faceAnim = PORT_NPC_FACE_EAST;
+        if (!PortNpcIsInanimateGraphics(event->graphicsId))
+        {
+            u8 faceAnim = PORT_NPC_FACE_SOUTH;
+            if (playerY < npc->y)
+                faceAnim = PORT_NPC_FACE_NORTH;
+            else if (playerY > npc->y)
+                faceAnim = PORT_NPC_FACE_SOUTH;
+            else if (playerX < npc->x)
+                faceAnim = PORT_NPC_FACE_WEST;
+            else if (playerX > npc->x)
+                faceAnim = PORT_NPC_FACE_EAST;
 
-        npc->facing = faceAnim;
-        npc->idleFrames = 60;
-        if (npc->spriteId < MAX_SPRITES)
-            StartSpriteAnimIfDifferent(&gSprites[npc->spriteId], faceAnim);
+            npc->facing = faceAnim;
+            npc->idleFrames = 60;
+            if (npc->spriteId < MAX_SPRITES)
+                StartSpriteAnimIfDifferent(&gSprites[npc->spriteId], faceAnim);
+        }
 
         if (event->script != NULL)
             return PortTestDialogue_Open(event->script);
