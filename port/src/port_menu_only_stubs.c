@@ -1,4 +1,5 @@
 #include "global.h"
+#include "port_test_overworld.h"
 #include "event_data.h"
 #include "field_name_box.h"
 #include "sound.h"
@@ -76,9 +77,7 @@ void ClearMirageTowerPulseBlendEffect(void)
 
 void LoadMapFromCameraTransition(u8 mapGroup, u8 mapNum)
 {
-    // Map connections are not enabled in the reduced Android map slice yet.
-    // Door/interior transitions are handled explicitly by the Android field
-    // bridge until the full Emerald overworld loader is linked.
-    (void)mapGroup;
-    (void)mapNum;
+    // Keep Emerald's field-camera connection math, but hand the actual map
+    // replacement to the reduced Android overworld bridge.
+    PortGame_LoadTestConnectionMap(mapGroup, mapNum);
 }
