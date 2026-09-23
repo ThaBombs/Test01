@@ -17,6 +17,10 @@ enum
     PORT_FIELD_MENU_COUNT,
 };
 
+// menu.c expects this common Emerald cursor string from strings.c. Pulling the
+// entire strings translation unit would retain a large unrelated data set.
+const u8 gText_SelectorArrow3[] = _("▶");
+
 static const u8 sTextOption[] = _("OPTION");
 static const u8 sTextClose[] = _("CLOSE");
 static const u8 sTextColors[] = {2, 1, 3};
