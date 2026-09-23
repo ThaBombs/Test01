@@ -75,8 +75,8 @@ static u8 sSelection;
 static void DrawFieldMenuContents(void)
 {
     FillWindowPixelBuffer(0, PIXEL_FILL(TEXT_COLOR_WHITE));
-    AddTextPrinterParameterized3(0, FONT_NORMAL, 18, 1, sTextColors, TEXT_SKIP_DRAW, sTextOption);
-    AddTextPrinterParameterized3(0, FONT_NORMAL, 18, 17, sTextColors, TEXT_SKIP_DRAW, sTextClose);
+    AddTextPrinterParameterized3(0, FONT_NORMAL, 16, 1, sTextColors, TEXT_SKIP_DRAW, sTextOption);
+    AddTextPrinterParameterized3(0, FONT_NORMAL, 16, 17, sTextColors, TEXT_SKIP_DRAW, sTextClose);
     AddTextPrinterParameterized3(
         0,
         FONT_NORMAL,

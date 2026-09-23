@@ -851,7 +851,7 @@ static void DrawOptionMenuTexts(void)
         AddTextPrinterParameterized3(
             WIN_OPTIONS,
             FONT_NORMAL,
-            16,
+            18,
             (i * 16) + 1,
             sAndroidTextColors,
             TEXT_SKIP_DRAW,
