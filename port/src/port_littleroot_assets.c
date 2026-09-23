@@ -198,6 +198,10 @@ static const u16 ALIGNED(4) sPortLittlerootBorder[] =
     INCBIN_U16("data/layouts/LittlerootTown/border.bin");
 static const u16 ALIGNED(4) sPortLittlerootMap[] =
     INCBIN_U16("data/layouts/LittlerootTown/map.bin");
+static const u16 ALIGNED(4) sPortRoute101Border[] =
+    INCBIN_U16("data/layouts/Route101/border.bin");
+static const u16 ALIGNED(4) sPortRoute101Map[] =
+    INCBIN_U16("data/layouts/Route101/map.bin");
 
 static const u16 ALIGNED(4) sPortBrendanHouse1FBorder[] =
     INCBIN_U16("data/layouts/LittlerootTown_BrendansHouse_1F/border.bin");
@@ -225,6 +229,22 @@ static const struct WarpEvent sPortLittlerootWarps[] =
     { .x = 14, .y = 8,  .elevation = 0, .warpId = 1, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F),          .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F) },
     { .x = 5,  .y = 8,  .elevation = 0, .warpId = 1, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F),     .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F) },
     { .x = 7,  .y = 16, .elevation = 0, .warpId = 0, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB) },
+};
+
+static const struct MapConnection sPortLittlerootConnectionEntries[] =
+{
+    {
+        .direction = CONNECTION_NORTH,
+        .offset = 0,
+        .mapGroup = MAP_GROUP(MAP_ROUTE101),
+        .mapNum = MAP_NUM(MAP_ROUTE101),
+    },
+};
+
+static const struct MapConnections sPortLittlerootConnections =
+{
+    .count = ARRAY_COUNT(sPortLittlerootConnectionEntries),
+    .connections = sPortLittlerootConnectionEntries,
 };
 
 static const u8 sPortText_LittlerootTownSign[] =
@@ -318,6 +338,36 @@ static const struct MapEvents sPortLittlerootEvents =
     .warps = sPortLittlerootWarps,
     .coordEvents = sPortLittlerootCoordEvents,
     .bgEvents = sPortLittlerootBgEvents,
+};
+
+static const u8 sPortText_Route101Sign[] =
+    _("ROUTE 101\nOLDALE TOWN AHEAD");
+
+static const struct BgEvent sPortRoute101BgEvents[] =
+{
+    { .x = 5, .y = 9, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY, .bgUnion.script = sPortText_Route101Sign },
+};
+
+static const struct MapEvents sPortRoute101Events =
+{
+    .bgEventCount = ARRAY_COUNT(sPortRoute101BgEvents),
+    .bgEvents = sPortRoute101BgEvents,
+};
+
+static const struct MapConnection sPortRoute101ConnectionEntries[] =
+{
+    {
+        .direction = CONNECTION_SOUTH,
+        .offset = 0,
+        .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN),
+        .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN),
+    },
+};
+
+static const struct MapConnections sPortRoute101Connections =
+{
+    .count = ARRAY_COUNT(sPortRoute101ConnectionEntries),
+    .connections = sPortRoute101ConnectionEntries,
 };
 
 static const struct WarpEvent sPortBrendanHouse1FWarps[] =
@@ -478,17 +528,51 @@ const struct MapLayout gPortLittlerootLayout =
     .borderHeight = 2,
 };
 
+const struct MapLayout gPortRoute101Layout =
+{
+    .width = 20,
+    .height = 20,
+    .border = sPortRoute101Border,
+    .map = sPortRoute101Map,
+    .primaryTileset = &sPortTilesetGeneral,
+    .secondaryTileset = &sPortTilesetPetalburg,
+    .isFrlg = FALSE,
+    .borderWidth = 2,
+    .borderHeight = 2,
+};
+
 const struct MapHeader gPortLittlerootHeader =
 {
     .mapLayout = &gPortLittlerootLayout,
     .events = &sPortLittlerootEvents,
     .mapScripts = NULL,
-    .connections = NULL,
+    .connections = &sPortLittlerootConnections,
     .music = 0,
     .mapLayoutId = LAYOUT_LITTLEROOT_TOWN,
     .regionMapSectionId = MAPSEC_LITTLEROOT_TOWN,
     .weather = WEATHER_NONE,
     .mapType = MAP_TYPE_TOWN,
+    .floorNumber = 0,
+    .nightMusic = 0,
+    .allowCycling = TRUE,
+    .allowEscaping = FALSE,
+    .allowRunning = TRUE,
+    .showMapName = FALSE,
+    .cave = FALSE,
+    .battleType = 0,
+};
+
+const struct MapHeader gPortRoute101Header =
+{
+    .mapLayout = &gPortRoute101Layout,
+    .events = &sPortRoute101Events,
+    .mapScripts = NULL,
+    .connections = &sPortRoute101Connections,
+    .music = 0,
+    .mapLayoutId = LAYOUT_ROUTE101,
+    .regionMapSectionId = MAPSEC_ROUTE_101,
+    .weather = WEATHER_NONE,
+    .mapType = MAP_TYPE_ROUTE,
     .floorNumber = 0,
     .nightMusic = 0,
     .allowCycling = TRUE,
@@ -639,6 +723,9 @@ const struct MapHeader *const Overworld_GetMapHeaderByGroupAndId(u16 mapGroup, u
     if (mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN)
      && mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN))
         return &gPortLittlerootHeader;
+    if (mapGroup == MAP_GROUP(MAP_ROUTE101)
+     && mapNum == MAP_NUM(MAP_ROUTE101))
+        return &gPortRoute101Header;
     if (mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F)
      && mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F))
         return &gPortBrendanHouse1FHeader;
