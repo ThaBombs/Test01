@@ -93,6 +93,30 @@ void PortGame_LoadTestMap(u16 mapGroup, u16 mapNum, s16 focusX, s16 focusY)
     PortTestNpc_LoadMap();
 }
 
+void PortGame_LoadTestConnectionMap(u16 mapGroup, u16 mapNum)
+{
+    const struct MapHeader *header =
+        Overworld_GetMapHeaderByGroupAndId(mapGroup, mapNum);
+    if (header == NULL)
+        return;
+
+    // CameraMove has already translated gSaveBlock1Ptr->pos into the
+    // destination map's coordinate space. Preserve that position and only
+    // replace the map data/tiles needed for a seamless border crossing.
+    PortTestNpc_ClearSavedSceneState();
+    gMapHeader = *header;
+    gSaveBlock1Ptr->location.mapGroup = mapGroup;
+    gSaveBlock1Ptr->location.mapNum = mapNum;
+    gSaveBlock1Ptr->location.warpId = WARP_ID_NONE;
+    gSaveBlock1Ptr->location.x = -1;
+    gSaveBlock1Ptr->location.y = -1;
+
+    InitMap();
+    CopyMapTilesetsToVram(gMapHeader.mapLayout);
+    LoadMapTilesetPalettes(gMapHeader.mapLayout);
+    PortTestNpc_LoadMap();
+}
+
 bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
 {
     const struct MapEvents *events = gMapHeader.events;
