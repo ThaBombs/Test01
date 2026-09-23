@@ -1,5 +1,6 @@
 #include "port_test_overworld.h"
 #include "port_test_player.h"
+#include "port_test_field_menu.h"
 
 #include "global.h"
 #include "bg.h"
@@ -9,6 +10,8 @@
 #include "main.h"
 #include "menu.h"
 #include "overworld.h"
+#include "option_menu.h"
+#include "window.h"
 #include "palette.h"
 #include "constants/maps.h"
 
@@ -17,6 +20,7 @@ u16 *gOverworldTilemapBuffer_Bg1 = NULL;
 u16 *gOverworldTilemapBuffer_Bg2 = NULL;
 u16 *gOverworldTilemapBuffer_Bg3 = NULL;
 
+static u16 sPortBg0[BG_SCREEN_SIZE / sizeof(u16)];
 static u16 sPortBg1[BG_SCREEN_SIZE / sizeof(u16)];
 static u16 sPortBg2[BG_SCREEN_SIZE / sizeof(u16)];
 static u16 sPortBg3[BG_SCREEN_SIZE / sizeof(u16)];
@@ -31,7 +35,9 @@ static const struct BgTemplate sPortOverworldBgTemplates[] =
 
 static void PortTestOverworld_Main(void)
 {
-    PortTestPlayer_Update();
+    if (!PortTestFieldMenu_Update())
+        PortTestPlayer_Update();
+
     FieldUpdateBgTilemapScroll();
     DoScheduledBgTilemapCopiesToVram();
     TransferPlttBuffer();
@@ -121,7 +127,7 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
     return FALSE;
 }
 
-void PortGame_StartTestOverworld(void)
+static void PortTestOverworld_SetupScene(u16 mapGroup, u16 mapNum, s16 focusX, s16 focusY)
 {
     SetGpuReg(REG_OFFSET_DISPCNT, 0);
     ResetBgsAndClearDma3BusyFlags(FALSE);
@@ -129,6 +135,7 @@ void PortGame_StartTestOverworld(void)
 
     InitBgsFromTemplates(0, sPortOverworldBgTemplates, ARRAY_COUNT(sPortOverworldBgTemplates));
 
+    memset(sPortBg0, 0, sizeof(sPortBg0));
     memset(sPortBg1, 0, sizeof(sPortBg1));
     memset(sPortBg2, 0, sizeof(sPortBg2));
     memset(sPortBg3, 0, sizeof(sPortBg3));
@@ -136,21 +143,45 @@ void PortGame_StartTestOverworld(void)
     gOverworldTilemapBuffer_Bg1 = sPortBg1;
     gOverworldTilemapBuffer_Bg2 = sPortBg2;
     gOverworldTilemapBuffer_Bg3 = sPortBg3;
+    SetBgTilemapBuffer(0, sPortBg0);
     SetBgTilemapBuffer(1, gOverworldTilemapBuffer_Bg1);
     SetBgTilemapBuffer(2, gOverworldTilemapBuffer_Bg2);
     SetBgTilemapBuffer(3, gOverworldTilemapBuffer_Bg3);
 
-    PortTestOverworld_LoadMapState(
-        MAP_GROUP(MAP_LITTLEROOT_TOWN),
-        MAP_NUM(MAP_LITTLEROOT_TOWN),
-        10,
-        10);
+    PortTestOverworld_LoadMapState(mapGroup, mapNum, focusX, focusY);
 
     ShowBg(1);
     ShowBg(2);
     ShowBg(3);
 
     PortTestPlayer_Init();
+    PortTestFieldMenu_Init();
 
     SetMainCallback2(PortTestOverworld_Main);
+}
+
+void PortGame_OpenTestOptions(void)
+{
+    FreeAllWindowBuffers();
+    gMain.savedCallback = PortGame_ReturnToTestOverworld;
+    SetMainCallback2(CB2_InitOptionMenu);
+}
+
+void PortGame_ReturnToTestOverworld(void)
+{
+    const u16 mapGroup = gSaveBlock1Ptr->location.mapGroup;
+    const u16 mapNum = gSaveBlock1Ptr->location.mapNum;
+    const s16 focusX = gSaveBlock1Ptr->pos.x + MAP_OFFSET;
+    const s16 focusY = gSaveBlock1Ptr->pos.y + MAP_OFFSET;
+
+    PortTestOverworld_SetupScene(mapGroup, mapNum, focusX, focusY);
+}
+
+void PortGame_StartTestOverworld(void)
+{
+    PortTestOverworld_SetupScene(
+        MAP_GROUP(MAP_LITTLEROOT_TOWN),
+        MAP_NUM(MAP_LITTLEROOT_TOWN),
+        10,
+        10);
 }

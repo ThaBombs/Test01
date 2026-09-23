@@ -295,6 +295,20 @@ add_custom_command(
     VERBATIM
 )
 
+# Reduced Emerald-style field Start menu used by the Android overworld slice.
+set(TEST_FIELD_MENU_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/test_field_menu_android.c")
+add_custom_command(
+    OUTPUT "${TEST_FIELD_MENU_ANDROID_C}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    COMMAND /bin/bash -o pipefail -c
+        "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DPORT_BOOTSTRAP_MENU_ONLY=1 -DPORT_BOOTSTRAP_NO_OVERWORLD=1 '${PORT_ROOT}/src/port_test_field_menu.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${PORT_ROOT}/src/port_test_field_menu.c' '${REPO_ROOT}/charmap.txt' > '${TEST_FIELD_MENU_ANDROID_C}'"
+    DEPENDS
+        "${PORT_ROOT}/src/port_test_field_menu.c"
+        "${REPO_ROOT}/tools/preproc/preproc"
+        "${REPO_ROOT}/charmap.txt"
+    VERBATIM
+)
+
 # Compile-only probe for the Android boot handoff that replaces the skipped
 # copyright/intro/title presentation flow. Once its dependencies are linked,
 # this source becomes part of pokeemerald_native and PortGame_InitialCallback
@@ -366,6 +380,7 @@ set_source_files_properties(
     "${REPO_ROOT}/src/field_camera.c"
     "${LITTLEROOT_ANDROID_C}"
     "${TEST_PLAYER_ANDROID_C}"
+    "${TEST_FIELD_MENU_ANDROID_C}"
     PROPERTIES
     COMPILE_OPTIONS "-fvisibility=hidden"
 )
@@ -382,6 +397,7 @@ target_sources(
     "${REPO_ROOT}/src/field_camera.c"
     "${LITTLEROOT_ANDROID_C}"
     "${TEST_PLAYER_ANDROID_C}"
+    "${TEST_FIELD_MENU_ANDROID_C}"
     "${REPO_ROOT}/src/window.c"
     "${REPO_ROOT}/src/blit.c"
     "${REPO_ROOT}/src/dynamic_placeholder_text_util.c"
