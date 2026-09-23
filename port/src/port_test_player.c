@@ -312,10 +312,16 @@ static bool32 CanStartStep(s16 dx, s16 dy)
     if (PortTestNpc_BlocksTile(targetMapX, targetMapY))
         return FALSE;
 
-    // Use the same two pieces of static-map collision that Emerald relies on
-    // for ordinary walking: the collision bits plus directional metatile
-    // edges. Warp tiles remain enterable even when the doorway block itself
-    // carries a collision bit.
+    // Match Emerald's static collision checks: undefined borders are solid,
+    // while a populated map connection remains a valid edge to walk across.
+    if (!targetIsWarp
+     && GetMapBorderIdAt(targetGridX, targetGridY) == CONNECTION_INVALID)
+        return FALSE;
+
+    // Use the same static-map collision pieces that Emerald relies on for
+    // ordinary walking: collision bits, directional edges, and elevation.
+    // Warp tiles remain enterable even when the doorway block itself carries
+    // a collision bit.
     if (!targetIsWarp && MapGridGetCollisionAt(targetGridX, targetGridY) != 0)
         return FALSE;
     if (!targetIsWarp
