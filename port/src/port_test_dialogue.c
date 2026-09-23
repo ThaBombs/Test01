@@ -90,10 +90,9 @@ bool32 PortTestDialogue_Update(void)
 
     if (JOY_NEW(A_BUTTON | B_BUTTON))
     {
-        ClearWindowTilemap(sDialogueWindowId);
-        CopyWindowToVram(sDialogueWindowId, COPYWIN_MAP);
-        HideBg(0);
+        ClearStdWindowAndFrameToTransparent(sDialogueWindowId, TRUE);
         ScheduleBgCopyTilemapToVram(0);
+        HideBg(0);
         sDialogueOpen = FALSE;
     }
 
