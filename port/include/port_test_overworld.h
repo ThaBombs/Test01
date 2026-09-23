@@ -3,10 +3,10 @@
 
 #include "gba/types.h"
 
-// The current Android camera/player slice is visually two rows below Emerald's
-// raw map-event Y coordinate space. Keep the conversion here so map data stays
-// byte-for-byte aligned with the original source.
-#define PORT_EVENT_PLAYER_Y_OFFSET 2
+// The simplified Android renderer keeps the custom player sprite one map row
+// above gSaveBlock1Ptr->pos.y. Convert between the camera focus coordinate and
+// the tile under the player's feet instead of shifting individual event types.
+#define PORT_PLAYER_MAP_Y_BIAS 1
 
 void PortGame_StartTestOverworld(void);
 void PortGame_LoadTestMap(u16 mapGroup, u16 mapNum, s16 focusX, s16 focusY);

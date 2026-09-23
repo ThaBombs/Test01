@@ -137,7 +137,7 @@ static bool32 IsStaticEventObstacle(s16 x, s16 y)
     for (u32 i = 0; i < events->bgEventCount; ++i)
     {
         if (events->bgEvents[i].x == x
-         && events->bgEvents[i].y + PORT_EVENT_PLAYER_Y_OFFSET == y)
+         && events->bgEvents[i].y == y)
             return TRUE;
     }
 
@@ -154,7 +154,7 @@ static bool32 IsWarpEventAt(s16 x, s16 y)
     for (u32 i = 0; i < events->warpCount; ++i)
     {
         if (events->warps[i].x == x
-         && events->warps[i].y + PORT_EVENT_PLAYER_Y_OFFSET == y)
+         && events->warps[i].y == y)
             return TRUE;
     }
 
@@ -163,8 +163,12 @@ static bool32 IsWarpEventAt(s16 x, s16 y)
 
 static bool32 CanStartStep(s16 dx, s16 dy)
 {
-    const s16 targetMapX = gSaveBlock1Ptr->pos.x + dx;
-    const s16 targetMapY = gSaveBlock1Ptr->pos.y + dy;
+    const s16 currentMapX = gSaveBlock1Ptr->pos.x;
+    const s16 currentMapY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
+    const s16 targetMapX = currentMapX + dx;
+    const s16 targetMapY = currentMapY + dy;
+    const s16 currentGridX = currentMapX + MAP_OFFSET;
+    const s16 currentGridY = currentMapY + MAP_OFFSET;
     const s16 targetGridX = targetMapX + MAP_OFFSET;
     const s16 targetGridY = targetMapY + MAP_OFFSET;
 
@@ -174,6 +178,19 @@ static bool32 CanStartStep(s16 dx, s16 dy)
     if (!IsWarpEventAt(targetMapX, targetMapY)
      && MapGridGetCollisionAt(targetGridX, targetGridY) != 0)
         return FALSE;
+
+    // Match Emerald's basic elevation collision rule as well. Some visually
+    // solid building pieces rely on elevation rather than the 2-bit collision
+    // flag, which is why the earlier Android slice could enter parts of houses.
+    const u8 currentElevation = MapGridGetElevationAt(currentGridX, currentGridY);
+    const u8 targetElevation = MapGridGetElevationAt(targetGridX, targetGridY);
+    if (!IsWarpEventAt(targetMapX, targetMapY)
+     && currentElevation != ELEVATION_TRANSITION
+     && targetElevation != ELEVATION_TRANSITION
+     && targetElevation != ELEVATION_MULTI_LEVEL
+     && currentElevation != targetElevation)
+        return FALSE;
+
     if (IsStaticEventObstacle(targetMapX, targetMapY))
         return FALSE;
 
@@ -263,7 +280,8 @@ void PortTestPlayer_Update(void)
             StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], sPortFacing);
 
             const s16 playerX = gSaveBlock1Ptr->pos.x;
-            const s16 playerY = gSaveBlock1Ptr->pos.y;
+            const s16 playerY =
+                gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
             if (PortGame_TryTestWarpAt(playerX, playerY))
             {
                 gFieldCamera.movementSpeedX = 0;
