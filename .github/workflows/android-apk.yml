@@ -153,25 +153,14 @@ jobs:
           echo "Main-menu probe: $PROBE"
           "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u | tee android/main-menu-unresolved.txt
 
-      - name: Report new-game and overworld probe dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          NDK_NM="$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
-          NEW_GAME_PROBE="$(find android/app -type f -name 'libpokeemerald_new_game_probe.a' -path '*arm64-v8a*' | head -n 1)"
-          OVERWORLD_PROBE="$(find android/app -type f -name 'libpokeemerald_overworld_probe.a' -path '*arm64-v8a*' | head -n 1)"
-          test -n "$NEW_GAME_PROBE"
-          test -n "$OVERWORLD_PROBE"
-          "$NDK_NM" -u "$NEW_GAME_PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u > android/new-game-unresolved.txt
-          "$NDK_NM" -u "$OVERWORLD_PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u > android/overworld-unresolved.txt
-
-      - name: Upload NEW GAME dependency reports
+      - name: Upload NEW GAME compile diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: new-game-overworld-unresolved-${{ github.sha }}
+          name: new-game-overworld-compile-${{ github.sha }}
           path: |
-            android/new-game-unresolved.txt
-            android/overworld-unresolved.txt
+            android/new-game-compile.txt
+            android/overworld-compile.txt
           if-no-files-found: error
           retention-days: 30
 

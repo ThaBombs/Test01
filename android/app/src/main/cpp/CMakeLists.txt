@@ -296,81 +296,21 @@ add_custom_command(
 add_dependencies(pokeemerald_native pokeemerald_main_menu_startup_probe)
 
 
-# Compile-only probes for the next Android milestone: NEW GAME -> overworld.
-# These do not alter the known-good APK link; they expose the exact dependency
-# boundary for fresh-game initialization and map loading.
-add_library(
-    pokeemerald_new_game_probe
-    STATIC
-    "${REPO_ROOT}/src/new_game.c"
-)
-target_include_directories(
-    pokeemerald_new_game_probe
-    PRIVATE
-    "${PORT_ROOT}/include"
-)
-target_compile_features(pokeemerald_new_game_probe PRIVATE c_std_17)
-target_compile_definitions(
-    pokeemerald_new_game_probe
-    PRIVATE
-    PLATFORM_ANDROID=1
-    MODERN=1
-    TESTING=0
-    PORT_BOOTSTRAP_MENU_ONLY=1
-    PORT_BOOTSTRAP_NO_OVERWORLD=1
-)
-target_compile_options(
-    pokeemerald_new_game_probe
-    PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
-    "-iquote${REPO_ROOT}/include"
-)
-add_custom_command(
-    TARGET pokeemerald_new_game_probe
-    POST_BUILD
-    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_new_game_probe>"
-    COMMENT "New-game probe unresolved symbols"
+# Non-blocking Android syntax probes for the next milestone: NEW GAME -> overworld.
+# They deliberately capture compiler diagnostics without failing the known-good
+# menu/options APK, so CI can upload a small actionable report.
+add_custom_target(
+    pokeemerald_new_game_probe ALL
+    COMMAND /bin/bash -c
+        "'${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -fsyntax-only -std=gnu17 -Wall -Wextra -Wpedantic -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DTESTING=0 -DPORT_BOOTSTRAP_MENU_ONLY=1 -DPORT_BOOTSTRAP_NO_OVERWORLD=1 '${REPO_ROOT}/src/new_game.c' > '${REPO_ROOT}/android/new-game-compile.txt' 2>&1 || true"
     VERBATIM
 )
 add_dependencies(pokeemerald_native pokeemerald_new_game_probe)
 
-add_library(
-    pokeemerald_overworld_probe
-    STATIC
-    "${REPO_ROOT}/src/overworld.c"
-)
-target_include_directories(
-    pokeemerald_overworld_probe
-    PRIVATE
-    "${PORT_ROOT}/include"
-)
-target_compile_features(pokeemerald_overworld_probe PRIVATE c_std_17)
-target_compile_definitions(
-    pokeemerald_overworld_probe
-    PRIVATE
-    PLATFORM_ANDROID=1
-    MODERN=1
-    TESTING=0
-    PORT_BOOTSTRAP_MENU_ONLY=1
-    PORT_BOOTSTRAP_NO_OVERWORLD=1
-    PORT_BOOTSTRAP_NO_WEATHER=1
-    PORT_BOOTSTRAP_NO_POKEMON_PICS=1
-)
-target_compile_options(
-    pokeemerald_overworld_probe
-    PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
-    "-iquote${REPO_ROOT}/include"
-)
-add_custom_command(
-    TARGET pokeemerald_overworld_probe
-    POST_BUILD
-    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_overworld_probe>"
-    COMMENT "Overworld probe unresolved symbols"
+add_custom_target(
+    pokeemerald_overworld_probe ALL
+    COMMAND /bin/bash -c
+        "'${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -fsyntax-only -std=gnu17 -Wall -Wextra -Wpedantic -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DTESTING=0 -DPORT_BOOTSTRAP_MENU_ONLY=1 -DPORT_BOOTSTRAP_NO_OVERWORLD=1 -DPORT_BOOTSTRAP_NO_WEATHER=1 -DPORT_BOOTSTRAP_NO_POKEMON_PICS=1 '${REPO_ROOT}/src/overworld.c' > '${REPO_ROOT}/android/overworld-compile.txt' 2>&1 || true"
     VERBATIM
 )
 add_dependencies(pokeemerald_native pokeemerald_overworld_probe)
