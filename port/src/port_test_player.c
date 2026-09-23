@@ -1,4 +1,5 @@
 #include "port_test_player.h"
+#include "port_test_overworld.h"
 
 #include "global.h"
 #include "field_camera.h"
@@ -6,6 +7,7 @@
 #include "gpu_regs.h"
 #include "main.h"
 #include "sprite.h"
+#include "constants/maps.h"
 
 #define PORT_PLAYER_PAL_TAG 0x7F01
 
@@ -139,9 +141,13 @@ static bool32 IsStaticEventObstacle(s16 x, s16 y)
         {12, 8},
     };
 
-    for (u32 i = 0; i < ARRAY_COUNT(signs); ++i)
-        if (x == signs[i][0] && y == signs[i][1])
-            return TRUE;
+    if (gSaveBlock1Ptr->location.mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN)
+     && gSaveBlock1Ptr->location.mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN))
+    {
+        for (u32 i = 0; i < ARRAY_COUNT(signs); ++i)
+            if (x == signs[i][0] && y == signs[i][1])
+                return TRUE;
+    }
 
     return FALSE;
 }
@@ -240,6 +246,15 @@ void PortTestPlayer_Update(void)
             sPortStepDx = 0;
             sPortStepDy = 0;
             StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], sPortFacing);
+
+            const s16 focusX = gSaveBlock1Ptr->pos.x + MAP_OFFSET;
+            const s16 focusY = gSaveBlock1Ptr->pos.y + MAP_OFFSET;
+            if (PortGame_TryTestWarpAt(focusX, focusY))
+            {
+                gFieldCamera.movementSpeedX = 0;
+                gFieldCamera.movementSpeedY = 0;
+                return;
+            }
 
             // Continue walking seamlessly when the direction is still held.
             if (gMain.heldKeys & DPAD_ANY)

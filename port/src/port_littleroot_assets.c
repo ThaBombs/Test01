@@ -4,6 +4,7 @@
 #include "constants/map_types.h"
 #include "constants/region_map_sections.h"
 #include "constants/weather.h"
+#include "constants/maps.h"
 
 const u16 ALIGNED(4) gPortTilesetPalettes_General[][16] =
 {
@@ -57,6 +58,84 @@ const u16 gPortMetatiles_Petalburg[] =
 const u16 gPortMetatileAttributes_Petalburg[] =
     INCBIN_U16("data/tilesets/secondary/petalburg/metatile_attributes.bin");
 
+const u16 ALIGNED(4) gPortTilesetPalettes_Building[][16] =
+{
+    INCGFX_U16("data/tilesets/primary/building/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/primary/building/palettes/15.pal", ".gbapal"),
+};
+const u32 gPortTilesetTiles_Building[] =
+    INCGFX_U32("data/tilesets/primary/building/tiles.png", ".4bpp", "-num_tiles 502 -Wnum_tiles");
+const u16 gPortMetatiles_Building[] =
+    INCBIN_U16("data/tilesets/primary/building/metatiles.bin");
+const u16 gPortMetatileAttributes_Building[] =
+    INCBIN_U16("data/tilesets/primary/building/metatile_attributes.bin");
+
+const u16 ALIGNED(4) gPortTilesetPalettes_BrendansMaysHouse[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/brendans_mays_house/palettes/15.pal", ".gbapal"),
+};
+const u32 gPortTilesetTiles_BrendansMaysHouse[] =
+    INCGFX_U32("data/tilesets/secondary/brendans_mays_house/tiles.png", ".4bpp");
+const u16 gPortMetatiles_BrendansMaysHouse[] =
+    INCBIN_U16("data/tilesets/secondary/brendans_mays_house/metatiles.bin");
+const u16 gPortMetatileAttributes_BrendansMaysHouse[] =
+    INCBIN_U16("data/tilesets/secondary/brendans_mays_house/metatile_attributes.bin");
+
+const u16 ALIGNED(4) gPortTilesetPalettes_Lab[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/lab/palettes/15.pal", ".gbapal"),
+};
+const u32 gPortTilesetTiles_Lab[] =
+    INCGFX_U32("data/tilesets/secondary/lab/tiles.png", ".4bpp", "-num_tiles 500 -Wnum_tiles");
+const u16 gPortMetatiles_Lab[] =
+    INCBIN_U16("data/tilesets/secondary/lab/metatiles.bin");
+const u16 gPortMetatileAttributes_Lab[] =
+    INCBIN_U16("data/tilesets/secondary/lab/metatile_attributes.bin");
+
 static const struct Tileset sPortTilesetGeneral =
 {
     .isCompressed = FALSE,
@@ -79,10 +158,56 @@ static const struct Tileset sPortTilesetPetalburg =
     .callback = NULL,
 };
 
+static const struct Tileset sPortTilesetBuilding =
+{
+    .isCompressed = FALSE,
+    .isSecondary = FALSE,
+    .tiles = gPortTilesetTiles_Building,
+    .palettes = gPortTilesetPalettes_Building,
+    .metatiles = gPortMetatiles_Building,
+    .metatileAttributes = gPortMetatileAttributes_Building,
+    .callback = NULL,
+};
+
+static const struct Tileset sPortTilesetBrendansMaysHouse =
+{
+    .isCompressed = FALSE,
+    .isSecondary = TRUE,
+    .tiles = gPortTilesetTiles_BrendansMaysHouse,
+    .palettes = gPortTilesetPalettes_BrendansMaysHouse,
+    .metatiles = gPortMetatiles_BrendansMaysHouse,
+    .metatileAttributes = gPortMetatileAttributes_BrendansMaysHouse,
+    .callback = NULL,
+};
+
+static const struct Tileset sPortTilesetLab =
+{
+    .isCompressed = FALSE,
+    .isSecondary = TRUE,
+    .tiles = gPortTilesetTiles_Lab,
+    .palettes = gPortTilesetPalettes_Lab,
+    .metatiles = gPortMetatiles_Lab,
+    .metatileAttributes = gPortMetatileAttributes_Lab,
+    .callback = NULL,
+};
+
 static const u16 ALIGNED(4) sPortLittlerootBorder[] =
     INCBIN_U16("data/layouts/LittlerootTown/border.bin");
 static const u16 ALIGNED(4) sPortLittlerootMap[] =
     INCBIN_U16("data/layouts/LittlerootTown/map.bin");
+
+static const u16 ALIGNED(4) sPortBrendanHouse1FBorder[] =
+    INCBIN_U16("data/layouts/LittlerootTown_BrendansHouse_1F/border.bin");
+static const u16 ALIGNED(4) sPortBrendanHouse1FMap[] =
+    INCBIN_U16("data/layouts/LittlerootTown_BrendansHouse_1F/map.bin");
+static const u16 ALIGNED(4) sPortMayHouse1FBorder[] =
+    INCBIN_U16("data/layouts/LittlerootTown_MaysHouse_1F/border.bin");
+static const u16 ALIGNED(4) sPortMayHouse1FMap[] =
+    INCBIN_U16("data/layouts/LittlerootTown_MaysHouse_1F/map.bin");
+static const u16 ALIGNED(4) sPortBirchLabBorder[] =
+    INCBIN_U16("data/layouts/LittlerootTown_ProfessorBirchsLab/border.bin");
+static const u16 ALIGNED(4) sPortBirchLabMap[] =
+    INCBIN_U16("data/layouts/LittlerootTown_ProfessorBirchsLab/map.bin");
 
 static const struct MapEvents sPortEmptyEvents = {0};
 
@@ -120,10 +245,100 @@ const struct MapHeader gPortLittlerootHeader =
     .battleType = 0,
 };
 
+const struct MapLayout gPortBrendanHouse1FLayout =
+{
+    .width = 11,
+    .height = 9,
+    .border = sPortBrendanHouse1FBorder,
+    .map = sPortBrendanHouse1FMap,
+    .primaryTileset = &sPortTilesetBuilding,
+    .secondaryTileset = &sPortTilesetBrendansMaysHouse,
+    .isFrlg = FALSE,
+    .borderWidth = 2,
+    .borderHeight = 2,
+};
+
+const struct MapLayout gPortMayHouse1FLayout =
+{
+    .width = 11,
+    .height = 9,
+    .border = sPortMayHouse1FBorder,
+    .map = sPortMayHouse1FMap,
+    .primaryTileset = &sPortTilesetBuilding,
+    .secondaryTileset = &sPortTilesetBrendansMaysHouse,
+    .isFrlg = FALSE,
+    .borderWidth = 2,
+    .borderHeight = 2,
+};
+
+const struct MapLayout gPortBirchLabLayout =
+{
+    .width = 13,
+    .height = 13,
+    .border = sPortBirchLabBorder,
+    .map = sPortBirchLabMap,
+    .primaryTileset = &sPortTilesetBuilding,
+    .secondaryTileset = &sPortTilesetLab,
+    .isFrlg = FALSE,
+    .borderWidth = 2,
+    .borderHeight = 2,
+};
+
+const struct MapHeader gPortBrendanHouse1FHeader =
+{
+    .mapLayout = &gPortBrendanHouse1FLayout,
+    .events = &sPortEmptyEvents,
+    .mapScripts = NULL,
+    .connections = NULL,
+    .music = 0,
+    .mapLayoutId = LAYOUT_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F,
+    .regionMapSectionId = MAPSEC_LITTLEROOT_TOWN,
+    .weather = WEATHER_NONE,
+    .mapType = MAP_TYPE_INDOOR,
+    .allowRunning = FALSE,
+};
+
+const struct MapHeader gPortMayHouse1FHeader =
+{
+    .mapLayout = &gPortMayHouse1FLayout,
+    .events = &sPortEmptyEvents,
+    .mapScripts = NULL,
+    .connections = NULL,
+    .music = 0,
+    .mapLayoutId = LAYOUT_LITTLEROOT_TOWN_MAYS_HOUSE_1F,
+    .regionMapSectionId = MAPSEC_LITTLEROOT_TOWN,
+    .weather = WEATHER_NONE,
+    .mapType = MAP_TYPE_INDOOR,
+    .allowRunning = FALSE,
+};
+
+const struct MapHeader gPortBirchLabHeader =
+{
+    .mapLayout = &gPortBirchLabLayout,
+    .events = &sPortEmptyEvents,
+    .mapScripts = NULL,
+    .connections = NULL,
+    .music = 0,
+    .mapLayoutId = LAYOUT_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB,
+    .regionMapSectionId = MAPSEC_LITTLEROOT_TOWN,
+    .weather = WEATHER_NONE,
+    .mapType = MAP_TYPE_INDOOR,
+    .allowRunning = FALSE,
+};
+
 const struct MapHeader *const Overworld_GetMapHeaderByGroupAndId(u16 mapGroup, u16 mapNum)
 {
     if (mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN)
      && mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN))
         return &gPortLittlerootHeader;
+    if (mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F)
+     && mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F))
+        return &gPortBrendanHouse1FHeader;
+    if (mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F)
+     && mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F))
+        return &gPortMayHouse1FHeader;
+    if (mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB)
+     && mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB))
+        return &gPortBirchLabHeader;
     return &gPortLittlerootHeader;
 }
