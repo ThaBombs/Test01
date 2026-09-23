@@ -42,6 +42,7 @@ uint64_t PortRuntime_GetFrameCount(void);
 bool PortRuntime_IsGbaHostReady(void);
 bool PortRuntime_IsFastForwardEnabled(void);
 int PortRuntime_GetFastForwardMultiplier(void);
+void PortRuntime_SetFastForwardMultiplier(int multiplier);
 void PortRuntime_CycleFastForwardMultiplier(void);
 
 #endif // POKEEMERALD_PORT_RUNTIME_H
