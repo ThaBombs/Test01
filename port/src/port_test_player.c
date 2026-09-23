@@ -152,15 +152,27 @@ static const struct SpritePalette sPortGrassSpritePalette =
 
 static void PortGrassSpriteCallback(struct Sprite *sprite)
 {
-    // Grass is a world-tile effect, not a child of the player. Recalculate its
-    // screen position from the tile where it was spawned as the camera moves.
-    const s16 playerX = gSaveBlock1Ptr->pos.x;
-    const s16 playerY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
-    sprite->x = DISPLAY_WIDTH / 2 + (sprite->data[0] - playerX) * 16;
-    sprite->y = DISPLAY_HEIGHT / 2 + (sprite->data[1] - playerY) * 16 + 8;
-
+    // Position is advanced by the inverse camera delta each movement frame.
+    // Do not derive it from the player's logical tile here: that made every
+    // still-running grass effect snap along with the player at tile boundaries.
     if (sprite->animEnded)
         DestroySprite(sprite);
+}
+
+static void ApplyGrassCameraDelta(s16 dx, s16 dy)
+{
+    if (dx == 0 && dy == 0)
+        return;
+
+    for (u32 i = 0; i < MAX_SPRITES; ++i)
+    {
+        struct Sprite *sprite = &gSprites[i];
+        if (!sprite->inUse || sprite->callback != PortGrassSpriteCallback)
+            continue;
+
+        sprite->x -= dx;
+        sprite->y -= dy;
+    }
 }
 
 static const struct SpriteTemplate sPortBrendanTemplate =
@@ -253,7 +265,12 @@ static bool32 CanStartLedgeJump(s16 dx, s16 dy)
 
     if (!IsMatchingLedgeBehavior(ledgeBehavior, dx, dy))
         return FALSE;
-    if (PortTestNpc_BlocksTile(landingMapX, landingMapY))
+
+    // A ledge jump traverses both the ledge tile and the landing tile. Static
+    // actors such as Birch/Zigzagoon must block either space; otherwise the
+    // two-tile jump can visually pass straight through them.
+    if (PortTestNpc_BlocksTile(ledgeMapX, ledgeMapY)
+     || PortTestNpc_BlocksTile(landingMapX, landingMapY))
         return FALSE;
     if (GetMapBorderIdAt(landingGridX, landingGridY) == CONNECTION_INVALID)
         return FALSE;
@@ -606,6 +623,7 @@ void PortTestPlayer_Update(void)
 
         CameraUpdateNoObjectRefresh();
         PortTestNpc_ApplyCameraDelta(cameraDx, cameraDy);
+        ApplyGrassCameraDelta(cameraDx, cameraDy);
         --sPortStepFrames;
 
         if (sPortLedgeJump)
