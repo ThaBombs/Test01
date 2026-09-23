@@ -6,6 +6,7 @@
 #include "fieldmap.h"
 #include "gpu_regs.h"
 #include "main.h"
+#include "menu.h"
 #include "overworld.h"
 #include "palette.h"
 #include "constants/maps.h"
