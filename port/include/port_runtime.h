@@ -41,6 +41,8 @@ void PortRuntime_TouchEditorPointer(float x, float y, bool down, int width, int 
 uint64_t PortRuntime_GetFrameCount(void);
 bool PortRuntime_IsGbaHostReady(void);
 bool PortRuntime_IsFastForwardEnabled(void);
+bool PortRuntime_GetFastForwardToggleMode(void);
+void PortRuntime_SetFastForwardToggleMode(bool enabled);
 int PortRuntime_GetFastForwardMultiplier(void);
 void PortRuntime_SetFastForwardMultiplier(int multiplier);
 void PortRuntime_CycleFastForwardMultiplier(void);
