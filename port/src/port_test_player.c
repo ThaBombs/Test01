@@ -364,10 +364,6 @@ void PortTestPlayer_Init(void)
         REG_OFFSET_DISPCNT,
         DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
 
-    PortTestNpc_UpdateMovement(
-        gSaveBlock1Ptr->pos.x,
-        gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS);
-
     AnimateSprites();
     BuildOamBuffer();
     LoadOam();
@@ -429,6 +425,10 @@ void PortTestPlayer_Update(void)
         else if (gMain.heldKeys & DPAD_ANY)
             TryBeginStepFromKeys(gMain.heldKeys);
     }
+
+    PortTestNpc_UpdateMovement(
+        gSaveBlock1Ptr->pos.x,
+        gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS);
 
     AnimateSprites();
     BuildOamBuffer();
