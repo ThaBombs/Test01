@@ -246,6 +246,28 @@ static bool32 PortMetatileBlocksEast(u8 behavior)
         || behavior == MB_SECRET_BASE_BREAKABLE_DOOR;
 }
 
+static bool32 IsElevationMismatch(
+    s16 currentGridX,
+    s16 currentGridY,
+    s16 targetGridX,
+    s16 targetGridY)
+{
+    const u8 currentElevation =
+        MapGridGetElevationAt(currentGridX, currentGridY);
+    const u8 targetElevation =
+        MapGridGetElevationAt(targetGridX, targetGridY);
+
+    // Match Emerald's IsElevationMismatchAt semantics for ordinary walking:
+    // transition (0) and multi-level (15) tiles accept either elevation.
+    if (currentElevation == ELEVATION_TRANSITION
+     || currentElevation == ELEVATION_MULTI_LEVEL
+     || targetElevation == ELEVATION_TRANSITION
+     || targetElevation == ELEVATION_MULTI_LEVEL)
+        return FALSE;
+
+    return currentElevation != targetElevation;
+}
+
 static bool32 IsDirectionBlockedByMetatile(
     s16 currentGridX,
     s16 currentGridY,
@@ -301,6 +323,11 @@ static bool32 CanStartStep(s16 dx, s16 dy)
             currentGridX, currentGridY,
             targetGridX, targetGridY,
             dx, dy))
+        return FALSE;
+    if (!targetIsWarp
+     && IsElevationMismatch(
+            currentGridX, currentGridY,
+            targetGridX, targetGridY))
         return FALSE;
 
     return TRUE;
