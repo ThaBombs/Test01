@@ -2,6 +2,7 @@
 #include "port_test_player.h"
 #include "port_test_field_menu.h"
 #include "port_test_dialogue.h"
+#include "port_test_npc.h"
 
 #include "global.h"
 #include "bg.h"
@@ -37,6 +38,8 @@ static const struct BgTemplate sPortOverworldBgTemplates[] =
 
 static void PortTestOverworld_Main(void)
 {
+    PortTestNpc_Update();
+
     if (!PortTestDialogue_Update())
     {
         if (!PortTestFieldMenu_Update())
@@ -86,6 +89,7 @@ static void PortTestOverworld_LoadMapState(u16 mapGroup, u16 mapNum, s16 focusX,
 void PortGame_LoadTestMap(u16 mapGroup, u16 mapNum, s16 focusX, s16 focusY)
 {
     PortTestOverworld_LoadMapState(mapGroup, mapNum, focusX, focusY);
+    PortTestNpc_LoadMap();
 }
 
 bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
@@ -171,6 +175,7 @@ static void PortTestOverworld_SetupScene(u16 mapGroup, u16 mapNum, s16 focusX, s
     ShowBg(3);
 
     PortTestPlayer_Init();
+    PortTestNpc_LoadMap();
     PortTestFieldMenu_Init();
     PortTestDialogue_Init();
 

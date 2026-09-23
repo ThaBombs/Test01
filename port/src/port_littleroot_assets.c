@@ -5,6 +5,8 @@
 #include "constants/region_map_sections.h"
 #include "constants/weather.h"
 #include "constants/maps.h"
+#include "constants/event_object_movement.h"
+#include "constants/event_objects.h"
 
 const u16 ALIGNED(4) gPortTilesetPalettes_General[][16] =
 {
@@ -225,6 +227,62 @@ static const u8 sPortText_BrendanHouseSign[] =
 static const u8 sPortText_MayHouseSign[] =
     _("PROF. BIRCH'S HOUSE");
 
+static const u8 sPortText_LittlerootTwin[] =
+    _("If you go into the grass, wild\\nPOKéMON will jump out!");
+static const u8 sPortText_LittlerootFatMan[] =
+    _("The power of science is staggering!");
+static const u8 sPortText_LittlerootBoy[] =
+    _("PROF. BIRCH studies POKéMON in his LAB\\nand out in the wild.");
+
+static const struct ObjectEventTemplate sPortLittlerootObjectEvents[] =
+{
+    {
+        .localId = 1,
+        .graphicsId = OBJ_EVENT_GFX_TWIN,
+        .kind = 0,
+        .x = 16,
+        .y = 10,
+        .elevation = 3,
+        .movementType = MOVEMENT_TYPE_WANDER_AROUND,
+        .movementRangeX = 1,
+        .movementRangeY = 2,
+        .trainerType = 0,
+        .trainerRange_berryTreeId = 0,
+        .script = sPortText_LittlerootTwin,
+        .flagId = 0,
+    },
+    {
+        .localId = 2,
+        .graphicsId = OBJ_EVENT_GFX_FAT_MAN,
+        .kind = 0,
+        .x = 12,
+        .y = 13,
+        .elevation = 3,
+        .movementType = MOVEMENT_TYPE_WANDER_AROUND,
+        .movementRangeX = 2,
+        .movementRangeY = 1,
+        .trainerType = 0,
+        .trainerRange_berryTreeId = 0,
+        .script = sPortText_LittlerootFatMan,
+        .flagId = 0,
+    },
+    {
+        .localId = 3,
+        .graphicsId = OBJ_EVENT_GFX_BOY_2,
+        .kind = 0,
+        .x = 14,
+        .y = 17,
+        .elevation = 3,
+        .movementType = MOVEMENT_TYPE_WANDER_AROUND,
+        .movementRangeX = 2,
+        .movementRangeY = 1,
+        .trainerType = 0,
+        .trainerRange_berryTreeId = 0,
+        .script = sPortText_LittlerootBoy,
+        .flagId = 0,
+    },
+};
+
 static const struct BgEvent sPortLittlerootBgEvents[] =
 {
     { .x = 15, .y = 13, .elevation = 0, .kind = 0, .bgUnion.script = sPortText_LittlerootTownSign },
@@ -235,8 +293,10 @@ static const struct BgEvent sPortLittlerootBgEvents[] =
 
 static const struct MapEvents sPortLittlerootEvents =
 {
+    .objectEventCount = ARRAY_COUNT(sPortLittlerootObjectEvents),
     .warpCount = ARRAY_COUNT(sPortLittlerootWarps),
     .bgEventCount = ARRAY_COUNT(sPortLittlerootBgEvents),
+    .objectEvents = sPortLittlerootObjectEvents,
     .warps = sPortLittlerootWarps,
     .bgEvents = sPortLittlerootBgEvents,
 };

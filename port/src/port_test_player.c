@@ -1,6 +1,7 @@
 #include "port_test_player.h"
 #include "port_test_overworld.h"
 #include "port_test_dialogue.h"
+#include "port_test_npc.h"
 
 #include "global.h"
 #include "field_camera.h"
@@ -167,14 +168,12 @@ static bool32 BgEventMatchesFacing(const struct BgEvent *event)
     }
 }
 
-static bool32 TryInteractWithBackgroundEvent(void)
+static bool32 TryInteractWithFacingEvent(void)
 {
-    const struct MapEvents *events = gMapHeader.events;
-    if (events == NULL || events->bgEvents == NULL)
-        return FALSE;
-
-    s16 x = gSaveBlock1Ptr->pos.x;
-    s16 y = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
+    const s16 playerX = gSaveBlock1Ptr->pos.x;
+    const s16 playerY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
+    s16 x = playerX;
+    s16 y = playerY;
 
     switch (sPortFacing)
     {
@@ -191,6 +190,13 @@ static bool32 TryInteractWithBackgroundEvent(void)
         ++x;
         break;
     }
+
+    if (PortTestNpc_TryInteractAt(x, y, playerX, playerY))
+        return TRUE;
+
+    const struct MapEvents *events = gMapHeader.events;
+    if (events == NULL || events->bgEvents == NULL)
+        return FALSE;
 
     for (u32 i = 0; i < events->bgEventCount; ++i)
     {
@@ -281,6 +287,9 @@ static bool32 CanStartStep(s16 dx, s16 dy)
     const s16 targetGridY = targetMapY + MAP_OFFSET;
     const bool32 targetIsWarp = IsWarpEventAt(targetMapX, targetMapY);
 
+    if (PortTestNpc_BlocksTile(targetMapX, targetMapY))
+        return FALSE;
+
     // Use the same two pieces of static-map collision that Emerald relies on
     // for ordinary walking: the collision bits plus directional metatile
     // edges. Warp tiles remain enterable even when the doorway block itself
@@ -368,7 +377,7 @@ void PortTestPlayer_Update(void)
 
     if (sPortStepFrames == 0
      && (gMain.newKeys & A_BUTTON)
-     && TryInteractWithBackgroundEvent())
+     && TryInteractWithFacingEvent())
     {
         AnimateSprites();
         BuildOamBuffer();

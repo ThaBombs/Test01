@@ -1,0 +1,11 @@
+#ifndef GUARD_PORT_TEST_NPC_H
+#define GUARD_PORT_TEST_NPC_H
+
+#include "gba/types.h"
+
+void PortTestNpc_LoadMap(void);
+void PortTestNpc_Update(void);
+bool32 PortTestNpc_BlocksTile(s16 x, s16 y);
+bool32 PortTestNpc_TryInteractAt(s16 x, s16 y, s16 playerX, s16 playerY);
+
+#endif

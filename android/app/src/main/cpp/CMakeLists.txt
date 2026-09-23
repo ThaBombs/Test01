@@ -295,6 +295,27 @@ add_custom_command(
     VERBATIM
 )
 
+# Android-native Littleroot NPC slice using Emerald's original object-event art.
+set(TEST_NPC_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/test_npc_android.c")
+add_custom_command(
+    OUTPUT "${TEST_NPC_ANDROID_C}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    COMMAND /bin/bash -o pipefail -c
+        "cd '${REPO_ROOT}' && mkdir -p build/assets/graphics/object_events/pics/people build/assets/graphics/object_events/palettes && tools/gbagfx/gbagfx graphics/object_events/pics/people/twin.png build/assets/graphics/object_events/pics/people/twin.png_mwidth_2__mheight_4.4bpp -mwidth 2 -mheight 4 && tools/gbagfx/gbagfx graphics/object_events/pics/people/fat_man.png build/assets/graphics/object_events/pics/people/fat_man.png_mwidth_2__mheight_4.4bpp -mwidth 2 -mheight 4 && tools/gbagfx/gbagfx graphics/object_events/pics/people/boy_2.png build/assets/graphics/object_events/pics/people/boy_2.png_mwidth_2__mheight_4.4bpp -mwidth 2 -mheight 4 && tools/gbagfx/gbagfx graphics/object_events/palettes/npc_1.pal build/assets/graphics/object_events/palettes/npc_1.pal.gbapal && tools/gbagfx/gbagfx graphics/object_events/palettes/npc_2.pal build/assets/graphics/object_events/palettes/npc_2.pal.gbapal && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DPORT_BOOTSTRAP_MENU_ONLY=1 -DPORT_BOOTSTRAP_NO_OVERWORLD=1 '${PORT_ROOT}/src/port_test_npc.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${PORT_ROOT}/src/port_test_npc.c' '${REPO_ROOT}/charmap.txt' > '${TEST_NPC_ANDROID_C}'"
+    DEPENDS
+        "${PORT_ROOT}/src/port_test_npc.c"
+        "${PORT_ROOT}/include/port_test_npc.h"
+        "${REPO_ROOT}/graphics/object_events/pics/people/twin.png"
+        "${REPO_ROOT}/graphics/object_events/pics/people/fat_man.png"
+        "${REPO_ROOT}/graphics/object_events/pics/people/boy_2.png"
+        "${REPO_ROOT}/graphics/object_events/palettes/npc_1.pal"
+        "${REPO_ROOT}/graphics/object_events/palettes/npc_2.pal"
+        "${REPO_ROOT}/tools/preproc/preproc"
+        "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/charmap.txt"
+    VERBATIM
+)
+
 # Reduced Emerald-style field Start menu used by the Android overworld slice.
 set(TEST_FIELD_MENU_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/test_field_menu_android.c")
 add_custom_command(
@@ -380,6 +401,7 @@ set_source_files_properties(
     "${REPO_ROOT}/src/field_camera.c"
     "${LITTLEROOT_ANDROID_C}"
     "${TEST_PLAYER_ANDROID_C}"
+    "${TEST_NPC_ANDROID_C}"
     "${TEST_FIELD_MENU_ANDROID_C}"
     "${PORT_ROOT}/src/port_test_dialogue.c"
     PROPERTIES
@@ -398,6 +420,7 @@ target_sources(
     "${REPO_ROOT}/src/field_camera.c"
     "${LITTLEROOT_ANDROID_C}"
     "${TEST_PLAYER_ANDROID_C}"
+    "${TEST_NPC_ANDROID_C}"
     "${TEST_FIELD_MENU_ANDROID_C}"
     "${PORT_ROOT}/src/port_test_dialogue.c"
     "${REPO_ROOT}/src/window.c"
