@@ -25,7 +25,7 @@ const u16 ALIGNED(4) gPortTilesetPalettes_General[][16] =
     INCGFX_U16("data/tilesets/primary/general/palettes/15.pal", ".gbapal"),
 };
 const u32 gPortTilesetTiles_General[] =
-    INCGFX_U32("data/tilesets/primary/general/tiles.png", ".4bpp.smol");
+    INCGFX_U32("data/tilesets/primary/general/tiles.png", ".4bpp");
 const u16 gPortMetatiles_General[] =
     INCBIN_U16("data/tilesets/primary/general/metatiles.bin");
 const u16 gPortMetatileAttributes_General[] =
@@ -51,7 +51,7 @@ const u16 ALIGNED(4) gPortTilesetPalettes_Petalburg[][16] =
     INCGFX_U16("data/tilesets/secondary/petalburg/palettes/15.pal", ".gbapal"),
 };
 const u32 gPortTilesetTiles_Petalburg[] =
-    INCGFX_U32("data/tilesets/secondary/petalburg/tiles.png", ".4bpp.fastSmol", "-num_tiles 159 -Wnum_tiles");
+    INCGFX_U32("data/tilesets/secondary/petalburg/tiles.png", ".4bpp", "-num_tiles 159 -Wnum_tiles");
 const u16 gPortMetatiles_Petalburg[] =
     INCBIN_U16("data/tilesets/secondary/petalburg/metatiles.bin");
 const u16 gPortMetatileAttributes_Petalburg[] =
@@ -59,7 +59,7 @@ const u16 gPortMetatileAttributes_Petalburg[] =
 
 static const struct Tileset sPortTilesetGeneral =
 {
-    .isCompressed = TRUE,
+    .isCompressed = FALSE,
     .isSecondary = FALSE,
     .tiles = gPortTilesetTiles_General,
     .palettes = gPortTilesetPalettes_General,
@@ -70,7 +70,7 @@ static const struct Tileset sPortTilesetGeneral =
 
 static const struct Tileset sPortTilesetPetalburg =
 {
-    .isCompressed = TRUE,
+    .isCompressed = FALSE,
     .isSecondary = TRUE,
     .tiles = gPortTilesetTiles_Petalburg,
     .palettes = gPortTilesetPalettes_Petalburg,
