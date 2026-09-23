@@ -85,6 +85,9 @@ static struct TouchControlConfig sTouchControls[TOUCH_CONTROL_COUNT] =
 
 static bool sTouchLayoutEditing;
 static int sFastForwardMultiplier = 2;
+static bool sFastForwardToggleMode;
+static bool sFastForwardToggled;
+static bool sPreviousFastForwardDown;
 static bool sEditorPointerDown;
 static bool sEditorDragging;
 static int sEditorSelected = TOUCH_CONTROL_DPAD;
@@ -315,6 +318,7 @@ static void SaveTouchLayout(void)
                 sTouchControls[i].yPermille,
                 sTouchControls[i].sizePercent);
     fprintf(file, "FF %d\n", sFastForwardMultiplier);
+    fprintf(file, "FFT %d\n", sFastForwardToggleMode ? 1 : 0);
     fclose(file);
 }
 
@@ -366,6 +370,11 @@ static void LoadTouchLayout(void)
          && strcmp(tag, "FF") == 0
          && multiplier >= 2 && multiplier <= 4)
             sFastForwardMultiplier = multiplier;
+
+        int toggleMode = 0;
+        if (fscanf(file, "%7s %d", tag, &toggleMode) == 2
+         && strcmp(tag, "FFT") == 0)
+            sFastForwardToggleMode = toggleMode != 0;
     }
 
     fclose(file);
@@ -743,10 +752,11 @@ static void DrawTouchControls(uint32_t *pixels, int width, int height, int strid
                      (layout.startTop + layout.startBottom) / 2,
                      "START", 1, label, 230);
 
+    const bool fastForwardActive = PortRuntime_IsFastForwardEnabled();
     BlendFillRect(pixels, width, height, stridePixels,
                   layout.fastLeft, layout.fastTop, layout.fastRight, layout.fastBottom,
-                  (held & PORT_BUTTON_FAST_FORWARD) ? active : idle,
-                  (held & PORT_BUTTON_FAST_FORWARD) ? activeAlpha : idleAlpha);
+                  fastForwardActive ? active : idle,
+                  fastForwardActive ? activeAlpha : idleAlpha);
     const char *fastLabel =
         sFastForwardMultiplier == 4 ? "4X"
       : sFastForwardMultiplier == 3 ? "3X"
@@ -804,6 +814,9 @@ void PortRuntime_Init(void)
 {
     sPortState = (struct PortRuntimeState){0};
     sFastForwardMultiplier = 2;
+    sFastForwardToggleMode = false;
+    sFastForwardToggled = false;
+    sPreviousFastForwardDown = false;
     sTouchLayoutEditing = false;
     sEditorPointerDown = false;
     sEditorDragging = false;
@@ -815,6 +828,16 @@ void PortRuntime_Step(const struct PortInputState *input, double deltaSeconds)
 {
     if (input != NULL)
         sPortState.input = *input;
+
+    const bool fastForwardDown =
+        (sPortState.input.buttons & PORT_BUTTON_FAST_FORWARD) != 0;
+    if (sFastForwardToggleMode
+     && fastForwardDown
+     && !sPreviousFastForwardDown)
+        sFastForwardToggled = !sFastForwardToggled;
+    if (!sFastForwardToggleMode)
+        sFastForwardToggled = false;
+    sPreviousFastForwardDown = fastForwardDown;
 
     PortGbaHost_SetButtons(sPortState.input.buttons);
 
@@ -870,7 +893,22 @@ bool PortRuntime_IsGbaHostReady(void)
 
 bool PortRuntime_IsFastForwardEnabled(void)
 {
+    if (sFastForwardToggleMode)
+        return sFastForwardToggled;
     return (sPortState.input.buttons & PORT_BUTTON_FAST_FORWARD) != 0;
+}
+
+bool PortRuntime_GetFastForwardToggleMode(void)
+{
+    return sFastForwardToggleMode;
+}
+
+void PortRuntime_SetFastForwardToggleMode(bool enabled)
+{
+    sFastForwardToggleMode = enabled;
+    sFastForwardToggled = false;
+    sPreviousFastForwardDown = false;
+    SaveTouchLayout();
 }
 
 int PortRuntime_GetFastForwardMultiplier(void)
