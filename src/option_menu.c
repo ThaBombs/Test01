@@ -49,15 +49,21 @@ enum
     WIN_OPTIONS
 };
 
-#define YPOS_TEXTSPEED    (MENUITEM_TEXTSPEED * 16)
-#define YPOS_BATTLESCENE  (MENUITEM_BATTLESCENE * 16)
-#define YPOS_BATTLESTYLE  (MENUITEM_BATTLESTYLE * 16)
-#define YPOS_SOUND        (MENUITEM_SOUND * 16)
-#define YPOS_BUTTONMODE   (MENUITEM_BUTTONMODE * 16)
 #ifdef PLATFORM_ANDROID
-#define YPOS_FASTFORWARD  (MENUITEM_FASTFORWARD * 16)
+#define OPTION_ROW_HEIGHT 14
+#else
+#define OPTION_ROW_HEIGHT 16
 #endif
-#define YPOS_FRAMETYPE    (MENUITEM_FRAMETYPE * 16)
+
+#define YPOS_TEXTSPEED    (MENUITEM_TEXTSPEED * OPTION_ROW_HEIGHT)
+#define YPOS_BATTLESCENE  (MENUITEM_BATTLESCENE * OPTION_ROW_HEIGHT)
+#define YPOS_BATTLESTYLE  (MENUITEM_BATTLESTYLE * OPTION_ROW_HEIGHT)
+#define YPOS_SOUND        (MENUITEM_SOUND * OPTION_ROW_HEIGHT)
+#define YPOS_BUTTONMODE   (MENUITEM_BUTTONMODE * OPTION_ROW_HEIGHT)
+#ifdef PLATFORM_ANDROID
+#define YPOS_FASTFORWARD  (MENUITEM_FASTFORWARD * OPTION_ROW_HEIGHT)
+#endif
+#define YPOS_FRAMETYPE    (MENUITEM_FRAMETYPE * OPTION_ROW_HEIGHT)
 
 static void Task_OptionMenuFadeIn(u8 taskId);
 static void Task_OptionMenuProcessInput(u8 taskId);
@@ -175,11 +181,7 @@ static const struct WindowTemplate sOptionMenuWinTemplates[] =
         .tilemapLeft = 2,
         .tilemapTop = 5,
         .width = 26,
-#ifdef PLATFORM_ANDROID
-        .height = 16,
-#else
         .height = 14,
-#endif
         .paletteNum = 1,
         .baseBlock = 0x36
     },
@@ -495,13 +497,13 @@ static void HighlightOptionMenuItem(u8 index)
         0,
         0,
         12,
-        MENUITEM_COUNT * 16);
+        MENUITEM_COUNT * OPTION_ROW_HEIGHT);
 
     AddTextPrinterParameterized3(
         WIN_OPTIONS,
         FONT_NORMAL,
         2,
-        index * 16 + 1,
+        index * OPTION_ROW_HEIGHT + 1,
         sAndroidTextColors,
         TEXT_SKIP_DRAW,
         gText_SelectedMarker);
@@ -578,7 +580,7 @@ static void TextSpeed_DrawChoices(u8 selection)
         104,
         YPOS_TEXTSPEED,
         96,
-        16);
+        OPTION_ROW_HEIGHT);
     DrawOptionMenuChoice(
         text,
         GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
@@ -631,7 +633,7 @@ static void BattleScene_DrawChoices(u8 selection)
         104,
         YPOS_BATTLESCENE,
         96,
-        16);
+        OPTION_ROW_HEIGHT);
     DrawOptionMenuChoice(
         text,
         GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
@@ -673,7 +675,7 @@ static void BattleStyle_DrawChoices(u8 selection)
         104,
         YPOS_BATTLESTYLE,
         96,
-        16);
+        OPTION_ROW_HEIGHT);
     DrawOptionMenuChoice(
         text,
         GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
@@ -716,7 +718,7 @@ static void Sound_DrawChoices(u8 selection)
         104,
         YPOS_SOUND,
         96,
-        16);
+        OPTION_ROW_HEIGHT);
     DrawOptionMenuChoice(
         text,
         GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
@@ -757,7 +759,7 @@ static void FastForward_DrawChoices(void)
         104,
         YPOS_FASTFORWARD,
         96,
-        16);
+        OPTION_ROW_HEIGHT);
     DrawOptionMenuChoice(
         text,
         GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
@@ -827,7 +829,7 @@ static void FrameType_DrawChoices(u8 selection)
         104,
         YPOS_FRAMETYPE,
         96,
-        16);
+        OPTION_ROW_HEIGHT);
     DrawOptionMenuChoice(gText_FrameType, 148, YPOS_FRAMETYPE, 0);
     DrawOptionMenuChoice(text, 180, YPOS_FRAMETYPE, 0);
 #else
@@ -889,7 +891,7 @@ static void ButtonMode_DrawChoices(u8 selection)
         104,
         YPOS_BUTTONMODE,
         96,
-        16);
+        OPTION_ROW_HEIGHT);
 
     const u8 *multiplierText = gText_FastForward2x;
     if (PortRuntime_GetFastForwardMultiplier() == 3)
@@ -945,7 +947,7 @@ static void DrawOptionMenuTexts(void)
             WIN_OPTIONS,
             FONT_NORMAL,
             18,
-            (i * 16) + 1,
+            (i * OPTION_ROW_HEIGHT) + 1,
             sAndroidTextColors,
             TEXT_SKIP_DRAW,
             sOptionMenuItemsNames[i]);
@@ -989,19 +991,11 @@ static void DrawBgWindowFrames(void)
     FillBgTilemapBufferRect(1, TILE_TOP_CORNER_L,  1,  4,  1,  1,  7);
     FillBgTilemapBufferRect(1, TILE_TOP_EDGE,      2,  4, 26,  1,  7);
     FillBgTilemapBufferRect(1, TILE_TOP_CORNER_R, 28,  4,  1,  1,  7);
-#ifdef PLATFORM_ANDROID
-    FillBgTilemapBufferRect(1, TILE_LEFT_EDGE,     1,  5,  1, 16,  7);
-    FillBgTilemapBufferRect(1, TILE_RIGHT_EDGE,   28,  5,  1, 16,  7);
-    FillBgTilemapBufferRect(1, TILE_BOT_CORNER_L,  1, 21,  1,  1,  7);
-    FillBgTilemapBufferRect(1, TILE_BOT_EDGE,      2, 21, 26,  1,  7);
-    FillBgTilemapBufferRect(1, TILE_BOT_CORNER_R, 28, 21,  1,  1,  7);
-#else
     FillBgTilemapBufferRect(1, TILE_LEFT_EDGE,     1,  5,  1, 18,  7);
     FillBgTilemapBufferRect(1, TILE_RIGHT_EDGE,   28,  5,  1, 18,  7);
     FillBgTilemapBufferRect(1, TILE_BOT_CORNER_L,  1, 19,  1,  1,  7);
     FillBgTilemapBufferRect(1, TILE_BOT_EDGE,      2, 19, 26,  1,  7);
     FillBgTilemapBufferRect(1, TILE_BOT_CORNER_R, 28, 19,  1,  1,  7);
-#endif
 
     CopyBgTilemapBufferToVram(1);
 }
