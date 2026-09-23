@@ -224,14 +224,13 @@ static void SpawnTallGrassEffectAt(s16 mapX, s16 mapY)
     const s16 playerX = gSaveBlock1Ptr->pos.x;
     const s16 playerY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
 
-    // Match Emerald's field-effect placement: a 16x16 grass sprite is centered
-    // eight pixels into the map tile. Spawning it before movement means the
-    // rustle belongs to the grass tile being entered and then stays world-tied
-    // while the camera moves over it.
+    // CreateSprite coordinates already refer to the center of this 16x16
+    // effect. Keep it on the exact world-tile center; the previous +8 offset
+    // pushed the rustle visibly toward the next row.
     const u8 spriteId = CreateSprite(
         &sPortTallGrassTemplate,
         DISPLAY_WIDTH / 2 + (mapX - playerX) * 16,
-        DISPLAY_HEIGHT / 2 + (mapY - playerY) * 16 + 8,
+        DISPLAY_HEIGHT / 2 + (mapY - playerY) * 16,
         0);
     if (spriteId < MAX_SPRITES)
     {
@@ -532,11 +531,13 @@ static void BeginStep(s16 dx, s16 dy, u8 faceAnim, u8 walkAnim)
     sPortLedgeJump = FALSE;
     sPortWarpExitStep = FALSE;
 
-    // Start the rustle on the destination grass tile while the player is
-    // actually crossing into it, rather than one frame after arrival.
+    // Grass should read as a trail, not an aura attached to the player.
+    // Spawn on the grass tile being LEFT as the step begins; camera deltas then
+    // carry that effect backward in world space while the player remains
+    // screen-centered.
     SpawnTallGrassEffectAt(
-        gSaveBlock1Ptr->pos.x + dx,
-        gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS + dy);
+        gSaveBlock1Ptr->pos.x,
+        gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS);
 
     // CameraUpdateNoObjectRefresh consumes pixel speeds and updates/redraws the
     // map one tile boundary at a time. Two pixels for eight frames is a native
