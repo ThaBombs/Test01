@@ -216,12 +216,21 @@ static const struct WarpEvent sPortLittlerootWarps[] =
     { .x = 7,  .y = 16, .elevation = 0, .warpId = 0, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB) },
 };
 
+static const u8 sPortText_LittlerootTownSign[] =
+    _("LITTLEROOT TOWN\\nA small town with big dreams.");
+static const u8 sPortText_BirchLabSign[] =
+    _("PROF. BIRCH'S\\nPOKEMON LAB");
+static const u8 sPortText_BrendanHouseSign[] =
+    _("BRENDAN'S HOUSE");
+static const u8 sPortText_MayHouseSign[] =
+    _("PROF. BIRCH'S HOUSE");
+
 static const struct BgEvent sPortLittlerootBgEvents[] =
 {
-    { .x = 15, .y = 13, .elevation = 0, .kind = 0, .bgUnion.script = NULL },
-    { .x = 6,  .y = 17, .elevation = 0, .kind = 0, .bgUnion.script = NULL },
-    { .x = 7,  .y = 8,  .elevation = 3, .kind = 0, .bgUnion.script = NULL },
-    { .x = 12, .y = 8,  .elevation = 3, .kind = 0, .bgUnion.script = NULL },
+    { .x = 15, .y = 13, .elevation = 0, .kind = 0, .bgUnion.script = sPortText_LittlerootTownSign },
+    { .x = 6,  .y = 17, .elevation = 0, .kind = 0, .bgUnion.script = sPortText_BirchLabSign },
+    { .x = 7,  .y = 8,  .elevation = 3, .kind = 0, .bgUnion.script = sPortText_BrendanHouseSign },
+    { .x = 12, .y = 8,  .elevation = 3, .kind = 0, .bgUnion.script = sPortText_MayHouseSign },
 };
 
 static const struct MapEvents sPortLittlerootEvents =

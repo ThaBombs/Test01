@@ -381,6 +381,7 @@ set_source_files_properties(
     "${LITTLEROOT_ANDROID_C}"
     "${TEST_PLAYER_ANDROID_C}"
     "${TEST_FIELD_MENU_ANDROID_C}"
+    "${PORT_ROOT}/src/port_test_dialogue.c"
     PROPERTIES
     COMPILE_OPTIONS "-fvisibility=hidden"
 )
@@ -398,6 +399,7 @@ target_sources(
     "${LITTLEROOT_ANDROID_C}"
     "${TEST_PLAYER_ANDROID_C}"
     "${TEST_FIELD_MENU_ANDROID_C}"
+    "${PORT_ROOT}/src/port_test_dialogue.c"
     "${REPO_ROOT}/src/window.c"
     "${REPO_ROOT}/src/blit.c"
     "${REPO_ROOT}/src/dynamic_placeholder_text_util.c"

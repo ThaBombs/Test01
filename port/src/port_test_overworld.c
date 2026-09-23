@@ -1,11 +1,11 @@
 #include "port_test_overworld.h"
 #include "port_test_player.h"
 #include "port_test_field_menu.h"
+#include "port_test_dialogue.h"
 
 #include "global.h"
 #include "bg.h"
 #include "field_camera.h"
-#include "field_message_box.h"
 #include "fieldmap.h"
 #include "gpu_regs.h"
 #include "main.h"
@@ -14,8 +14,6 @@
 #include "option_menu.h"
 #include "window.h"
 #include "palette.h"
-#include "script.h"
-#include "task.h"
 #include "constants/maps.h"
 
 
@@ -39,13 +37,11 @@ static const struct BgTemplate sPortOverworldBgTemplates[] =
 
 static void PortTestOverworld_Main(void)
 {
-    ScriptContext_RunScript();
-    RunTasks();
-
-    if (ArePlayerFieldControlsLocked())
-        PortTestPlayer_Update();
-    else if (!PortTestFieldMenu_Update())
-        PortTestPlayer_Update();
+    if (!PortTestDialogue_Update())
+    {
+        if (!PortTestFieldMenu_Update())
+            PortTestPlayer_Update();
+    }
 
     FieldUpdateBgTilemapScroll();
     DoScheduledBgTilemapCopiesToVram();
@@ -168,22 +164,15 @@ static void PortTestOverworld_SetupScene(u16 mapGroup, u16 mapNum, s16 focusX, s
     SetBgTilemapBuffer(2, gOverworldTilemapBuffer_Bg2);
     SetBgTilemapBuffer(3, gOverworldTilemapBuffer_Bg3);
 
-    ResetTasks();
-    ScriptContext_Init();
-    UnlockPlayerFieldControls();
-    InitStandardTextBoxWindows();
-    InitTextBoxGfxAndPrinters();
-    InitFieldMessageBox();
-
     PortTestOverworld_LoadMapState(mapGroup, mapNum, focusX, focusY);
 
-    ShowBg(0);
     ShowBg(1);
     ShowBg(2);
     ShowBg(3);
 
     PortTestPlayer_Init();
     PortTestFieldMenu_Init();
+    PortTestDialogue_Init();
 
     SetMainCallback2(PortTestOverworld_Main);
 }

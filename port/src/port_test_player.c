@@ -1,12 +1,12 @@
 #include "port_test_player.h"
 #include "port_test_overworld.h"
+#include "port_test_dialogue.h"
 
 #include "global.h"
 #include "field_camera.h"
 #include "fieldmap.h"
 #include "gpu_regs.h"
 #include "main.h"
-#include "script.h"
 #include "sprite.h"
 #include "constants/event_bg.h"
 #include "constants/maps.h"
@@ -170,7 +170,7 @@ static bool32 BgEventMatchesFacing(const struct BgEvent *event)
 static bool32 TryInteractWithBackgroundEvent(void)
 {
     const struct MapEvents *events = gMapHeader.events;
-    if (events == NULL || events->bgEvents == NULL || ScriptContext_IsEnabled())
+    if (events == NULL || events->bgEvents == NULL)
         return FALSE;
 
     s16 x = gSaveBlock1Ptr->pos.x;
@@ -200,8 +200,7 @@ static bool32 TryInteractWithBackgroundEvent(void)
         if (event->bgUnion.script == NULL)
             return FALSE;
 
-        ScriptContext_SetupScript(event->bgUnion.script);
-        return TRUE;
+        return PortTestDialogue_Open(event->bgUnion.script);
     }
 
     return FALSE;
@@ -368,18 +367,8 @@ void PortTestPlayer_Update(void)
         return;
 
     if (sPortStepFrames == 0
-     && !ArePlayerFieldControlsLocked()
      && (gMain.newKeys & A_BUTTON)
      && TryInteractWithBackgroundEvent())
-    {
-        AnimateSprites();
-        BuildOamBuffer();
-        LoadOam();
-        ProcessSpriteCopyRequests();
-        return;
-    }
-
-    if (sPortStepFrames == 0 && ArePlayerFieldControlsLocked())
     {
         AnimateSprites();
         BuildOamBuffer();
