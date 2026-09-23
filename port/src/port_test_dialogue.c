@@ -10,7 +10,8 @@
 #include "window.h"
 
 #define PORT_DIALOGUE_FRAME_TILE 0x1E0
-#define PORT_DIALOGUE_FRAME_PAL  15
+#define PORT_DIALOGUE_FRAME_PAL  14
+#define PORT_DIALOGUE_TEXT_PAL   15
 
 static const struct WindowTemplate sDialogueWindow =
 {
@@ -38,10 +39,15 @@ void PortTestDialogue_Init(void)
     sDialogueWindowId = AddWindow(&sDialogueWindow);
     if (sDialogueWindowId != WINDOW_NONE)
     {
-        LoadMessageBoxGfx(
+        LoadWindowGfx(
             sDialogueWindowId,
+            gSaveBlock2Ptr->optionsWindowFrameType,
             PORT_DIALOGUE_FRAME_TILE,
             BG_PLTT_ID(PORT_DIALOGUE_FRAME_PAL));
+        LoadPalette(
+            GetTextWindowPalette(3),
+            BG_PLTT_ID(PORT_DIALOGUE_TEXT_PAL),
+            PLTT_SIZE_4BPP);
     }
     sDialogueOpen = FALSE;
 }
