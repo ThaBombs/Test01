@@ -117,6 +117,33 @@ void PortGame_LoadTestConnectionMap(u16 mapGroup, u16 mapNum)
     PortTestNpc_LoadMap();
 }
 
+static bool32 IsHouseStairTransition(
+    u16 srcGroup, u16 srcNum,
+    u16 dstGroup, u16 dstNum)
+{
+    const bool32 brendanPair =
+        ((srcGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F)
+       && srcNum == MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F)
+       && dstGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F)
+       && dstNum == MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F))
+      || (srcGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F)
+       && srcNum == MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F)
+       && dstGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F)
+       && dstNum == MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F)));
+
+    const bool32 mayPair =
+        ((srcGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F)
+       && srcNum == MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F)
+       && dstGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_2F)
+       && dstNum == MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_2F))
+      || (srcGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_2F)
+       && srcNum == MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_2F)
+       && dstGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F)
+       && dstNum == MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F)));
+
+    return brendanPair || mayPair;
+}
+
 bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
 {
     const struct MapEvents *events = gMapHeader.events;
@@ -149,6 +176,8 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
         if (warp->x != x || warp->y != y)
             continue;
 
+        const u16 sourceGroup = gSaveBlock1Ptr->location.mapGroup;
+        const u16 sourceNum = gSaveBlock1Ptr->location.mapNum;
         const struct MapHeader *destHeader =
             Overworld_GetMapHeaderByGroupAndId(warp->mapGroup, warp->mapNum);
         if (destHeader == NULL || destHeader->events == NULL
@@ -165,6 +194,15 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
             warp->mapNum,
             dest->x,
             dest->y + PORT_PLAYER_MAP_Y_BIAS);
+
+        // Both Littleroot bedroom staircases emerge toward the room interior.
+        // Preserve that arrival orientation instead of carrying the direction
+        // the player happened to face when stepping onto the source warp.
+        if (IsHouseStairTransition(
+                sourceGroup, sourceNum,
+                warp->mapGroup, warp->mapNum))
+            PortTestPlayer_SetFacingDirection(DIR_SOUTH);
+
         sPortWarpArrivalLocked = TRUE;
         return TRUE;
     }
