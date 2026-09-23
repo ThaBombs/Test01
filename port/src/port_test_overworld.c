@@ -11,7 +11,7 @@ void PortGame_StartTestOverworld(void)
     // NewGameInitData dependency graph. The bootstrap save blocks start zeroed,
     // so provide only the player identity state needed by the field loader.
     gSaveBlock2Ptr->playerGender = 0;
-    gSaveBlock2Ptr->playerName[0] = EOS;
+    gSaveBlock2Ptr->playerName[0] = 0xFF; // Emerald string terminator
 
     // WARP_ID_NONE with invalid coordinates makes Emerald choose the center of
     // the destination map, avoiding a fragile hard-coded Littleroot tile.
