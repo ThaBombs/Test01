@@ -27,6 +27,7 @@ static u16 sPortBg1[BG_SCREEN_SIZE / sizeof(u16)];
 static u16 sPortBg2[BG_SCREEN_SIZE / sizeof(u16)];
 static u16 sPortBg3[BG_SCREEN_SIZE / sizeof(u16)];
 static bool32 sPortWarpArrivalLocked;
+static u16 sPortEventVars[8];
 
 static const struct BgTemplate sPortOverworldBgTemplates[] =
 {
@@ -225,10 +226,27 @@ bool32 PortGame_TryTestCoordEventAt(s16 x, s16 y)
         if (event->script == NULL)
             return FALSE;
 
+        // trigger/index are reused by the reduced Android slice as a compact
+        // state-variable gate. trigger 0 remains unconditional, preserving the
+        // original Littleroot warning events.
+        if (event->trigger != 0)
+        {
+            if (event->trigger >= ARRAY_COUNT(sPortEventVars)
+             || sPortEventVars[event->trigger] != event->index)
+                continue;
+        }
+
         // The Android slice currently stores a displayable dialogue string in
-        // the script field. Later scripted-movement support can replace this
-        // with full Emerald bytecode execution without changing trigger lookup.
-        return PortTestDialogue_Open(event->script);
+        // the script field. Advancing a gated variable after the message opens
+        // gives us deterministic one-shot/sequential story triggers until the
+        // full Emerald script engine and VarSet/VarGet state are linked.
+        if (PortTestDialogue_Open(event->script))
+        {
+            if (event->trigger != 0)
+                ++sPortEventVars[event->trigger];
+            return TRUE;
+        }
+        return FALSE;
     }
 
     return FALSE;
@@ -304,6 +322,7 @@ void PortGame_ReturnToTestOverworld(void)
 void PortGame_StartTestOverworld(void)
 {
     sPortWarpArrivalLocked = FALSE;
+    memset(sPortEventVars, 0, sizeof(sPortEventVars));
     PortTestNpc_ClearSavedSceneState();
     PortTestOverworld_SetupScene(
         MAP_GROUP(MAP_LITTLEROOT_TOWN),
