@@ -202,6 +202,7 @@ static u8 sPortStepFrames;
 static s8 sPortStepDx;
 static s8 sPortStepDy;
 static bool32 sPortLedgeJump;
+static bool32 sPortWarpExitStep;
 static bool32 sPortFacingLockUntilRelease;
 
 static bool32 IsTallGrassBehavior(u8 behavior)
@@ -210,23 +211,27 @@ static bool32 IsTallGrassBehavior(u8 behavior)
         || behavior == MB_CYCLING_ROAD_PULL_DOWN_GRASS;
 }
 
-static void SpawnTallGrassStepEffect(void)
+static void SpawnTallGrassEffectAt(s16 mapX, s16 mapY)
 {
     if (sPortPlayerSpriteId >= MAX_SPRITES)
         return;
 
-    const s16 mapX = gSaveBlock1Ptr->pos.x;
-    const s16 mapY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
     const u8 behavior =
         MapGridGetMetatileBehaviorAt(mapX + MAP_OFFSET, mapY + MAP_OFFSET);
-
     if (!IsTallGrassBehavior(behavior))
         return;
 
+    const s16 playerX = gSaveBlock1Ptr->pos.x;
+    const s16 playerY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
+
+    // Match Emerald's field-effect placement: a 16x16 grass sprite is centered
+    // eight pixels into the map tile. Spawning it before movement means the
+    // rustle belongs to the grass tile being entered and then stays world-tied
+    // while the camera moves over it.
     const u8 spriteId = CreateSprite(
         &sPortTallGrassTemplate,
-        DISPLAY_WIDTH / 2,
-        DISPLAY_HEIGHT / 2 + 8,
+        DISPLAY_WIDTH / 2 + (mapX - playerX) * 16,
+        DISPLAY_HEIGHT / 2 + (mapY - playerY) * 16 + 8,
         0);
     if (spriteId < MAX_SPRITES)
     {
@@ -525,6 +530,13 @@ static void BeginStep(s16 dx, s16 dy, u8 faceAnim, u8 walkAnim)
     sPortStepDy = dy;
     sPortStepFrames = 8;
     sPortLedgeJump = FALSE;
+    sPortWarpExitStep = FALSE;
+
+    // Start the rustle on the destination grass tile while the player is
+    // actually crossing into it, rather than one frame after arrival.
+    SpawnTallGrassEffectAt(
+        gSaveBlock1Ptr->pos.x + dx,
+        gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS + dy);
 
     // CameraUpdateNoObjectRefresh consumes pixel speeds and updates/redraws the
     // map one tile boundary at a time. Two pixels for eight frames is a native
@@ -566,6 +578,7 @@ void PortTestPlayer_Init(void)
     sPortStepDx = 0;
     sPortStepDy = 0;
     sPortLedgeJump = FALSE;
+    sPortWarpExitStep = FALSE;
     sPortFacingLockUntilRelease = FALSE;
     StartSpriteAnim(&gSprites[sPortPlayerSpriteId], sPortFacing);
 
@@ -635,14 +648,15 @@ void PortTestPlayer_Update(void)
 
         if (sPortStepFrames == 0)
         {
+            const bool32 completedWarpExitStep = sPortWarpExitStep;
             gFieldCamera.movementSpeedX = 0;
             gFieldCamera.movementSpeedY = 0;
             sPortStepDx = 0;
             sPortStepDy = 0;
             sPortLedgeJump = FALSE;
+            sPortWarpExitStep = FALSE;
             gSprites[sPortPlayerSpriteId].y2 = 0;
             StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], sPortFacing);
-            SpawnTallGrassStepEffect();
 
             const s16 playerX = gSaveBlock1Ptr->pos.x;
             const s16 playerY =
@@ -660,6 +674,17 @@ void PortTestPlayer_Update(void)
                 BuildOamBuffer();
                 LoadOam();
                 ProcessSpriteCopyRequests();
+                return;
+            }
+
+            // A warp-exit animation must finish as its own step. Clear the
+            // arrival lock while standing off the warp, then require the old
+            // held direction to be released so it cannot immediately send the
+            // player back through the stairs. A fresh reverse press works at
+            // once after release.
+            if (completedWarpExitStep)
+            {
+                sPortFacingLockUntilRelease = TRUE;
                 return;
             }
 
@@ -686,6 +711,53 @@ void PortTestPlayer_Update(void)
     ProcessSpriteCopyRequests();
 }
 
+
+void PortTestPlayer_BeginWarpExitStep(u8 direction)
+{
+    if (sPortPlayerSpriteId >= MAX_SPRITES)
+        return;
+
+    s8 dx = 0;
+    s8 dy = 0;
+    u8 faceAnim = PORT_ANIM_FACE_SOUTH;
+    u8 walkAnim = PORT_ANIM_WALK_SOUTH;
+
+    switch (direction)
+    {
+    case DIR_NORTH:
+        dy = -1;
+        faceAnim = PORT_ANIM_FACE_NORTH;
+        walkAnim = PORT_ANIM_WALK_NORTH;
+        break;
+    case DIR_WEST:
+        dx = -1;
+        faceAnim = PORT_ANIM_FACE_WEST;
+        walkAnim = PORT_ANIM_WALK_WEST;
+        break;
+    case DIR_EAST:
+        dx = 1;
+        faceAnim = PORT_ANIM_FACE_EAST;
+        walkAnim = PORT_ANIM_WALK_EAST;
+        break;
+    case DIR_SOUTH:
+    default:
+        dy = 1;
+        faceAnim = PORT_ANIM_FACE_SOUTH;
+        walkAnim = PORT_ANIM_WALK_SOUTH;
+        break;
+    }
+
+    sPortFacing = faceAnim;
+    sPortStepDx = dx;
+    sPortStepDy = dy;
+    sPortStepFrames = 8;
+    sPortLedgeJump = FALSE;
+    sPortWarpExitStep = TRUE;
+    sPortFacingLockUntilRelease = FALSE;
+    gFieldCamera.movementSpeedX = dx * 2;
+    gFieldCamera.movementSpeedY = dy * 2;
+    StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], walkAnim);
+}
 
 void PortTestPlayer_SetFacingDirection(u8 direction)
 {
