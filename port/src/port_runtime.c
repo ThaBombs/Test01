@@ -43,6 +43,13 @@ struct TouchLayout
 
 static struct PortRuntimeState sPortState;
 
+static int sTouchScalePercent = 125;
+
+static int ScaleTouchSize(int value)
+{
+    return (value * sTouchScalePercent + 50) / 100;
+}
+
 static int MinInt(int a, int b)
 {
     return a < b ? a : b;
@@ -170,17 +177,17 @@ static struct TouchLayout GetTouchLayout(int width, int height)
 
     layout.dpadX = width * 12 / 100;
     layout.dpadY = height * 70 / 100;
-    layout.dpadRadius = minDim / 8;
+    layout.dpadRadius = ScaleTouchSize(minDim / 8);
     layout.dpadDead = layout.dpadRadius / 3;
 
-    layout.faceRadius = minDim / 16;
+    layout.faceRadius = ScaleTouchSize(minDim / 16);
     layout.aX = width * 88 / 100;
     layout.aY = height * 65 / 100;
     layout.bX = width * 79 / 100;
     layout.bY = height * 76 / 100;
 
-    const int shoulderHalfW = minDim / 10;
-    const int shoulderHalfH = minDim / 28;
+    const int shoulderHalfW = ScaleTouchSize(minDim / 10);
+    const int shoulderHalfH = ScaleTouchSize(minDim / 28);
     layout.lLeft = width * 8 / 100 - shoulderHalfW;
     layout.lRight = width * 8 / 100 + shoulderHalfW;
     layout.rLeft = width * 92 / 100 - shoulderHalfW;
@@ -188,8 +195,8 @@ static struct TouchLayout GetTouchLayout(int width, int height)
     layout.lTop = layout.rTop = height * 10 / 100 - shoulderHalfH;
     layout.lBottom = layout.rBottom = height * 10 / 100 + shoulderHalfH;
 
-    const int systemHalfW = minDim / 13;
-    const int systemHalfH = minDim / 30;
+    const int systemHalfW = ScaleTouchSize(minDim / 13);
+    const int systemHalfH = ScaleTouchSize(minDim / 30);
     const int systemY = height * 91 / 100;
     layout.selectLeft = width * 43 / 100 - systemHalfW;
     layout.selectRight = width * 43 / 100 + systemHalfW;
@@ -212,6 +219,20 @@ static bool PointInCircle(float x, float y, int centerX, int centerY, int radius
     const float dx = x - (float)centerX;
     const float dy = y - (float)centerY;
     return dx * dx + dy * dy <= (float)(radius * radius);
+}
+
+void PortRuntime_SetTouchScalePercent(int percent)
+{
+    if (percent < 75)
+        percent = 75;
+    else if (percent > 175)
+        percent = 175;
+    sTouchScalePercent = percent;
+}
+
+int PortRuntime_GetTouchScalePercent(void)
+{
+    return sTouchScalePercent;
 }
 
 uint32_t PortRuntime_ButtonsForTouch(float x, float y, int width, int height)

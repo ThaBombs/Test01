@@ -130,23 +130,14 @@ static s8 sPortStepDy;
 
 static bool32 IsStaticEventObstacle(s16 x, s16 y)
 {
-    // Littleroot's sign/background events occupy these tiles. The temporary
-    // map slice does not yet spawn event objects, so keep their physical
-    // footprint here until the real map-event table is linked.
-    static const s16 signs[][2] =
-    {
-        {15, 13},
-        {6, 17},
-        {7, 8},
-        {12, 8},
-    };
+    const struct MapEvents *events = gMapHeader.events;
+    if (events == NULL || events->bgEvents == NULL)
+        return FALSE;
 
-    if (gSaveBlock1Ptr->location.mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN)
-     && gSaveBlock1Ptr->location.mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN))
+    for (u32 i = 0; i < events->bgEventCount; ++i)
     {
-        for (u32 i = 0; i < ARRAY_COUNT(signs); ++i)
-            if (x == signs[i][0] && y == signs[i][1])
-                return TRUE;
+        if (events->bgEvents[i].x == x && events->bgEvents[i].y == y)
+            return TRUE;
     }
 
     return FALSE;
@@ -154,12 +145,14 @@ static bool32 IsStaticEventObstacle(s16 x, s16 y)
 
 static bool32 CanStartStep(s16 dx, s16 dy)
 {
-    const s16 targetX = gSaveBlock1Ptr->pos.x + MAP_OFFSET + dx;
-    const s16 targetY = gSaveBlock1Ptr->pos.y + MAP_OFFSET + dy;
+    const s16 targetMapX = gSaveBlock1Ptr->pos.x + dx;
+    const s16 targetMapY = gSaveBlock1Ptr->pos.y + dy;
+    const s16 targetGridX = targetMapX + MAP_OFFSET;
+    const s16 targetGridY = targetMapY + MAP_OFFSET;
 
-    if (MapGridGetCollisionAt(targetX, targetY) != 0)
+    if (MapGridGetCollisionAt(targetGridX, targetGridY) != 0)
         return FALSE;
-    if (IsStaticEventObstacle(targetX, targetY))
+    if (IsStaticEventObstacle(targetMapX, targetMapY))
         return FALSE;
 
     return TRUE;
@@ -247,9 +240,9 @@ void PortTestPlayer_Update(void)
             sPortStepDy = 0;
             StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], sPortFacing);
 
-            const s16 focusX = gSaveBlock1Ptr->pos.x + MAP_OFFSET;
-            const s16 focusY = gSaveBlock1Ptr->pos.y + MAP_OFFSET;
-            if (PortGame_TryTestWarpAt(focusX, focusY))
+            const s16 playerX = gSaveBlock1Ptr->pos.x;
+            const s16 playerY = gSaveBlock1Ptr->pos.y;
+            if (PortGame_TryTestWarpAt(playerX, playerY))
             {
                 gFieldCamera.movementSpeedX = 0;
                 gFieldCamera.movementSpeedY = 0;

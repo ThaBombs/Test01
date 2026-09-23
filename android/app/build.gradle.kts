@@ -2,17 +2,30 @@ plugins {
     id("com.android.application")
 }
 
+val ciVersionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull()?.coerceAtLeast(2) ?: 2
+
 android {
     namespace = "com.thabombs.pokeemeraldnative"
     compileSdk = 35
     ndkVersion = "27.2.12479018"
 
+    signingConfigs {
+        create("testDebug") {
+            // Public, development-only key. Keeping it stable lets test APKs
+            // update in place across ephemeral GitHub Actions runners.
+            storeFile = rootProject.file("pokeemerald-test.keystore")
+            storePassword = "android"
+            keyAlias = "pokeemerald-test"
+            keyPassword = "android"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.thabombs.pokeemeraldnative"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = ciVersionCode
+        versionName = "0.2.$ciVersionCode"
 
         externalNativeBuild {
             cmake {
@@ -35,6 +48,7 @@ android {
     buildTypes {
         debug {
             isJniDebuggable = true
+            signingConfig = signingConfigs.getByName("testDebug")
         }
         release {
             isMinifyEnabled = false

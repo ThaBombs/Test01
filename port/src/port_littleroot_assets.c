@@ -209,7 +209,64 @@ static const u16 ALIGNED(4) sPortBirchLabBorder[] =
 static const u16 ALIGNED(4) sPortBirchLabMap[] =
     INCBIN_U16("data/layouts/LittlerootTown_ProfessorBirchsLab/map.bin");
 
-static const struct MapEvents sPortEmptyEvents = {0};
+static const struct WarpEvent sPortLittlerootWarps[] =
+{
+    { .x = 14, .y = 8,  .elevation = 0, .warpId = 1, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F),          .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F) },
+    { .x = 5,  .y = 8,  .elevation = 0, .warpId = 1, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F),     .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F) },
+    { .x = 7,  .y = 16, .elevation = 0, .warpId = 0, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB) },
+};
+
+static const struct BgEvent sPortLittlerootBgEvents[] =
+{
+    { .x = 15, .y = 13, .elevation = 0, .kind = 0, .bgUnion.script = NULL },
+    { .x = 6,  .y = 17, .elevation = 0, .kind = 0, .bgUnion.script = NULL },
+    { .x = 7,  .y = 8,  .elevation = 3, .kind = 0, .bgUnion.script = NULL },
+    { .x = 12, .y = 8,  .elevation = 3, .kind = 0, .bgUnion.script = NULL },
+};
+
+static const struct MapEvents sPortLittlerootEvents =
+{
+    .warpCount = ARRAY_COUNT(sPortLittlerootWarps),
+    .bgEventCount = ARRAY_COUNT(sPortLittlerootBgEvents),
+    .warps = sPortLittlerootWarps,
+    .bgEvents = sPortLittlerootBgEvents,
+};
+
+static const struct WarpEvent sPortBrendanHouse1FWarps[] =
+{
+    { .x = 9, .y = 8, .elevation = 0, .warpId = 1, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
+    { .x = 8, .y = 8, .elevation = 0, .warpId = 1, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
+};
+
+static const struct MapEvents sPortBrendanHouse1FEvents =
+{
+    .warpCount = ARRAY_COUNT(sPortBrendanHouse1FWarps),
+    .warps = sPortBrendanHouse1FWarps,
+};
+
+static const struct WarpEvent sPortMayHouse1FWarps[] =
+{
+    { .x = 1, .y = 8, .elevation = 0, .warpId = 0, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
+    { .x = 2, .y = 8, .elevation = 0, .warpId = 0, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
+};
+
+static const struct MapEvents sPortMayHouse1FEvents =
+{
+    .warpCount = ARRAY_COUNT(sPortMayHouse1FWarps),
+    .warps = sPortMayHouse1FWarps,
+};
+
+static const struct WarpEvent sPortBirchLabWarps[] =
+{
+    { .x = 6, .y = 12, .elevation = 0, .warpId = 2, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
+    { .x = 7, .y = 12, .elevation = 0, .warpId = 2, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
+};
+
+static const struct MapEvents sPortBirchLabEvents =
+{
+    .warpCount = ARRAY_COUNT(sPortBirchLabWarps),
+    .warps = sPortBirchLabWarps,
+};
 
 const struct MapLayout gPortLittlerootLayout =
 {
@@ -227,7 +284,7 @@ const struct MapLayout gPortLittlerootLayout =
 const struct MapHeader gPortLittlerootHeader =
 {
     .mapLayout = &gPortLittlerootLayout,
-    .events = &sPortEmptyEvents,
+    .events = &sPortLittlerootEvents,
     .mapScripts = NULL,
     .connections = NULL,
     .music = 0,
@@ -287,7 +344,7 @@ const struct MapLayout gPortBirchLabLayout =
 const struct MapHeader gPortBrendanHouse1FHeader =
 {
     .mapLayout = &gPortBrendanHouse1FLayout,
-    .events = &sPortEmptyEvents,
+    .events = &sPortBrendanHouse1FEvents,
     .mapScripts = NULL,
     .connections = NULL,
     .music = 0,
@@ -301,7 +358,7 @@ const struct MapHeader gPortBrendanHouse1FHeader =
 const struct MapHeader gPortMayHouse1FHeader =
 {
     .mapLayout = &gPortMayHouse1FLayout,
-    .events = &sPortEmptyEvents,
+    .events = &sPortMayHouse1FEvents,
     .mapScripts = NULL,
     .connections = NULL,
     .music = 0,
@@ -315,7 +372,7 @@ const struct MapHeader gPortMayHouse1FHeader =
 const struct MapHeader gPortBirchLabHeader =
 {
     .mapLayout = &gPortBirchLabLayout,
-    .events = &sPortEmptyEvents,
+    .events = &sPortBirchLabEvents,
     .mapScripts = NULL,
     .connections = NULL,
     .music = 0,

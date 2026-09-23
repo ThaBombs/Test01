@@ -54,8 +54,10 @@ static void PortTestOverworld_LoadMapState(u16 mapGroup, u16 mapNum, s16 focusX,
     gSaveBlock1Ptr->location.x = -1;
     gSaveBlock1Ptr->location.y = -1;
 
-    gSaveBlock1Ptr->pos.x = focusX - MAP_OFFSET;
-    gSaveBlock1Ptr->pos.y = focusY - MAP_OFFSET;
+    // SaveBlock position is map-local. MAP_OFFSET is only added when querying
+    // Emerald's bordered backup map grid.
+    gSaveBlock1Ptr->pos.x = focusX;
+    gSaveBlock1Ptr->pos.y = focusY;
 
     InitMap();
     ResetFieldCamera();
@@ -83,44 +85,28 @@ void PortGame_LoadTestMap(u16 mapGroup, u16 mapNum, s16 focusX, s16 focusY)
 
 bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
 {
-    const u16 group = gSaveBlock1Ptr->location.mapGroup;
-    const u16 num = gSaveBlock1Ptr->location.mapNum;
+    const struct MapEvents *events = gMapHeader.events;
+    if (events == NULL || events->warps == NULL)
+        return FALSE;
 
-    if (group == MAP_GROUP(MAP_LITTLEROOT_TOWN)
-     && num == MAP_NUM(MAP_LITTLEROOT_TOWN))
+    for (u32 i = 0; i < events->warpCount; ++i)
     {
-        if (x == 14 && y == 8)
-            PortGame_LoadTestMap(MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F), MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F), 2, 8);
-        else if (x == 5 && y == 8)
-            PortGame_LoadTestMap(MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F), MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F), 8, 8);
-        else if (x == 7 && y == 16)
-            PortGame_LoadTestMap(MAP_GROUP(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB), MAP_NUM(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB), 6, 12);
-        else
+        const struct WarpEvent *warp = &events->warps[i];
+        if (warp->x != x || warp->y != y)
+            continue;
+
+        const struct MapHeader *destHeader =
+            Overworld_GetMapHeaderByGroupAndId(warp->mapGroup, warp->mapNum);
+        if (destHeader == NULL || destHeader->events == NULL
+         || destHeader->events->warps == NULL
+         || warp->warpId >= destHeader->events->warpCount)
             return FALSE;
-        return TRUE;
-    }
 
-    if (group == MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F)
-     && num == MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F)
-     && ((x == 8 && y == 8) || (x == 9 && y == 8)))
-    {
-        PortGame_LoadTestMap(MAP_GROUP(MAP_LITTLEROOT_TOWN), MAP_NUM(MAP_LITTLEROOT_TOWN), 5, 8);
-        return TRUE;
-    }
-
-    if (group == MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F)
-     && num == MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F)
-     && ((x == 1 && y == 8) || (x == 2 && y == 8)))
-    {
-        PortGame_LoadTestMap(MAP_GROUP(MAP_LITTLEROOT_TOWN), MAP_NUM(MAP_LITTLEROOT_TOWN), 14, 8);
-        return TRUE;
-    }
-
-    if (group == MAP_GROUP(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB)
-     && num == MAP_NUM(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB)
-     && ((x == 6 && y == 12) || (x == 7 && y == 12)))
-    {
-        PortGame_LoadTestMap(MAP_GROUP(MAP_LITTLEROOT_TOWN), MAP_NUM(MAP_LITTLEROOT_TOWN), 7, 16);
+        // Destination warp IDs refer to entries in the destination map's warp
+        // table. Spawn on that door tile; held movement naturally carries the
+        // player away from it on the next step.
+        const struct WarpEvent *dest = &destHeader->events->warps[warp->warpId];
+        PortGame_LoadTestMap(warp->mapGroup, warp->mapNum, dest->x, dest->y);
         return TRUE;
     }
 
@@ -171,8 +157,8 @@ void PortGame_ReturnToTestOverworld(void)
 {
     const u16 mapGroup = gSaveBlock1Ptr->location.mapGroup;
     const u16 mapNum = gSaveBlock1Ptr->location.mapNum;
-    const s16 focusX = gSaveBlock1Ptr->pos.x + MAP_OFFSET;
-    const s16 focusY = gSaveBlock1Ptr->pos.y + MAP_OFFSET;
+    const s16 focusX = gSaveBlock1Ptr->pos.x;
+    const s16 focusY = gSaveBlock1Ptr->pos.y;
 
     PortTestOverworld_SetupScene(mapGroup, mapNum, focusX, focusY);
 }

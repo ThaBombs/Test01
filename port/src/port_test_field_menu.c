@@ -7,8 +7,12 @@
 #include "main.h"
 #include "palette.h"
 #include "text.h"
+#include "text_window.h"
 #include "window.h"
 #include "constants/rgb.h"
+
+#define PORT_FIELD_MENU_FRAME_TILE 0x1E0
+#define PORT_FIELD_MENU_FRAME_PAL  14
 
 enum
 {
@@ -67,6 +71,7 @@ static void DrawFieldMenu(void)
     AddTextPrinterParameterized3(0, FONT_NORMAL, 8, 1, sTextColors, TEXT_SKIP_DRAW, sTextOption);
     AddTextPrinterParameterized3(0, FONT_NORMAL, 8, 17, sTextColors, TEXT_SKIP_DRAW, sTextClose);
     PutWindowTilemap(0);
+    DrawTextBorderOuter(0, PORT_FIELD_MENU_FRAME_TILE, PORT_FIELD_MENU_FRAME_PAL);
     InitMenuNormal(0, FONT_NORMAL, 0, 1, 16, PORT_FIELD_MENU_COUNT, 0);
     CopyWindowToVram(0, COPYWIN_FULL);
     ShowBg(0);
@@ -78,6 +83,7 @@ void PortTestFieldMenu_Init(void)
     InitWindows(sFieldMenuWindows);
     DeactivateAllTextPrinters();
     LoadPalette(sFieldMenuPalette, BG_PLTT_ID(15), sizeof(sFieldMenuPalette));
+    LoadUserWindowBorderGfx(0, PORT_FIELD_MENU_FRAME_TILE, BG_PLTT_ID(PORT_FIELD_MENU_FRAME_PAL));
     sOpen = FALSE;
     HideBg(0);
 }
