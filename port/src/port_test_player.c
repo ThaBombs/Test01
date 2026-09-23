@@ -143,6 +143,22 @@ static bool32 IsStaticEventObstacle(s16 x, s16 y)
     return FALSE;
 }
 
+
+static bool32 IsWarpEventAt(s16 x, s16 y)
+{
+    const struct MapEvents *events = gMapHeader.events;
+    if (events == NULL || events->warps == NULL)
+        return FALSE;
+
+    for (u32 i = 0; i < events->warpCount; ++i)
+    {
+        if (events->warps[i].x == x && events->warps[i].y == y)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
 static bool32 CanStartStep(s16 dx, s16 dy)
 {
     const s16 targetMapX = gSaveBlock1Ptr->pos.x + dx;
@@ -150,7 +166,11 @@ static bool32 CanStartStep(s16 dx, s16 dy)
     const s16 targetGridX = targetMapX + MAP_OFFSET;
     const s16 targetGridY = targetMapY + MAP_OFFSET;
 
-    if (MapGridGetCollisionAt(targetGridX, targetGridY) != 0)
+    // Door/warp tiles are allowed to consume the step even when their
+    // metatile collision bit is set. Emerald's full field-control path handles
+    // this as a special warp interaction before ordinary collision rejection.
+    if (!IsWarpEventAt(targetMapX, targetMapY)
+     && MapGridGetCollisionAt(targetGridX, targetGridY) != 0)
         return FALSE;
     if (IsStaticEventObstacle(targetMapX, targetMapY))
         return FALSE;
