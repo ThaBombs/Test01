@@ -111,6 +111,40 @@ static uint8_t GetTextBgPixel(
     return (pixelX & 1) ? (packed >> 4) : (packed & 0x0Fu);
 }
 
+
+static bool IsBgVisibleThroughWindow(int bg, int x, int y)
+{
+    const uint16_t dispcnt = REG_DISPCNT;
+
+    // Most Android bring-up screens currently use WIN0 only. Apply the GBA
+    // window layer mask here rather than only applying its color effect:
+    // Emerald's Options selector relies on WIN0 hiding BG1 on the selected row.
+    if ((dispcnt & DISPCNT_WIN0_ON) != 0)
+    {
+        const uint16_t win0h = REG_WIN0H;
+        const uint16_t win0v = REG_WIN0V;
+        const uint8_t left = (uint8_t)(win0h >> 8);
+        const uint8_t right = (uint8_t)(win0h & 0xFFu);
+        const uint8_t top = (uint8_t)(win0v >> 8);
+        const uint8_t bottom = (uint8_t)(win0v & 0xFFu);
+
+        const bool inX = left <= right
+            ? (x >= left && x < right)
+            : (x >= left || x < right);
+        const bool inY = top <= bottom
+            ? (y >= top && y < bottom)
+            : (y >= top || y < bottom);
+
+        const uint16_t mask = (inX && inY)
+            ? (REG_WININ & 0x3Fu)
+            : (REG_WINOUT & 0x3Fu);
+
+        return (mask & (1u << bg)) != 0;
+    }
+
+    return true;
+}
+
 static void RenderTextBackground(
     int bg,
     uint16_t bgcnt,
@@ -135,6 +169,9 @@ static void RenderTextBackground(
 
         for (int x = 0; x < PORT_GBA_FRAME_WIDTH; ++x)
         {
+            if (!IsBgVisibleThroughWindow(bg, x, y))
+                continue;
+
             const int worldX = (x + hofs) % widthPixels;
             const int tileX = worldX >> 3;
             const int pixelX = worldX & 7;

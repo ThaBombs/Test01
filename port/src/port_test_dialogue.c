@@ -9,7 +9,7 @@
 #include "window.h"
 
 #define PORT_DIALOGUE_FRAME_TILE 0x1E0
-#define PORT_DIALOGUE_FRAME_PAL  14
+#define PORT_DIALOGUE_FRAME_PAL  15
 
 static const struct WindowTemplate sDialogueWindow =
 {
@@ -22,7 +22,12 @@ static const struct WindowTemplate sDialogueWindow =
     .baseBlock = 0x40,
 };
 
-static const u8 sTextColors[] = {2, 1, 3};
+static const u8 sTextColors[] =
+{
+    TEXT_COLOR_DARK_GRAY,
+    TEXT_COLOR_WHITE,
+    TEXT_COLOR_LIGHT_GRAY,
+};
 
 static u8 sDialogueWindowId = WINDOW_NONE;
 static bool32 sDialogueOpen;
@@ -30,6 +35,13 @@ static bool32 sDialogueOpen;
 void PortTestDialogue_Init(void)
 {
     sDialogueWindowId = AddWindow(&sDialogueWindow);
+    if (sDialogueWindowId != WINDOW_NONE)
+    {
+        LoadMessageBoxGfx(
+            sDialogueWindowId,
+            PORT_DIALOGUE_FRAME_TILE,
+            BG_PLTT_ID(PORT_DIALOGUE_FRAME_PAL));
+    }
     sDialogueOpen = FALSE;
 }
 
@@ -38,7 +50,7 @@ bool32 PortTestDialogue_Open(const u8 *text)
     if (sDialogueOpen || sDialogueWindowId == WINDOW_NONE || text == NULL)
         return FALSE;
 
-    FillWindowPixelBuffer(sDialogueWindowId, PIXEL_FILL(1));
+    FillWindowPixelBuffer(sDialogueWindowId, PIXEL_FILL(TEXT_COLOR_WHITE));
     AddTextPrinterParameterized3(
         sDialogueWindowId,
         FONT_NORMAL,
