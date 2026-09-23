@@ -6,7 +6,9 @@
 #include "fieldmap.h"
 #include "gpu_regs.h"
 #include "main.h"
+#include "script.h"
 #include "sprite.h"
+#include "constants/event_bg.h"
 #include "constants/maps.h"
 #include "constants/metatile_behaviors.h"
 
@@ -140,6 +142,66 @@ static bool32 IsWarpEventAt(s16 x, s16 y)
         if (events->warps[i].x == x
          && events->warps[i].y == y)
             return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+static bool32 BgEventMatchesFacing(const struct BgEvent *event)
+{
+    switch (event->kind)
+    {
+    case BG_EVENT_PLAYER_FACING_ANY:
+        return TRUE;
+    case BG_EVENT_PLAYER_FACING_NORTH:
+        return sPortFacing == PORT_ANIM_FACE_NORTH;
+    case BG_EVENT_PLAYER_FACING_SOUTH:
+        return sPortFacing == PORT_ANIM_FACE_SOUTH;
+    case BG_EVENT_PLAYER_FACING_EAST:
+        return sPortFacing == PORT_ANIM_FACE_EAST;
+    case BG_EVENT_PLAYER_FACING_WEST:
+        return sPortFacing == PORT_ANIM_FACE_WEST;
+    default:
+        return FALSE;
+    }
+}
+
+static bool32 TryInteractWithBackgroundEvent(void)
+{
+    const struct MapEvents *events = gMapHeader.events;
+    if (events == NULL || events->bgEvents == NULL || ScriptContext_IsEnabled())
+        return FALSE;
+
+    s16 x = gSaveBlock1Ptr->pos.x;
+    s16 y = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
+
+    switch (sPortFacing)
+    {
+    case PORT_ANIM_FACE_NORTH:
+        --y;
+        break;
+    case PORT_ANIM_FACE_SOUTH:
+        ++y;
+        break;
+    case PORT_ANIM_FACE_WEST:
+        --x;
+        break;
+    case PORT_ANIM_FACE_EAST:
+        ++x;
+        break;
+    }
+
+    for (u32 i = 0; i < events->bgEventCount; ++i)
+    {
+        const struct BgEvent *event = &events->bgEvents[i];
+        if (event->x != x || event->y != y || !BgEventMatchesFacing(event))
+            continue;
+        if (event->bgUnion.script == NULL)
+            return FALSE;
+
+        ScriptContext_SetupScript(event->bgUnion.script);
+        return TRUE;
     }
 
     return FALSE;
@@ -304,6 +366,27 @@ void PortTestPlayer_Update(void)
 {
     if (sPortPlayerSpriteId >= MAX_SPRITES)
         return;
+
+    if (sPortStepFrames == 0
+     && !ArePlayerFieldControlsLocked()
+     && (gMain.newKeys & A_BUTTON)
+     && TryInteractWithBackgroundEvent())
+    {
+        AnimateSprites();
+        BuildOamBuffer();
+        LoadOam();
+        ProcessSpriteCopyRequests();
+        return;
+    }
+
+    if (sPortStepFrames == 0 && ArePlayerFieldControlsLocked())
+    {
+        AnimateSprites();
+        BuildOamBuffer();
+        LoadOam();
+        ProcessSpriteCopyRequests();
+        return;
+    }
 
     if (sPortStepFrames != 0)
     {
