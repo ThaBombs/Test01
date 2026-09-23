@@ -135,8 +135,10 @@ const struct MapHeader *const GetMapHeaderFromConnection(const struct MapConnect
 void InitMap(void)
 {
     InitMapLayoutData(&gMapHeader);
+#ifndef PORT_BOOTSTRAP_NO_OVERWORLD
     SetOccupiedSecretBaseEntranceMetatiles(gMapHeader.events);
     RunOnLoadMapScript();
+#endif
 }
 
 void InitMapFromSavedGame(void)
