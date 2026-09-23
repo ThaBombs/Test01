@@ -4,6 +4,7 @@
 #include "global.h"
 #include "bg.h"
 #include "menu.h"
+#include "main.h"
 #include "palette.h"
 #include "text.h"
 #include "window.h"
