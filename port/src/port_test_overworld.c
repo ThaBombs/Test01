@@ -16,6 +16,7 @@
 #include "window.h"
 #include "palette.h"
 #include "constants/maps.h"
+#include "constants/metatile_behaviors.h"
 
 
 u16 *gOverworldTilemapBuffer_Bg1 = NULL;
@@ -145,6 +146,70 @@ static bool32 IsHouseStairTransition(
     return brendanPair || mayPair;
 }
 
+static u8 ResolveWarpExitDirection(const struct MapHeader *header, const struct WarpEvent *dest)
+{
+    if (header == NULL || header->mapLayout == NULL || dest == NULL)
+        return DIR_NONE;
+
+    const s16 x = dest->x;
+    const s16 y = dest->y;
+    const s16 width = header->mapLayout->width;
+    const s16 height = header->mapLayout->height;
+
+    // Directional warp tiles carry the preferred exit direction themselves.
+    // For diagonal stair warps, Emerald's own exit animation faces away from
+    // the right/left stair edge respectively.
+    const u8 behavior =
+        MapGridGetMetatileBehaviorAt(x + MAP_OFFSET, y + MAP_OFFSET);
+    switch (behavior)
+    {
+    case MB_EAST_ARROW_WARP:
+        return DIR_EAST;
+    case MB_WEST_ARROW_WARP:
+        return DIR_WEST;
+    case MB_NORTH_ARROW_WARP:
+        return DIR_NORTH;
+    case MB_SOUTH_ARROW_WARP:
+    case MB_WATER_SOUTH_ARROW_WARP:
+        return DIR_SOUTH;
+    case MB_UP_RIGHT_STAIR_WARP:
+    case MB_DOWN_RIGHT_STAIR_WARP:
+        return DIR_WEST;
+    case MB_UP_LEFT_STAIR_WARP:
+    case MB_DOWN_LEFT_STAIR_WARP:
+        return DIR_EAST;
+    default:
+        break;
+    }
+
+    // Older Emerald interiors often encode ordinary stairs as a normal/non-
+    // animated warp at an edge rather than a directional stair behavior.
+    // Resolve those geometrically: move away from the nearest map edge. This
+    // gives the current bedroom stairs SOUTH, but also naturally handles
+    // equivalent stairs placed on the other three sides of future maps.
+    const s16 top = y;
+    const s16 bottom = height - 1 - y;
+    const s16 left = x;
+    const s16 right = width - 1 - x;
+
+    s16 nearest = top;
+    u8 direction = DIR_SOUTH;
+    if (bottom < nearest)
+    {
+        nearest = bottom;
+        direction = DIR_NORTH;
+    }
+    if (left < nearest)
+    {
+        nearest = left;
+        direction = DIR_EAST;
+    }
+    if (right < nearest)
+        direction = DIR_WEST;
+
+    return direction;
+}
+
 bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
 {
     const struct MapEvents *events = gMapHeader.events;
@@ -192,20 +257,25 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
                 sourceGroup, sourceNum,
                 warp->mapGroup, warp->mapNum);
 
-        // Door warps still land on their destination warp. Bedroom stairs are
-        // different: the warp tile itself is the stair/wall graphic, so place
-        // the player one tile south in the walkable room and face back out.
-        const s16 arrivalY = dest->y + (isHouseStair ? 1 : 0);
+        // Load on the actual destination warp tile first. Stair exits then use
+        // a real movement step away from that tile, so the player visibly
+        // emerges instead of teleporting directly to the already-offset spot.
         PortGame_LoadTestMap(
             warp->mapGroup,
             warp->mapNum,
             dest->x,
-            arrivalY + PORT_PLAYER_MAP_Y_BIAS);
-
-        if (isHouseStair)
-            PortTestPlayer_SetFacingDirection(DIR_SOUTH);
+            dest->y + PORT_PLAYER_MAP_Y_BIAS);
 
         sPortWarpArrivalLocked = TRUE;
+
+        if (isHouseStair)
+        {
+            const u8 exitDirection =
+                ResolveWarpExitDirection(&gMapHeader, dest);
+            if (exitDirection != DIR_NONE)
+                PortTestPlayer_BeginWarpExitStep(exitDirection);
+        }
+
         return TRUE;
     }
 
