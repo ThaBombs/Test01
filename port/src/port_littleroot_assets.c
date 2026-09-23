@@ -342,6 +342,37 @@ static const struct MapEvents sPortLittlerootEvents =
 
 static const u8 sPortText_Route101Sign[] =
     _("ROUTE 101\nOLDALE TOWN AHEAD");
+static const u8 sPortText_Route101Youngster[] =
+    _("If POKéMON get tired, take them to\na POKéMON CENTER.\nThere's one in OLDALE TOWN close by.");
+static const u8 sPortText_Route101BirchHelp[] =
+    _("Hello! You over there!\nPlease! Help!\nIn my BAG! There's a POKé BALL!");
+
+static const struct ObjectEventTemplate sPortRoute101ObjectEvents[] =
+{
+    {
+        .localId = 1,
+        .graphicsId = OBJ_EVENT_GFX_YOUNGSTER,
+        .kind = 0,
+        .x = 16,
+        .y = 8,
+        .elevation = 3,
+        .movementType = MOVEMENT_TYPE_LOOK_AROUND,
+        .movementRangeX = 0,
+        .movementRangeY = 0,
+        .trainerType = 0,
+        .trainerRange_berryTreeId = 0,
+        .script = sPortText_Route101Youngster,
+        .flagId = 0,
+    },
+};
+
+static const struct CoordEvent sPortRoute101CoordEvents[] =
+{
+    // trigger 1 is a small Android-native route event variable. index 0 means
+    // this entrance prompt is active before the rescue sequence advances.
+    { .x = 10, .y = 19, .elevation = 3, .trigger = 1, .index = 0, .script = sPortText_Route101BirchHelp },
+    { .x = 11, .y = 19, .elevation = 3, .trigger = 1, .index = 0, .script = sPortText_Route101BirchHelp },
+};
 
 static const struct BgEvent sPortRoute101BgEvents[] =
 {
@@ -350,7 +381,11 @@ static const struct BgEvent sPortRoute101BgEvents[] =
 
 static const struct MapEvents sPortRoute101Events =
 {
+    .objectEventCount = ARRAY_COUNT(sPortRoute101ObjectEvents),
+    .coordEventCount = ARRAY_COUNT(sPortRoute101CoordEvents),
     .bgEventCount = ARRAY_COUNT(sPortRoute101BgEvents),
+    .objectEvents = sPortRoute101ObjectEvents,
+    .coordEvents = sPortRoute101CoordEvents,
     .bgEvents = sPortRoute101BgEvents,
 };
 
