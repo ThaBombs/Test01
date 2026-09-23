@@ -11,6 +11,7 @@
 #include "sprite.h"
 #include "constants/event_bg.h"
 #include "constants/maps.h"
+#include "constants/map_types.h"
 #include "constants/metatile_behaviors.h"
 
 #define PORT_PLAYER_PAL_TAG 0x7F01
