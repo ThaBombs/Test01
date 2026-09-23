@@ -41,6 +41,10 @@
 #include "window.h"
 #include "mystery_gift_menu.h"
 
+#ifdef PLATFORM_ANDROID
+#include "port_test_overworld.h"
+#endif
+
 /*
  * Main menu state machine
  * -----------------------
@@ -1009,19 +1013,21 @@ static void Task_HandleMainMenuInput(u8 taskId)
 static void Task_HandleMainMenuAPressed(u8 taskId)
 {
 #ifdef PORT_BOOTSTRAP_MENU_ONLY
-    // OPTION is now backed by Emerald's real option-menu state machine.
-    // NEW GAME remains isolated until its Birch/naming/overworld dependency
-    // graph is linked into the Android target.
-    if (gTasks[taskId].tCurrItem == 1)
+    // Android milestone path: NEW GAME skips Birch/truck presentation and
+    // enters a real Emerald overworld map directly. OPTION remains the real
+    // Emerald option menu.
+    if (gTasks[taskId].tCurrItem == 0)
+    {
+        FreeAllWindowBuffers();
+        DestroyTask(taskId);
+        PortGame_StartTestOverworld();
+    }
+    else
     {
         gMain.savedCallback = CB2_ReinitMainMenu;
         FreeAllWindowBuffers();
         SetMainCallback2(CB2_InitOptionMenu);
         DestroyTask(taskId);
-    }
-    else
-    {
-        gTasks[taskId].func = Task_HighlightSelectedMainMenuItem;
     }
 #else
 

@@ -329,6 +329,7 @@ set_source_files_properties(
     "${STRING_UTIL_ANDROID_C}"
     "${REPO_ROOT}/src/international_string_util.c"
     "${REPO_ROOT}/src/dynamic_placeholder_text_util.c"
+    "${REPO_ROOT}/src/overworld.c"
     PROPERTIES
     COMPILE_OPTIONS "-fvisibility=hidden"
 )
@@ -340,6 +341,8 @@ target_sources(
     PRIVATE
     "${PORT_ROOT}/src/port_main_menu_startup.c"
     "${PORT_ROOT}/src/port_menu_only_stubs.c"
+    "${PORT_ROOT}/src/port_test_overworld.c"
+    "${REPO_ROOT}/src/overworld.c"
     "${REPO_ROOT}/src/window.c"
     "${REPO_ROOT}/src/blit.c"
     "${REPO_ROOT}/src/dynamic_placeholder_text_util.c"
