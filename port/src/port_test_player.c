@@ -152,6 +152,13 @@ static const struct SpritePalette sPortGrassSpritePalette =
 
 static void PortGrassSpriteCallback(struct Sprite *sprite)
 {
+    // Grass is a world-tile effect, not a child of the player. Recalculate its
+    // screen position from the tile where it was spawned as the camera moves.
+    const s16 playerX = gSaveBlock1Ptr->pos.x;
+    const s16 playerY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
+    sprite->x = DISPLAY_WIDTH / 2 + (sprite->data[0] - playerX) * 16;
+    sprite->y = DISPLAY_HEIGHT / 2 + (sprite->data[1] - playerY) * 16 + 8;
+
     if (sprite->animEnded)
         DestroySprite(sprite);
 }
@@ -183,6 +190,7 @@ static u8 sPortStepFrames;
 static s8 sPortStepDx;
 static s8 sPortStepDy;
 static bool32 sPortLedgeJump;
+static bool32 sPortFacingLockUntilRelease;
 
 static bool32 IsTallGrassBehavior(u8 behavior)
 {
@@ -203,11 +211,16 @@ static void SpawnTallGrassStepEffect(void)
     if (!IsTallGrassBehavior(behavior))
         return;
 
-    CreateSprite(
+    const u8 spriteId = CreateSprite(
         &sPortTallGrassTemplate,
         DISPLAY_WIDTH / 2,
         DISPLAY_HEIGHT / 2 + 8,
         0);
+    if (spriteId < MAX_SPRITES)
+    {
+        gSprites[spriteId].data[0] = mapX;
+        gSprites[spriteId].data[1] = mapY;
+    }
 }
 
 static bool32 IsMatchingLedgeBehavior(u8 behavior, s16 dx, s16 dy)
@@ -536,6 +549,7 @@ void PortTestPlayer_Init(void)
     sPortStepDx = 0;
     sPortStepDy = 0;
     sPortLedgeJump = FALSE;
+    sPortFacingLockUntilRelease = FALSE;
     StartSpriteAnim(&gSprites[sPortPlayerSpriteId], sPortFacing);
 
     SetGpuRegBits(
@@ -552,6 +566,27 @@ void PortTestPlayer_Update(void)
 {
     if (sPortPlayerSpriteId >= MAX_SPRITES)
         return;
+
+    // A held direction used to enter a staircase used to overwrite the
+    // destination-facing direction on the very next frame. Require the player
+    // to release the d-pad once after a staircase warp, matching the visual
+    // pause of the original transition.
+    if (sPortFacingLockUntilRelease)
+    {
+        if (gMain.heldKeys & DPAD_ANY)
+        {
+            PortTestNpc_UpdateMovement(
+                gSaveBlock1Ptr->pos.x,
+                gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS);
+            AnimateSprites();
+            BuildOamBuffer();
+            LoadOam();
+            ProcessSpriteCopyRequests();
+            return;
+        }
+
+        sPortFacingLockUntilRelease = FALSE;
+    }
 
     if (sPortStepFrames == 0
      && (gMain.newKeys & A_BUTTON)
@@ -657,4 +692,5 @@ void PortTestPlayer_SetFacingDirection(u8 direction)
     }
 
     StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], sPortFacing);
+    sPortFacingLockUntilRelease = TRUE;
 }
