@@ -405,8 +405,15 @@ static void Task_OptionMenuProcessInput(u8 taskId)
             previousOption = gTasks[taskId].tButtonMode;
             gTasks[taskId].tButtonMode = ButtonMode_ProcessInput(gTasks[taskId].tButtonMode);
 
+#ifdef PLATFORM_ANDROID
+            // Android keeps the legacy button-mode value unchanged; left/right
+            // instead edits the fast-forward multiplier shown on this row.
+            if (sArrowPressed)
+                ButtonMode_DrawChoices(gTasks[taskId].tButtonMode);
+#else
             if (previousOption != gTasks[taskId].tButtonMode)
                 ButtonMode_DrawChoices(gTasks[taskId].tButtonMode);
+#endif
             break;
         case MENUITEM_FRAMETYPE:
             previousOption = gTasks[taskId].tWindowFrameType;
