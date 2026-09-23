@@ -16,6 +16,10 @@
 #include "gba/m4a_internal.h"
 #include "constants/rgb.h"
 
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
+
 #define tMenuSelection data[0]
 #define tTextSpeed data[1]
 #define tBattleSceneOff data[2]
@@ -87,6 +91,9 @@ static const u8 gText_FrameTypeNumber[]    = _("{COLOR GREEN}{SHADOW LIGHT_GREEN
 static const u8 gText_ButtonTypeNormal[]   = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NORMAL");
 static const u8 gText_ButtonTypeLR[]       = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}LR");
 static const u8 gText_ButtonTypeLEqualsA[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}L=A");
+#ifdef PLATFORM_ANDROID
+static const u8 gText_ButtonEdit[]          = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}EDIT");
+#endif
 
 static const u16 sOptionMenuText_Pal[] = INCGFX_U16("graphics/interface/option_menu_text.pal", ".gbapal");
 // note: this is only used in the Japanese release
@@ -98,7 +105,11 @@ static const u8 *const sOptionMenuItemsNames[MENUITEM_COUNT] =
     [MENUITEM_BATTLESCENE] = COMPOUND_STRING("BATTLE SCENE"),
     [MENUITEM_BATTLESTYLE] = COMPOUND_STRING("BATTLE STYLE"),
     [MENUITEM_SOUND]       = COMPOUND_STRING("SOUND"),
+#ifdef PLATFORM_ANDROID
+    [MENUITEM_BUTTONMODE]  = COMPOUND_STRING("CONTROLS"),
+#else
     [MENUITEM_BUTTONMODE]  = COMPOUND_STRING("BUTTON MODE"),
+#endif
     [MENUITEM_FRAMETYPE]   = COMPOUND_STRING("FRAME"),
     [MENUITEM_CANCEL]      = COMPOUND_STRING("CANCEL"),
 };
@@ -281,6 +292,13 @@ static void Task_OptionMenuProcessInput(u8 taskId)
 {
     if (JOY_NEW(A_BUTTON))
     {
+#ifdef PLATFORM_ANDROID
+        if (gTasks[taskId].tMenuSelection == MENUITEM_BUTTONMODE)
+        {
+            PortRuntime_BeginTouchLayoutEdit();
+            return;
+        }
+#endif
         if (gTasks[taskId].tMenuSelection == MENUITEM_CANCEL)
             gTasks[taskId].func = Task_OptionMenuSave;
     }
@@ -587,6 +605,9 @@ static void FrameType_DrawChoices(u8 selection)
 
 static u8 ButtonMode_ProcessInput(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    return selection;
+#else
     if (JOY_NEW(DPAD_RIGHT))
     {
         if (selection <= 1)
@@ -606,10 +627,15 @@ static u8 ButtonMode_ProcessInput(u8 selection)
         sArrowPressed = TRUE;
     }
     return selection;
+#endif
 }
 
 static void ButtonMode_DrawChoices(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    (void)selection;
+    DrawOptionMenuChoice(gText_ButtonEdit, 104, YPOS_BUTTONMODE, 1);
+#else
     s32 widthNormal, widthLR, widthLA, xLR;
     u8 styles[3];
 
@@ -629,6 +655,7 @@ static void ButtonMode_DrawChoices(u8 selection)
     DrawOptionMenuChoice(gText_ButtonTypeLR, xLR, YPOS_BUTTONMODE, styles[1]);
 
     DrawOptionMenuChoice(gText_ButtonTypeLEqualsA, GetStringRightAlignXOffset(FONT_NORMAL, gText_ButtonTypeLEqualsA, 198), YPOS_BUTTONMODE, styles[2]);
+#endif
 }
 
 static void DrawHeaderText(void)

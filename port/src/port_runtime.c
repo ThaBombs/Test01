@@ -3,6 +3,8 @@
 #include "port_gba_renderer.h"
 
 #include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 
 struct PortRuntimeState
 {
@@ -22,7 +24,8 @@ struct TouchLayout
     int aY;
     int bX;
     int bY;
-    int faceRadius;
+    int aRadius;
+    int bRadius;
     int lLeft;
     int lTop;
     int lRight;
@@ -43,11 +46,54 @@ struct TouchLayout
 
 static struct PortRuntimeState sPortState;
 
-static int sTouchScalePercent = 125;
-
-static int ScaleTouchSize(int value)
+enum
 {
-    return (value * sTouchScalePercent + 50) / 100;
+    TOUCH_CONTROL_DPAD,
+    TOUCH_CONTROL_A,
+    TOUCH_CONTROL_B,
+    TOUCH_CONTROL_L,
+    TOUCH_CONTROL_R,
+    TOUCH_CONTROL_SELECT,
+    TOUCH_CONTROL_START,
+    TOUCH_CONTROL_COUNT,
+};
+
+struct TouchControlConfig
+{
+    int xPermille;
+    int yPermille;
+    int sizePercent;
+};
+
+static struct TouchControlConfig sTouchControls[TOUCH_CONTROL_COUNT] =
+{
+    [TOUCH_CONTROL_DPAD]   = {120, 700, 125},
+    [TOUCH_CONTROL_A]      = {880, 650, 125},
+    [TOUCH_CONTROL_B]      = {790, 760, 125},
+    [TOUCH_CONTROL_L]      = { 80, 100, 125},
+    [TOUCH_CONTROL_R]      = {920, 100, 125},
+    [TOUCH_CONTROL_SELECT] = {430, 910, 125},
+    [TOUCH_CONTROL_START]  = {570, 910, 125},
+};
+
+static bool sTouchLayoutEditing;
+static bool sEditorPointerDown;
+static bool sEditorDragging;
+static int sEditorSelected = TOUCH_CONTROL_DPAD;
+static char sTouchLayoutPath[512];
+
+static int ClampInt(int value, int low, int high)
+{
+    if (value < low)
+        return low;
+    if (value > high)
+        return high;
+    return value;
+}
+
+static int ScaleTouchSizeFor(int control, int value)
+{
+    return (value * sTouchControls[control].sizePercent + 50) / 100;
 }
 
 static int MinInt(int a, int b)
@@ -175,35 +221,51 @@ static struct TouchLayout GetTouchLayout(int width, int height)
     const int minDim = MinInt(width, height);
     struct TouchLayout layout = {0};
 
-    layout.dpadX = width * 12 / 100;
-    layout.dpadY = height * 70 / 100;
-    layout.dpadRadius = ScaleTouchSize(minDim / 8);
+    layout.dpadX = width * sTouchControls[TOUCH_CONTROL_DPAD].xPermille / 1000;
+    layout.dpadY = height * sTouchControls[TOUCH_CONTROL_DPAD].yPermille / 1000;
+    layout.dpadRadius = ScaleTouchSizeFor(TOUCH_CONTROL_DPAD, minDim / 8);
     layout.dpadDead = layout.dpadRadius / 3;
 
-    layout.faceRadius = ScaleTouchSize(minDim / 16);
-    layout.aX = width * 88 / 100;
-    layout.aY = height * 65 / 100;
-    layout.bX = width * 79 / 100;
-    layout.bY = height * 76 / 100;
+    layout.aX = width * sTouchControls[TOUCH_CONTROL_A].xPermille / 1000;
+    layout.aY = height * sTouchControls[TOUCH_CONTROL_A].yPermille / 1000;
+    layout.bX = width * sTouchControls[TOUCH_CONTROL_B].xPermille / 1000;
+    layout.bY = height * sTouchControls[TOUCH_CONTROL_B].yPermille / 1000;
+    layout.aRadius = ScaleTouchSizeFor(TOUCH_CONTROL_A, minDim / 16);
+    layout.bRadius = ScaleTouchSizeFor(TOUCH_CONTROL_B, minDim / 16);
 
-    const int shoulderHalfW = ScaleTouchSize(minDim / 10);
-    const int shoulderHalfH = ScaleTouchSize(minDim / 28);
-    layout.lLeft = width * 8 / 100 - shoulderHalfW;
-    layout.lRight = width * 8 / 100 + shoulderHalfW;
-    layout.rLeft = width * 92 / 100 - shoulderHalfW;
-    layout.rRight = width * 92 / 100 + shoulderHalfW;
-    layout.lTop = layout.rTop = height * 10 / 100 - shoulderHalfH;
-    layout.lBottom = layout.rBottom = height * 10 / 100 + shoulderHalfH;
+    const int lHalfW = ScaleTouchSizeFor(TOUCH_CONTROL_L, minDim / 10);
+    const int lHalfH = ScaleTouchSizeFor(TOUCH_CONTROL_L, minDim / 28);
+    const int rHalfW = ScaleTouchSizeFor(TOUCH_CONTROL_R, minDim / 10);
+    const int rHalfH = ScaleTouchSizeFor(TOUCH_CONTROL_R, minDim / 28);
+    const int lX = width * sTouchControls[TOUCH_CONTROL_L].xPermille / 1000;
+    const int lY = height * sTouchControls[TOUCH_CONTROL_L].yPermille / 1000;
+    const int rX = width * sTouchControls[TOUCH_CONTROL_R].xPermille / 1000;
+    const int rY = height * sTouchControls[TOUCH_CONTROL_R].yPermille / 1000;
+    layout.lLeft = lX - lHalfW;
+    layout.lRight = lX + lHalfW;
+    layout.rLeft = rX - rHalfW;
+    layout.rRight = rX + rHalfW;
+    layout.lTop = lY - lHalfH;
+    layout.lBottom = lY + lHalfH;
+    layout.rTop = rY - rHalfH;
+    layout.rBottom = rY + rHalfH;
 
-    const int systemHalfW = ScaleTouchSize(minDim / 13);
-    const int systemHalfH = ScaleTouchSize(minDim / 30);
-    const int systemY = height * 91 / 100;
-    layout.selectLeft = width * 43 / 100 - systemHalfW;
-    layout.selectRight = width * 43 / 100 + systemHalfW;
-    layout.startLeft = width * 57 / 100 - systemHalfW;
-    layout.startRight = width * 57 / 100 + systemHalfW;
-    layout.selectTop = layout.startTop = systemY - systemHalfH;
-    layout.selectBottom = layout.startBottom = systemY + systemHalfH;
+    const int selectHalfW = ScaleTouchSizeFor(TOUCH_CONTROL_SELECT, minDim / 13);
+    const int selectHalfH = ScaleTouchSizeFor(TOUCH_CONTROL_SELECT, minDim / 30);
+    const int startHalfW = ScaleTouchSizeFor(TOUCH_CONTROL_START, minDim / 13);
+    const int startHalfH = ScaleTouchSizeFor(TOUCH_CONTROL_START, minDim / 30);
+    const int selectX = width * sTouchControls[TOUCH_CONTROL_SELECT].xPermille / 1000;
+    const int selectY = height * sTouchControls[TOUCH_CONTROL_SELECT].yPermille / 1000;
+    const int startX = width * sTouchControls[TOUCH_CONTROL_START].xPermille / 1000;
+    const int startY = height * sTouchControls[TOUCH_CONTROL_START].yPermille / 1000;
+    layout.selectLeft = selectX - selectHalfW;
+    layout.selectRight = selectX + selectHalfW;
+    layout.startLeft = startX - startHalfW;
+    layout.startRight = startX + startHalfW;
+    layout.selectTop = selectY - selectHalfH;
+    layout.selectBottom = selectY + selectHalfH;
+    layout.startTop = startY - startHalfH;
+    layout.startBottom = startY + startHalfH;
 
     return layout;
 }
@@ -221,23 +283,195 @@ static bool PointInCircle(float x, float y, int centerX, int centerY, int radius
     return dx * dx + dy * dy <= (float)(radius * radius);
 }
 
+static void SaveTouchLayout(void)
+{
+    if (sTouchLayoutPath[0] == '\0')
+        return;
+
+    FILE *file = fopen(sTouchLayoutPath, "w");
+    if (file == NULL)
+        return;
+
+    for (int i = 0; i < TOUCH_CONTROL_COUNT; ++i)
+        fprintf(file, "%d %d %d\n",
+                sTouchControls[i].xPermille,
+                sTouchControls[i].yPermille,
+                sTouchControls[i].sizePercent);
+    fclose(file);
+}
+
+static void LoadTouchLayout(void)
+{
+    if (sTouchLayoutPath[0] == '\0')
+        return;
+
+    FILE *file = fopen(sTouchLayoutPath, "r");
+    if (file == NULL)
+        return;
+
+    struct TouchControlConfig loaded[TOUCH_CONTROL_COUNT];
+    bool valid = true;
+    for (int i = 0; i < TOUCH_CONTROL_COUNT; ++i)
+    {
+        if (fscanf(file, "%d %d %d",
+                   &loaded[i].xPermille,
+                   &loaded[i].yPermille,
+                   &loaded[i].sizePercent) != 3)
+        {
+            valid = false;
+            break;
+        }
+        if (loaded[i].xPermille < 20 || loaded[i].xPermille > 980
+         || loaded[i].yPermille < 20 || loaded[i].yPermille > 980
+         || loaded[i].sizePercent < 60 || loaded[i].sizePercent > 200)
+        {
+            valid = false;
+            break;
+        }
+    }
+    fclose(file);
+
+    if (valid)
+        memcpy(sTouchControls, loaded, sizeof(sTouchControls));
+}
+
+void PortRuntime_SetStoragePath(const char *path)
+{
+    if (path == NULL || path[0] == '\0')
+        return;
+
+    snprintf(sTouchLayoutPath, sizeof(sTouchLayoutPath),
+             "%s/touch_layout.cfg", path);
+    LoadTouchLayout();
+}
+
 void PortRuntime_SetTouchScalePercent(int percent)
 {
-    if (percent < 75)
-        percent = 75;
-    else if (percent > 175)
-        percent = 175;
-    sTouchScalePercent = percent;
+    percent = ClampInt(percent, 60, 200);
+    for (int i = 0; i < TOUCH_CONTROL_COUNT; ++i)
+        sTouchControls[i].sizePercent = percent;
+    SaveTouchLayout();
 }
 
 int PortRuntime_GetTouchScalePercent(void)
 {
-    return sTouchScalePercent;
+    return sTouchControls[TOUCH_CONTROL_DPAD].sizePercent;
+}
+
+void PortRuntime_BeginTouchLayoutEdit(void)
+{
+    sTouchLayoutEditing = true;
+    sEditorPointerDown = false;
+    sEditorDragging = false;
+}
+
+void PortRuntime_EndTouchLayoutEdit(void)
+{
+    if (!sTouchLayoutEditing)
+        return;
+    sTouchLayoutEditing = false;
+    sEditorPointerDown = false;
+    sEditorDragging = false;
+    SaveTouchLayout();
+}
+
+bool PortRuntime_IsTouchLayoutEditing(void)
+{
+    return sTouchLayoutEditing;
+}
+
+static int TouchControlAt(float x, float y, const struct TouchLayout *layout)
+{
+    if (PointInCircle(x, y, layout->aX, layout->aY, layout->aRadius))
+        return TOUCH_CONTROL_A;
+    if (PointInCircle(x, y, layout->bX, layout->bY, layout->bRadius))
+        return TOUCH_CONTROL_B;
+    if (PointInRect(x, y, layout->lLeft, layout->lTop, layout->lRight, layout->lBottom))
+        return TOUCH_CONTROL_L;
+    if (PointInRect(x, y, layout->rLeft, layout->rTop, layout->rRight, layout->rBottom))
+        return TOUCH_CONTROL_R;
+    if (PointInRect(x, y, layout->selectLeft, layout->selectTop, layout->selectRight, layout->selectBottom))
+        return TOUCH_CONTROL_SELECT;
+    if (PointInRect(x, y, layout->startLeft, layout->startTop, layout->startRight, layout->startBottom))
+        return TOUCH_CONTROL_START;
+    if (PointInCircle(x, y, layout->dpadX, layout->dpadY, layout->dpadRadius))
+        return TOUCH_CONTROL_DPAD;
+    return -1;
+}
+
+void PortRuntime_TouchEditorPointer(float x, float y, bool down, int width, int height)
+{
+    if (!sTouchLayoutEditing || width <= 0 || height <= 0)
+        return;
+
+    if (!down)
+    {
+        sEditorPointerDown = false;
+        sEditorDragging = false;
+        return;
+    }
+
+    const bool justPressed = !sEditorPointerDown;
+    sEditorPointerDown = true;
+
+    const int chromeY = height * 7 / 100;
+    const int chromeHalfW = MinInt(width, height) / 18;
+    const int chromeHalfH = MinInt(width, height) / 28;
+    const int minusX = width * 43 / 100;
+    const int plusX = width * 57 / 100;
+    const int okX = width * 90 / 100;
+
+    if (justPressed)
+    {
+        if (PointInRect(x, y,
+                        okX - chromeHalfW, chromeY - chromeHalfH,
+                        okX + chromeHalfW, chromeY + chromeHalfH))
+        {
+            PortRuntime_EndTouchLayoutEdit();
+            return;
+        }
+
+        if (PointInRect(x, y,
+                        minusX - chromeHalfW, chromeY - chromeHalfH,
+                        minusX + chromeHalfW, chromeY + chromeHalfH))
+        {
+            sTouchControls[sEditorSelected].sizePercent =
+                ClampInt(sTouchControls[sEditorSelected].sizePercent - 10, 60, 200);
+            SaveTouchLayout();
+            return;
+        }
+
+        if (PointInRect(x, y,
+                        plusX - chromeHalfW, chromeY - chromeHalfH,
+                        plusX + chromeHalfW, chromeY + chromeHalfH))
+        {
+            sTouchControls[sEditorSelected].sizePercent =
+                ClampInt(sTouchControls[sEditorSelected].sizePercent + 10, 60, 200);
+            SaveTouchLayout();
+            return;
+        }
+
+        const struct TouchLayout layout = GetTouchLayout(width, height);
+        const int hit = TouchControlAt(x, y, &layout);
+        if (hit >= 0)
+        {
+            sEditorSelected = hit;
+            sEditorDragging = true;
+        }
+    }
+
+    if (sEditorDragging)
+    {
+        sTouchControls[sEditorSelected].xPermille =
+            ClampInt((int)(x * 1000.0f / (float)width), 20, 980);
+        sTouchControls[sEditorSelected].yPermille =
+            ClampInt((int)(y * 1000.0f / (float)height), 20, 980);
+    }
 }
 
 uint32_t PortRuntime_ButtonsForTouch(float x, float y, int width, int height)
 {
-    if (width <= 0 || height <= 0)
+    if (width <= 0 || height <= 0 || sTouchLayoutEditing)
         return 0;
 
     const struct TouchLayout layout = GetTouchLayout(width, height);
@@ -257,9 +491,9 @@ uint32_t PortRuntime_ButtonsForTouch(float x, float y, int width, int height)
             buttons |= (dy < 0) ? PORT_BUTTON_UP : PORT_BUTTON_DOWN;
     }
 
-    if (PointInCircle(x, y, layout.aX, layout.aY, layout.faceRadius))
+    if (PointInCircle(x, y, layout.aX, layout.aY, layout.aRadius))
         buttons |= PORT_BUTTON_A;
-    if (PointInCircle(x, y, layout.bX, layout.bY, layout.faceRadius))
+    if (PointInCircle(x, y, layout.bX, layout.bY, layout.bRadius))
         buttons |= PORT_BUTTON_B;
 
     if (PointInRect(x, y, layout.lLeft, layout.lTop, layout.lRight, layout.lBottom))
@@ -280,8 +514,12 @@ static uint8_t GlyphRow(char ch, int row)
     static const uint8_t glyphB[7] = {30, 17, 17, 30, 17, 17, 30};
     static const uint8_t glyphC[7] = {14, 17, 16, 16, 16, 17, 14};
     static const uint8_t glyphE[7] = {31, 16, 16, 30, 16, 16, 31};
+    static const uint8_t glyphK[7] = {17, 18, 20, 24, 20, 18, 17};
     static const uint8_t glyphL[7] = {16, 16, 16, 16, 16, 16, 31};
+    static const uint8_t glyphO[7] = {14, 17, 17, 17, 17, 17, 14};
     static const uint8_t glyphR[7] = {30, 17, 17, 30, 20, 18, 17};
+    static const uint8_t glyphPlus[7] = {0, 4, 4, 31, 4, 4, 0};
+    static const uint8_t glyphMinus[7] = {0, 0, 0, 31, 0, 0, 0};
     static const uint8_t glyphS[7] = {15, 16, 16, 14, 1, 1, 30};
     static const uint8_t glyphT[7] = {31, 4, 4, 4, 4, 4, 4};
 
@@ -292,8 +530,12 @@ static uint8_t GlyphRow(char ch, int row)
     case 'B': glyph = glyphB; break;
     case 'C': glyph = glyphC; break;
     case 'E': glyph = glyphE; break;
+    case 'K': glyph = glyphK; break;
     case 'L': glyph = glyphL; break;
+    case 'O': glyph = glyphO; break;
     case 'R': glyph = glyphR; break;
+    case '+': glyph = glyphPlus; break;
+    case '-': glyph = glyphMinus; break;
     case 'S': glyph = glyphS; break;
     case 'T': glyph = glyphT; break;
     default: return 0;
@@ -403,11 +645,11 @@ static void DrawTouchControls(uint32_t *pixels, int width, int height, int strid
                 (held & (PORT_BUTTON_UP | PORT_BUTTON_DOWN | PORT_BUTTON_LEFT | PORT_BUTTON_RIGHT)) ? activeAlpha : 205);
 
     BlendCircle(pixels, width, height, stridePixels,
-                layout.aX, layout.aY, layout.faceRadius,
+                layout.aX, layout.aY, layout.aRadius,
                 (held & PORT_BUTTON_A) ? active : idle,
                 (held & PORT_BUTTON_A) ? activeAlpha : idleAlpha);
     BlendCircle(pixels, width, height, stridePixels,
-                layout.bX, layout.bY, layout.faceRadius,
+                layout.bX, layout.bY, layout.bRadius,
                 (held & PORT_BUTTON_B) ? active : idle,
                 (held & PORT_BUTTON_B) ? activeAlpha : idleAlpha);
     DrawCenteredText(pixels, width, height, stridePixels,
@@ -448,11 +690,55 @@ static void DrawTouchControls(uint32_t *pixels, int width, int height, int strid
                      (layout.startLeft + layout.startRight) / 2,
                      (layout.startTop + layout.startBottom) / 2,
                      "START", 1, label, 230);
+
+    if (sTouchLayoutEditing)
+    {
+        const int chromeY = height * 7 / 100;
+        const int chromeHalfW = MinInt(width, height) / 18;
+        const int chromeHalfH = MinInt(width, height) / 28;
+        const int minusX = width * 43 / 100;
+        const int plusX = width * 57 / 100;
+        const int okX = width * 90 / 100;
+
+        if (sEditorSelected == TOUCH_CONTROL_DPAD)
+            BlendCircle(pixels, width, height, stridePixels, layout.dpadX, layout.dpadY, layout.dpadRadius + 6, active, 70);
+        else if (sEditorSelected == TOUCH_CONTROL_A)
+            BlendCircle(pixels, width, height, stridePixels, layout.aX, layout.aY, layout.aRadius + 6, active, 70);
+        else if (sEditorSelected == TOUCH_CONTROL_B)
+            BlendCircle(pixels, width, height, stridePixels, layout.bX, layout.bY, layout.bRadius + 6, active, 70);
+        else if (sEditorSelected == TOUCH_CONTROL_L)
+            BlendFillRect(pixels, width, height, stridePixels, layout.lLeft - 6, layout.lTop - 6, layout.lRight + 6, layout.lBottom + 6, active, 70);
+        else if (sEditorSelected == TOUCH_CONTROL_R)
+            BlendFillRect(pixels, width, height, stridePixels, layout.rLeft - 6, layout.rTop - 6, layout.rRight + 6, layout.rBottom + 6, active, 70);
+        else if (sEditorSelected == TOUCH_CONTROL_SELECT)
+            BlendFillRect(pixels, width, height, stridePixels, layout.selectLeft - 6, layout.selectTop - 6, layout.selectRight + 6, layout.selectBottom + 6, active, 70);
+        else if (sEditorSelected == TOUCH_CONTROL_START)
+            BlendFillRect(pixels, width, height, stridePixels, layout.startLeft - 6, layout.startTop - 6, layout.startRight + 6, layout.startBottom + 6, active, 70);
+
+        BlendFillRect(pixels, width, height, stridePixels,
+                      minusX - chromeHalfW, chromeY - chromeHalfH,
+                      minusX + chromeHalfW, chromeY + chromeHalfH,
+                      idle, 205);
+        BlendFillRect(pixels, width, height, stridePixels,
+                      plusX - chromeHalfW, chromeY - chromeHalfH,
+                      plusX + chromeHalfW, chromeY + chromeHalfH,
+                      idle, 205);
+        BlendFillRect(pixels, width, height, stridePixels,
+                      okX - chromeHalfW, chromeY - chromeHalfH,
+                      okX + chromeHalfW, chromeY + chromeHalfH,
+                      active, 205);
+        DrawCenteredText(pixels, width, height, stridePixels, minusX, chromeY, "-", 2, label, 240);
+        DrawCenteredText(pixels, width, height, stridePixels, plusX, chromeY, "+", 2, label, 240);
+        DrawCenteredText(pixels, width, height, stridePixels, okX, chromeY, "OK", 2, label, 240);
+    }
 }
 
 void PortRuntime_Init(void)
 {
     sPortState = (struct PortRuntimeState){0};
+    sTouchLayoutEditing = false;
+    sEditorPointerDown = false;
+    sEditorDragging = false;
     PortGbaHost_Init();
     sPortState.gbaHostReady = PortGbaHost_SelfTest();
 }

@@ -92,6 +92,40 @@ static int32_t HandleInput(struct android_app *app, AInputEvent *event)
         const int32_t rawAction = AMotionEvent_getAction(event);
         const int32_t action = rawAction & AMOTION_EVENT_ACTION_MASK;
 
+        if (PortRuntime_IsTouchLayoutEditing())
+        {
+            if (action == AMOTION_EVENT_ACTION_CANCEL)
+            {
+                PortRuntime_TouchEditorPointer(0.0f, 0.0f, false,
+                                               engine->surfaceWidth, engine->surfaceHeight);
+            }
+            else
+            {
+                const size_t pointerCount = AMotionEvent_getPointerCount(event);
+                size_t index = 0;
+                if (action == AMOTION_EVENT_ACTION_POINTER_UP || action == AMOTION_EVENT_ACTION_UP)
+                {
+                    index = (size_t)((rawAction & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK)
+                        >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+                    if (index >= pointerCount)
+                        index = 0;
+                }
+
+                const float x = AMotionEvent_getX(event, index);
+                const float y = AMotionEvent_getY(event, index);
+                const bool down =
+                    action != AMOTION_EVENT_ACTION_UP
+                    && action != AMOTION_EVENT_ACTION_POINTER_UP;
+                PortRuntime_TouchEditorPointer(
+                    x, y, down, engine->surfaceWidth, engine->surfaceHeight);
+            }
+
+            engine->touchButtons = 0;
+            engine->input.pointerDown = false;
+            RefreshCombinedButtons(engine);
+            return 1;
+        }
+
         if (action == AMOTION_EVENT_ACTION_CANCEL)
         {
             engine->touchButtons = 0;
@@ -138,6 +172,16 @@ static int32_t HandleInput(struct android_app *app, AInputEvent *event)
 
     if (type == AINPUT_EVENT_TYPE_KEY)
     {
+        if (PortRuntime_IsTouchLayoutEditing()
+         && AKeyEvent_getKeyCode(event) == AKEYCODE_BACK)
+        {
+            if (AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_DOWN)
+                PortRuntime_EndTouchLayoutEdit();
+            engine->touchButtons = 0;
+            RefreshCombinedButtons(engine);
+            return 1;
+        }
+
         const uint32_t button = ButtonForKeyCode(AKeyEvent_getKeyCode(event));
         if (button == 0)
             return 0;
@@ -238,6 +282,7 @@ void android_main(struct android_app *app)
     app->onInputEvent = HandleInput;
 
     PortRuntime_Init();
+    PortRuntime_SetStoragePath(app->activity->internalDataPath);
     PortGbaFlash_Init(app->activity->internalDataPath);
     LOGI("Native runtime started; no GBA ROM or emulator core is embedded.");
     const bool engineReady = PortRuntime_IsGbaHostReady();

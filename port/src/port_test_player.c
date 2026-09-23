@@ -136,7 +136,8 @@ static bool32 IsStaticEventObstacle(s16 x, s16 y)
 
     for (u32 i = 0; i < events->bgEventCount; ++i)
     {
-        if (events->bgEvents[i].x == x && events->bgEvents[i].y == y)
+        if (events->bgEvents[i].x == x
+         && events->bgEvents[i].y + PORT_EVENT_PLAYER_Y_OFFSET == y)
             return TRUE;
     }
 
@@ -152,7 +153,8 @@ static bool32 IsWarpEventAt(s16 x, s16 y)
 
     for (u32 i = 0; i < events->warpCount; ++i)
     {
-        if (events->warps[i].x == x && events->warps[i].y == y)
+        if (events->warps[i].x == x
+         && events->warps[i].y + PORT_EVENT_PLAYER_Y_OFFSET == y)
             return TRUE;
     }
 

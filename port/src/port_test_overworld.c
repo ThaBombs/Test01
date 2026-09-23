@@ -92,7 +92,8 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
     for (u32 i = 0; i < events->warpCount; ++i)
     {
         const struct WarpEvent *warp = &events->warps[i];
-        if (warp->x != x || warp->y != y)
+        if (warp->x != x
+         || warp->y + PORT_EVENT_PLAYER_Y_OFFSET != y)
             continue;
 
         const struct MapHeader *destHeader =
@@ -106,7 +107,11 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
         // table. Spawn on that door tile; held movement naturally carries the
         // player away from it on the next step.
         const struct WarpEvent *dest = &destHeader->events->warps[warp->warpId];
-        PortGame_LoadTestMap(warp->mapGroup, warp->mapNum, dest->x, dest->y);
+        PortGame_LoadTestMap(
+            warp->mapGroup,
+            warp->mapNum,
+            dest->x,
+            dest->y + PORT_EVENT_PLAYER_Y_OFFSET);
         return TRUE;
     }
 
