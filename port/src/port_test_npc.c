@@ -147,42 +147,32 @@ static const struct SpriteTemplate *GetPortNpcSpriteTemplate(u16 graphicsId)
     }
 }
 
-static s16 GetCameraTileCompensation(s16 offset, s16 speed)
+static void UpdateNpcVisibility(struct PortNpcRuntime *npc)
 {
-    if (offset == 0)
-        return 0;
-    if (speed > 0)
-        return 16 - offset;
-    if (speed < 0)
-        return -16 - offset;
-    return 0;
+    if (npc->spriteId >= MAX_SPRITES)
+        return;
+
+    struct Sprite *sprite = &gSprites[npc->spriteId];
+    sprite->invisible =
+        sprite->x < -16 || sprite->x > DISPLAY_WIDTH + 16
+        || sprite->y < -32 || sprite->y > DISPLAY_HEIGHT + 32;
 }
 
-static void UpdateNpcScreenPosition(struct PortNpcRuntime *npc)
+static void PositionNpcFromMap(struct PortNpcRuntime *npc)
 {
     if (npc->spriteId >= MAX_SPRITES || npc->event == NULL)
         return;
 
     const s16 playerX = gSaveBlock1Ptr->pos.x;
     const s16 playerY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
-    const s16 cameraX = GetCameraTileCompensation(
-        gFieldCamera.x,
-        gFieldCamera.movementSpeedX);
-    const s16 cameraY = GetCameraTileCompensation(
-        gFieldCamera.y,
-        gFieldCamera.movementSpeedY);
 
     struct Sprite *sprite = &gSprites[npc->spriteId];
     sprite->x = DISPLAY_WIDTH / 2
-        + (npc->event->x - playerX) * 16
-        + cameraX;
+        + (npc->event->x - playerX) * 16;
     sprite->y = DISPLAY_HEIGHT / 2
-        + (npc->event->y - playerY) * 16
-        + cameraY;
+        + (npc->event->y - playerY) * 16;
 
-    sprite->invisible =
-        sprite->x < -16 || sprite->x > DISPLAY_WIDTH + 16
-        || sprite->y < -32 || sprite->y > DISPLAY_HEIGHT + 32;
+    UpdateNpcVisibility(npc);
 }
 
 static void DestroyPortNpcs(void)
@@ -235,7 +225,27 @@ void PortTestNpc_LoadMap(void)
 void PortTestNpc_Update(void)
 {
     for (u32 i = 0; i < sPortNpcCount; ++i)
-        UpdateNpcScreenPosition(&sPortNpcs[i]);
+        PositionNpcFromMap(&sPortNpcs[i]);
+}
+
+void PortTestNpc_ApplyCameraDelta(s16 dx, s16 dy)
+{
+    if (dx == 0 && dy == 0)
+        return;
+
+    for (u32 i = 0; i < sPortNpcCount; ++i)
+    {
+        struct PortNpcRuntime *npc = &sPortNpcs[i];
+        if (npc->spriteId >= MAX_SPRITES)
+            continue;
+
+        // BG scroll and world sprites move in opposite screen directions.
+        // Applying the exact per-frame camera delta keeps NPCs pinned to map
+        // pixels instead of recomputing them from the player's logical tile.
+        gSprites[npc->spriteId].x -= dx;
+        gSprites[npc->spriteId].y -= dy;
+        UpdateNpcVisibility(npc);
+    }
 }
 
 bool32 PortTestNpc_BlocksTile(s16 x, s16 y)

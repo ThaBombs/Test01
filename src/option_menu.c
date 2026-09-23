@@ -225,6 +225,18 @@ void CB2_InitOptionMenu(void)
         ChangeBgY(3, 0, BG_COORD_SET);
         InitWindows(sOptionMenuWinTemplates);
         DeactivateAllTextPrinters();
+#ifdef PLATFORM_ANDROID
+        // The native renderer does not need Emerald's GBA WIN0 highlight trick.
+        // Keep the menu as ordinary BG layers and draw an explicit cursor.
+        SetGpuReg(REG_OFFSET_WIN0H, 0);
+        SetGpuReg(REG_OFFSET_WIN0V, 0);
+        SetGpuReg(REG_OFFSET_WININ, 0);
+        SetGpuReg(REG_OFFSET_WINOUT, 0);
+        SetGpuReg(REG_OFFSET_BLDCNT, 0);
+        SetGpuReg(REG_OFFSET_BLDALPHA, 0);
+        SetGpuReg(REG_OFFSET_BLDY, 0);
+        SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
+#else
         SetGpuReg(REG_OFFSET_WIN0H, 0);
         SetGpuReg(REG_OFFSET_WIN0V, 0);
         SetGpuReg(REG_OFFSET_WININ, WININ_WIN0_BG0);
@@ -233,6 +245,7 @@ void CB2_InitOptionMenu(void)
         SetGpuReg(REG_OFFSET_BLDALPHA, 0);
         SetGpuReg(REG_OFFSET_BLDY, 4);
         SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_WIN0_ON | DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
+#endif
         ShowBg(0);
         ShowBg(1);
         gMain.state++;
@@ -430,8 +443,31 @@ static void Task_OptionMenuFadeOut(u8 taskId)
 
 static void HighlightOptionMenuItem(u8 index)
 {
+#ifdef PLATFORM_ANDROID
+    for (u8 i = 0; i < MENUITEM_COUNT; ++i)
+    {
+        FillWindowPixelRect(
+            WIN_OPTIONS,
+            PIXEL_FILL(TEXT_COLOR_WHITE),
+            0,
+            i * 16,
+            8,
+            16);
+    }
+
+    AddTextPrinterParameterized(
+        WIN_OPTIONS,
+        FONT_NORMAL,
+        gText_SelectedMarker,
+        0,
+        index * 16 + 1,
+        TEXT_SKIP_DRAW,
+        NULL);
+    CopyWindowToVram(WIN_OPTIONS, COPYWIN_GFX);
+#else
     SetGpuReg(REG_OFFSET_WIN0H, WIN_RANGE(16, DISPLAY_WIDTH - 16));
     SetGpuReg(REG_OFFSET_WIN0V, WIN_RANGE(index * 16 + 40, index * 16 + 56));
+#endif
 }
 
 static void DrawOptionMenuChoice(const u8 *text, u8 x, u8 y, u8 style)

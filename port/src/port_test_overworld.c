@@ -153,6 +153,20 @@ static void PortTestOverworld_SetupScene(u16 mapGroup, u16 mapNum, s16 focusX, s
 
     InitBgsFromTemplates(0, sPortOverworldBgTemplates, ARRAY_COUNT(sPortOverworldBgTemplates));
 
+    // BG0 is the fixed UI/dialogue layer. Reset its scroll explicitly so
+    // previous menu state cannot wrap dialogue borders into ghost rectangles.
+    ChangeBgX(0, 0, BG_COORD_SET);
+    ChangeBgY(0, 0, BG_COORD_SET);
+    SetGpuReg(REG_OFFSET_BG0HOFS, 0);
+    SetGpuReg(REG_OFFSET_BG0VOFS, 0);
+    SetGpuReg(REG_OFFSET_WIN0H, 0);
+    SetGpuReg(REG_OFFSET_WIN0V, 0);
+    SetGpuReg(REG_OFFSET_WININ, 0);
+    SetGpuReg(REG_OFFSET_WINOUT, 0);
+    SetGpuReg(REG_OFFSET_BLDCNT, 0);
+    SetGpuReg(REG_OFFSET_BLDALPHA, 0);
+    SetGpuReg(REG_OFFSET_BLDY, 0);
+
     memset(sPortBg0, 0, sizeof(sPortBg0));
     memset(sPortBg1, 0, sizeof(sPortBg1));
     memset(sPortBg2, 0, sizeof(sPortBg2));
