@@ -203,10 +203,18 @@ static const u16 ALIGNED(4) sPortBrendanHouse1FBorder[] =
     INCBIN_U16("data/layouts/LittlerootTown_BrendansHouse_1F/border.bin");
 static const u16 ALIGNED(4) sPortBrendanHouse1FMap[] =
     INCBIN_U16("data/layouts/LittlerootTown_BrendansHouse_1F/map.bin");
+static const u16 ALIGNED(4) sPortBrendanHouse2FBorder[] =
+    INCBIN_U16("data/layouts/LittlerootTown_BrendansHouse_2F/border.bin");
+static const u16 ALIGNED(4) sPortBrendanHouse2FMap[] =
+    INCBIN_U16("data/layouts/LittlerootTown_BrendansHouse_2F/map.bin");
 static const u16 ALIGNED(4) sPortMayHouse1FBorder[] =
     INCBIN_U16("data/layouts/LittlerootTown_MaysHouse_1F/border.bin");
 static const u16 ALIGNED(4) sPortMayHouse1FMap[] =
     INCBIN_U16("data/layouts/LittlerootTown_MaysHouse_1F/map.bin");
+static const u16 ALIGNED(4) sPortMayHouse2FBorder[] =
+    INCBIN_U16("data/layouts/LittlerootTown_MaysHouse_2F/border.bin");
+static const u16 ALIGNED(4) sPortMayHouse2FMap[] =
+    INCBIN_U16("data/layouts/LittlerootTown_MaysHouse_2F/map.bin");
 static const u16 ALIGNED(4) sPortBirchLabBorder[] =
     INCBIN_U16("data/layouts/LittlerootTown_ProfessorBirchsLab/border.bin");
 static const u16 ALIGNED(4) sPortBirchLabMap[] =
@@ -316,6 +324,7 @@ static const struct WarpEvent sPortBrendanHouse1FWarps[] =
 {
     { .x = 9, .y = 8, .elevation = 0, .warpId = 1, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
     { .x = 8, .y = 8, .elevation = 0, .warpId = 1, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
+    { .x = 8, .y = 2, .elevation = 0, .warpId = 0, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F) },
 };
 
 static const struct MapEvents sPortBrendanHouse1FEvents =
@@ -328,12 +337,67 @@ static const struct WarpEvent sPortMayHouse1FWarps[] =
 {
     { .x = 1, .y = 8, .elevation = 0, .warpId = 0, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
     { .x = 2, .y = 8, .elevation = 0, .warpId = 0, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN) },
+    { .x = 2, .y = 2, .elevation = 0, .warpId = 0, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_2F), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_2F) },
 };
 
 static const struct MapEvents sPortMayHouse1FEvents =
 {
     .warpCount = ARRAY_COUNT(sPortMayHouse1FWarps),
     .warps = sPortMayHouse1FWarps,
+};
+
+
+static const u8 sPortText_BedroomNotebook[] =
+    _("The notebook lists two adventure rules.\nOpen the MENU with START, and record\nyour progress with SAVE.");
+static const u8 sPortText_BedroomGameCube[] =
+    _("It's a Nintendo GameCube.\nA Game Boy Advance is connected\nas the Controller.");
+static const u8 sPortText_BedroomClock[] =
+    _("The wall clock is ticking steadily.");
+static const u8 sPortText_PlayerBedroomPc[] =
+    _("The bedroom PC boots up.\nIts storage functions are not wired\ninto this Android test slice yet.");
+static const u8 sPortText_RivalBedroomPc[] =
+    _("There's an e-mail from POKéMON TRAINER SCHOOL\non the screen.");
+
+static const struct WarpEvent sPortBrendanHouse2FWarps[] =
+{
+    { .x = 7, .y = 1, .elevation = 0, .warpId = 2, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_1F) },
+};
+
+static const struct BgEvent sPortBrendanHouse2FBgEvents[] =
+{
+    { .x = 0, .y = 1, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_NORTH, .bgUnion.script = sPortText_PlayerBedroomPc },
+    { .x = 1, .y = 1, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BedroomNotebook },
+    { .x = 5, .y = 1, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BedroomClock },
+    { .x = 3, .y = 1, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY,   .bgUnion.script = sPortText_BedroomGameCube },
+};
+
+static const struct MapEvents sPortBrendanHouse2FEvents =
+{
+    .warpCount = ARRAY_COUNT(sPortBrendanHouse2FWarps),
+    .bgEventCount = ARRAY_COUNT(sPortBrendanHouse2FBgEvents),
+    .warps = sPortBrendanHouse2FWarps,
+    .bgEvents = sPortBrendanHouse2FBgEvents,
+};
+
+static const struct WarpEvent sPortMayHouse2FWarps[] =
+{
+    { .x = 1, .y = 1, .elevation = 0, .warpId = 2, .mapNum = MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F), .mapGroup = MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F) },
+};
+
+static const struct BgEvent sPortMayHouse2FBgEvents[] =
+{
+    { .x = 5, .y = 1, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY, .bgUnion.script = sPortText_BedroomGameCube },
+    { .x = 7, .y = 1, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY, .bgUnion.script = sPortText_BedroomNotebook },
+    { .x = 3, .y = 1, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY, .bgUnion.script = sPortText_BedroomClock },
+    { .x = 8, .y = 1, .elevation = 0, .kind = BG_EVENT_PLAYER_FACING_ANY, .bgUnion.script = sPortText_RivalBedroomPc },
+};
+
+static const struct MapEvents sPortMayHouse2FEvents =
+{
+    .warpCount = ARRAY_COUNT(sPortMayHouse2FWarps),
+    .bgEventCount = ARRAY_COUNT(sPortMayHouse2FBgEvents),
+    .warps = sPortMayHouse2FWarps,
+    .bgEvents = sPortMayHouse2FBgEvents,
 };
 
 static const struct WarpEvent sPortBirchLabWarps[] =
@@ -461,6 +525,32 @@ const struct MapLayout gPortMayHouse1FLayout =
     .borderHeight = 2,
 };
 
+const struct MapLayout gPortBrendanHouse2FLayout =
+{
+    .width = 9,
+    .height = 8,
+    .border = sPortBrendanHouse2FBorder,
+    .map = sPortBrendanHouse2FMap,
+    .primaryTileset = &sPortTilesetBuilding,
+    .secondaryTileset = &sPortTilesetBrendansMaysHouse,
+    .isFrlg = FALSE,
+    .borderWidth = 2,
+    .borderHeight = 2,
+};
+
+const struct MapLayout gPortMayHouse2FLayout =
+{
+    .width = 9,
+    .height = 8,
+    .border = sPortMayHouse2FBorder,
+    .map = sPortMayHouse2FMap,
+    .primaryTileset = &sPortTilesetBuilding,
+    .secondaryTileset = &sPortTilesetBrendansMaysHouse,
+    .isFrlg = FALSE,
+    .borderWidth = 2,
+    .borderHeight = 2,
+};
+
 const struct MapLayout gPortBirchLabLayout =
 {
     .width = 13,
@@ -502,6 +592,34 @@ const struct MapHeader gPortMayHouse1FHeader =
     .allowRunning = FALSE,
 };
 
+const struct MapHeader gPortBrendanHouse2FHeader =
+{
+    .mapLayout = &gPortBrendanHouse2FLayout,
+    .events = &sPortBrendanHouse2FEvents,
+    .mapScripts = NULL,
+    .connections = NULL,
+    .music = 0,
+    .mapLayoutId = LAYOUT_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F,
+    .regionMapSectionId = MAPSEC_LITTLEROOT_TOWN,
+    .weather = WEATHER_NONE,
+    .mapType = MAP_TYPE_INDOOR,
+    .allowRunning = FALSE,
+};
+
+const struct MapHeader gPortMayHouse2FHeader =
+{
+    .mapLayout = &gPortMayHouse2FLayout,
+    .events = &sPortMayHouse2FEvents,
+    .mapScripts = NULL,
+    .connections = NULL,
+    .music = 0,
+    .mapLayoutId = LAYOUT_LITTLEROOT_TOWN_MAYS_HOUSE_2F,
+    .regionMapSectionId = MAPSEC_LITTLEROOT_TOWN,
+    .weather = WEATHER_NONE,
+    .mapType = MAP_TYPE_INDOOR,
+    .allowRunning = FALSE,
+};
+
 const struct MapHeader gPortBirchLabHeader =
 {
     .mapLayout = &gPortBirchLabLayout,
@@ -527,6 +645,12 @@ const struct MapHeader *const Overworld_GetMapHeaderByGroupAndId(u16 mapGroup, u
     if (mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F)
      && mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_1F))
         return &gPortMayHouse1FHeader;
+    if (mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F)
+     && mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN_BRENDANS_HOUSE_2F))
+        return &gPortBrendanHouse2FHeader;
+    if (mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_2F)
+     && mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN_MAYS_HOUSE_2F))
+        return &gPortMayHouse2FHeader;
     if (mapGroup == MAP_GROUP(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB)
      && mapNum == MAP_NUM(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB))
         return &gPortBirchLabHeader;
