@@ -93,7 +93,13 @@ static const u8 gText_ButtonTypeNormal[]   = _("NORMAL");
 static const u8 gText_ButtonTypeLR[]       = _("LR");
 static const u8 gText_ButtonTypeLEqualsA[] = _("L=A");
 static const u8 gText_ButtonEdit[]         = _("EDIT");
-static const u8 gText_SelectedMarker[]     = _(">");
+static const u8 gText_SelectedMarker[]     = _("▶");
+static const u8 sAndroidTextColors[] =
+{
+    TEXT_COLOR_WHITE,
+    TEXT_COLOR_DARK_GRAY,
+    TEXT_COLOR_WHITE,
+};
 
 static const u16 sOptionMenuText_Pal[] =
 {
@@ -444,25 +450,24 @@ static void Task_OptionMenuFadeOut(u8 taskId)
 static void HighlightOptionMenuItem(u8 index)
 {
 #ifdef PLATFORM_ANDROID
-    for (u8 i = 0; i < MENUITEM_COUNT; ++i)
-    {
-        FillWindowPixelRect(
-            WIN_OPTIONS,
-            PIXEL_FILL(TEXT_COLOR_WHITE),
-            0,
-            i * 16,
-            8,
-            16);
-    }
+    // The cursor owns a dedicated 12-pixel margin. Labels start at x=16, so
+    // moving the cursor can never erase or overwrite their first glyph.
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        0,
+        0,
+        12,
+        MENUITEM_COUNT * 16);
 
-    AddTextPrinterParameterized(
+    AddTextPrinterParameterized3(
         WIN_OPTIONS,
         FONT_NORMAL,
-        gText_SelectedMarker,
-        0,
+        2,
         index * 16 + 1,
+        sAndroidTextColors,
         TEXT_SKIP_DRAW,
-        NULL);
+        gText_SelectedMarker);
     CopyWindowToVram(WIN_OPTIONS, COPYWIN_GFX);
 #else
     SetGpuReg(REG_OFFSET_WIN0H, WIN_RANGE(16, DISPLAY_WIDTH - 16));
@@ -473,24 +478,15 @@ static void HighlightOptionMenuItem(u8 index)
 static void DrawOptionMenuChoice(const u8 *text, u8 x, u8 y, u8 style)
 {
 #ifdef PLATFORM_ANDROID
-    if (style != 0 && x >= 8)
-        AddTextPrinterParameterized(
-            WIN_OPTIONS,
-            FONT_NORMAL,
-            gText_SelectedMarker,
-            x - 8,
-            y + 1,
-            TEXT_SKIP_DRAW,
-            NULL);
-
-    AddTextPrinterParameterized(
+    (void)style;
+    AddTextPrinterParameterized3(
         WIN_OPTIONS,
         FONT_NORMAL,
-        text,
         x,
         y + 1,
+        sAndroidTextColors,
         TEXT_SKIP_DRAW,
-        NULL);
+        text);
 #else
     u8 dst[16];
     u16 i;
@@ -534,6 +530,24 @@ static u8 TextSpeed_ProcessInput(u8 selection)
 
 static void TextSpeed_DrawChoices(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    const u8 *text = selection == 0
+        ? gText_TextSpeedSlow
+        : (selection == 1 ? gText_TextSpeedMid : gText_TextSpeedFast);
+
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_TEXTSPEED,
+        96,
+        16);
+    DrawOptionMenuChoice(
+        text,
+        GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
+        YPOS_TEXTSPEED,
+        0);
+#else
     u8 styles[3];
     s32 widthSlow, widthMid, widthFast, xMid;
 
@@ -553,6 +567,7 @@ static void TextSpeed_DrawChoices(u8 selection)
     DrawOptionMenuChoice(gText_TextSpeedMid, xMid, YPOS_TEXTSPEED, styles[1]);
 
     DrawOptionMenuChoice(gText_TextSpeedFast, GetStringRightAlignXOffset(FONT_NORMAL, gText_TextSpeedFast, 198), YPOS_TEXTSPEED, styles[2]);
+#endif
 }
 
 static u8 BattleScene_ProcessInput(u8 selection)
@@ -568,6 +583,24 @@ static u8 BattleScene_ProcessInput(u8 selection)
 
 static void BattleScene_DrawChoices(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    const u8 *text = selection == 0
+        ? gText_BattleSceneOn
+        : gText_BattleSceneOff;
+
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_BATTLESCENE,
+        96,
+        16);
+    DrawOptionMenuChoice(
+        text,
+        GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
+        YPOS_BATTLESCENE,
+        0);
+#else
     u8 styles[2];
 
     styles[0] = 0;
@@ -576,6 +609,7 @@ static void BattleScene_DrawChoices(u8 selection)
 
     DrawOptionMenuChoice(gText_BattleSceneOn, 104, YPOS_BATTLESCENE, styles[0]);
     DrawOptionMenuChoice(gText_BattleSceneOff, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleSceneOff, 198), YPOS_BATTLESCENE, styles[1]);
+#endif
 }
 
 static u8 BattleStyle_ProcessInput(u8 selection)
@@ -591,6 +625,24 @@ static u8 BattleStyle_ProcessInput(u8 selection)
 
 static void BattleStyle_DrawChoices(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    const u8 *text = selection == 0
+        ? gText_BattleStyleShift
+        : gText_BattleStyleSet;
+
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_BATTLESTYLE,
+        96,
+        16);
+    DrawOptionMenuChoice(
+        text,
+        GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
+        YPOS_BATTLESTYLE,
+        0);
+#else
     u8 styles[2];
 
     styles[0] = 0;
@@ -599,6 +651,7 @@ static void BattleStyle_DrawChoices(u8 selection)
 
     DrawOptionMenuChoice(gText_BattleStyleShift, 104, YPOS_BATTLESTYLE, styles[0]);
     DrawOptionMenuChoice(gText_BattleStyleSet, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleStyleSet, 198), YPOS_BATTLESTYLE, styles[1]);
+#endif
 }
 
 static u8 Sound_ProcessInput(u8 selection)
@@ -615,6 +668,24 @@ static u8 Sound_ProcessInput(u8 selection)
 
 static void Sound_DrawChoices(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    const u8 *text = selection == 0
+        ? gText_SoundMono
+        : gText_SoundStereo;
+
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_SOUND,
+        96,
+        16);
+    DrawOptionMenuChoice(
+        text,
+        GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
+        YPOS_SOUND,
+        0);
+#else
     u8 styles[2];
 
     styles[0] = 0;
@@ -623,6 +694,7 @@ static void Sound_DrawChoices(u8 selection)
 
     DrawOptionMenuChoice(gText_SoundMono, 104, YPOS_SOUND, styles[0]);
     DrawOptionMenuChoice(gText_SoundStereo, GetStringRightAlignXOffset(FONT_NORMAL, gText_SoundStereo, 198), YPOS_SOUND, styles[1]);
+#endif
 }
 
 static u8 FrameType_ProcessInput(u8 selection)
@@ -679,8 +751,20 @@ static void FrameType_DrawChoices(u8 selection)
 
     text[i] = EOS;
 
+#ifdef PLATFORM_ANDROID
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_FRAMETYPE,
+        96,
+        16);
+    DrawOptionMenuChoice(gText_FrameType, 148, YPOS_FRAMETYPE, 0);
+    DrawOptionMenuChoice(text, 180, YPOS_FRAMETYPE, 0);
+#else
     DrawOptionMenuChoice(gText_FrameType, 104, YPOS_FRAMETYPE, 0);
     DrawOptionMenuChoice(text, 128, YPOS_FRAMETYPE, 1);
+#endif
 }
 
 static u8 ButtonMode_ProcessInput(u8 selection)
@@ -714,7 +798,18 @@ static void ButtonMode_DrawChoices(u8 selection)
 {
 #ifdef PLATFORM_ANDROID
     (void)selection;
-    DrawOptionMenuChoice(gText_ButtonEdit, 104, YPOS_BUTTONMODE, 1);
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_BUTTONMODE,
+        96,
+        16);
+    DrawOptionMenuChoice(
+        gText_ButtonEdit,
+        GetStringRightAlignXOffset(FONT_NORMAL, gText_ButtonEdit, 198),
+        YPOS_BUTTONMODE,
+        0);
 #else
     s32 widthNormal, widthLR, widthLA, xLR;
     u8 styles[3];
@@ -751,7 +846,27 @@ static void DrawOptionMenuTexts(void)
 
     FillWindowPixelBuffer(WIN_OPTIONS, PIXEL_FILL(1));
     for (i = 0; i < MENUITEM_COUNT; i++)
-        AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, sOptionMenuItemsNames[i], 8, (i * 16) + 1, TEXT_SKIP_DRAW, NULL);
+    {
+#ifdef PLATFORM_ANDROID
+        AddTextPrinterParameterized3(
+            WIN_OPTIONS,
+            FONT_NORMAL,
+            16,
+            (i * 16) + 1,
+            sAndroidTextColors,
+            TEXT_SKIP_DRAW,
+            sOptionMenuItemsNames[i]);
+#else
+        AddTextPrinterParameterized(
+            WIN_OPTIONS,
+            FONT_NORMAL,
+            sOptionMenuItemsNames[i],
+            8,
+            (i * 16) + 1,
+            TEXT_SKIP_DRAW,
+            NULL);
+#endif
+    }
     CopyWindowToVram(WIN_OPTIONS, COPYWIN_FULL);
 }
 

@@ -27,7 +27,7 @@ const u8 gText_SelectorArrow3[] = _("▶");
 
 static const u8 sTextOption[] = _("OPTION");
 static const u8 sTextClose[] = _("CLOSE");
-static const u8 sTextCursor[] = _(">");
+static const u8 sTextCursor[] = _("▶");
 static const u8 sTextColors[] =
 {
     TEXT_COLOR_WHITE,
@@ -75,12 +75,12 @@ static u8 sSelection;
 static void DrawFieldMenuContents(void)
 {
     FillWindowPixelBuffer(0, PIXEL_FILL(TEXT_COLOR_WHITE));
-    AddTextPrinterParameterized3(0, FONT_NORMAL, 10, 1, sTextColors, TEXT_SKIP_DRAW, sTextOption);
-    AddTextPrinterParameterized3(0, FONT_NORMAL, 10, 17, sTextColors, TEXT_SKIP_DRAW, sTextClose);
+    AddTextPrinterParameterized3(0, FONT_NORMAL, 18, 1, sTextColors, TEXT_SKIP_DRAW, sTextOption);
+    AddTextPrinterParameterized3(0, FONT_NORMAL, 18, 17, sTextColors, TEXT_SKIP_DRAW, sTextClose);
     AddTextPrinterParameterized3(
         0,
         FONT_NORMAL,
-        0,
+        2,
         sSelection * 16 + 1,
         sTextColors,
         TEXT_SKIP_DRAW,
