@@ -346,6 +346,8 @@ static const u8 sPortText_Route101Youngster[] =
     _("If POKéMON get tired, take them to\na POKéMON CENTER.\nThere's one in OLDALE TOWN close by.");
 static const u8 sPortText_Route101BirchHelp[] =
     _("Hello! You over there!\nPlease! Help!\nIn my BAG! There's a POKé BALL!");
+static const u8 sPortText_Route101BirchsBag[] =
+    _("Three POKé BALLS are inside the BAG.");
 
 static const struct ObjectEventTemplate sPortRoute101ObjectEvents[] =
 {
@@ -364,12 +366,61 @@ static const struct ObjectEventTemplate sPortRoute101ObjectEvents[] =
         .script = sPortText_Route101Youngster,
         .flagId = 0,
     },
+    {
+        .localId = 2,
+        .graphicsId = OBJ_EVENT_GFX_PROF_BIRCH,
+        .kind = 0,
+        .x = 9,
+        .y = 13,
+        .elevation = 3,
+        .movementType = MOVEMENT_TYPE_FACE_RIGHT,
+        .movementRangeX = 0,
+        .movementRangeY = 0,
+        .trainerType = 0,
+        .trainerRange_berryTreeId = 0,
+        .script = sPortText_Route101BirchHelp,
+        .flagId = 0,
+    },
+    {
+        .localId = 3,
+        .graphicsId = OBJ_EVENT_GFX_BIRCHS_BAG,
+        .kind = 0,
+        .x = 7,
+        .y = 14,
+        .elevation = 3,
+        .movementType = MOVEMENT_TYPE_NONE,
+        .movementRangeX = 0,
+        .movementRangeY = 0,
+        .trainerType = 0,
+        .trainerRange_berryTreeId = 0,
+        .script = sPortText_Route101BirchsBag,
+        .flagId = 0,
+    },
+    {
+        .localId = 4,
+        .graphicsId = OBJ_EVENT_GFX_ZIGZAGOON_1,
+        .kind = 0,
+        .x = 10,
+        .y = 13,
+        .elevation = 3,
+        .movementType = MOVEMENT_TYPE_FACE_LEFT,
+        .movementRangeX = 0,
+        .movementRangeY = 0,
+        .trainerType = 0,
+        .trainerRange_berryTreeId = 0,
+        .script = NULL,
+        .flagId = 0,
+    },
 };
 
 static const struct CoordEvent sPortRoute101CoordEvents[] =
 {
-    // trigger 1 is a small Android-native route event variable. index 0 means
-    // this entrance prompt is active before the rescue sequence advances.
+    // The custom Android player is rendered one map row above the camera
+    // focus. Accept both the vanilla Route 101 trigger row (19) and the
+    // Android player's effective row (18); the state gate makes the prompt
+    // fire only once.
+    { .x = 10, .y = 18, .elevation = 3, .trigger = 1, .index = 0, .script = sPortText_Route101BirchHelp },
+    { .x = 11, .y = 18, .elevation = 3, .trigger = 1, .index = 0, .script = sPortText_Route101BirchHelp },
     { .x = 10, .y = 19, .elevation = 3, .trigger = 1, .index = 0, .script = sPortText_Route101BirchHelp },
     { .x = 11, .y = 19, .elevation = 3, .trigger = 1, .index = 0, .script = sPortText_Route101BirchHelp },
 };
