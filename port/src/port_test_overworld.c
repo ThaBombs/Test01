@@ -186,22 +186,23 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
          || warp->warpId >= destHeader->events->warpCount)
             return FALSE;
 
-        // Land on the exact destination warp specified by Emerald's map data.
-        // A small arrival lock suppresses the reciprocal warp until the player
-        // has actually stepped away, avoiding both spawn offsets and loops.
         const struct WarpEvent *dest = &destHeader->events->warps[warp->warpId];
+        const bool32 isHouseStair =
+            IsHouseStairTransition(
+                sourceGroup, sourceNum,
+                warp->mapGroup, warp->mapNum);
+
+        // Door warps still land on their destination warp. Bedroom stairs are
+        // different: the warp tile itself is the stair/wall graphic, so place
+        // the player one tile south in the walkable room and face back out.
+        const s16 arrivalY = dest->y + (isHouseStair ? 1 : 0);
         PortGame_LoadTestMap(
             warp->mapGroup,
             warp->mapNum,
             dest->x,
-            dest->y + PORT_PLAYER_MAP_Y_BIAS);
+            arrivalY + PORT_PLAYER_MAP_Y_BIAS);
 
-        // Both Littleroot bedroom staircases emerge toward the room interior.
-        // Preserve that arrival orientation instead of carrying the direction
-        // the player happened to face when stepping onto the source warp.
-        if (IsHouseStairTransition(
-                sourceGroup, sourceNum,
-                warp->mapGroup, warp->mapNum))
+        if (isHouseStair)
             PortTestPlayer_SetFacingDirection(DIR_SOUTH);
 
         sPortWarpArrivalLocked = TRUE;
