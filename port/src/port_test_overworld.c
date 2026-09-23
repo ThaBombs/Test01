@@ -1,4 +1,5 @@
 #include "port_test_overworld.h"
+#include "port_test_player.h"
 
 #include "global.h"
 #include "bg.h"
@@ -31,6 +32,7 @@ static const struct BgTemplate sPortOverworldBgTemplates[] =
 
 static void PortTestOverworld_Main(void)
 {
+    PortTestPlayer_Update();
     FieldUpdateBgTilemapScroll();
     DoScheduledBgTilemapCopiesToVram();
     TransferPlttBuffer();
@@ -62,9 +64,10 @@ void PortGame_StartTestOverworld(void)
     gSaveBlock1Ptr->location.x = -1;
     gSaveBlock1Ptr->location.y = -1;
 
-    // Camera focus at the middle of the 20x20 Littleroot map.
-    gSaveBlock1Ptr->pos.x = 10;
-    gSaveBlock1Ptr->pos.y = 10;
+    // gSaveBlock1Ptr->pos is the camera origin, not the player's map tile.
+    // With MAP_OFFSET == 7, (3,3) places the camera focus/player at (10,10).
+    gSaveBlock1Ptr->pos.x = 10 - MAP_OFFSET;
+    gSaveBlock1Ptr->pos.y = 10 - MAP_OFFSET;
 
     InitMap();
     ResetFieldCamera();
@@ -82,6 +85,8 @@ void PortGame_StartTestOverworld(void)
     ShowBg(1);
     ShowBg(2);
     ShowBg(3);
+
+    PortTestPlayer_Init();
 
     FieldUpdateBgTilemapScroll();
     DoScheduledBgTilemapCopiesToVram();
