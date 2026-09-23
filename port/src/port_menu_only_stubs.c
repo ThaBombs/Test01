@@ -65,3 +65,20 @@ u32 GetGlyphWidth_Braille(u16 glyphId, bool32 isJapanese)
     (void)isJapanese;
     return 16;
 }
+
+
+void ClearMirageTowerPulseBlendEffect(void)
+{
+    // The reduced Android Littleroot slice does not enable Mirage Tower
+    // effects. This keeps field-camera movement linkable until the full
+    // overworld effect stack is restored.
+}
+
+void LoadMapFromCameraTransition(u8 mapGroup, u8 mapNum)
+{
+    // Map connections are not enabled in the reduced Android map slice yet.
+    // Door/interior transitions are handled explicitly by the Android field
+    // bridge until the full Emerald overworld loader is linked.
+    (void)mapGroup;
+    (void)mapNum;
+}
