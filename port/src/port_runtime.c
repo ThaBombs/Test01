@@ -42,6 +42,10 @@ struct TouchLayout
     int startTop;
     int startRight;
     int startBottom;
+    int fastLeft;
+    int fastTop;
+    int fastRight;
+    int fastBottom;
 };
 
 static struct PortRuntimeState sPortState;
@@ -55,6 +59,8 @@ enum
     TOUCH_CONTROL_R,
     TOUCH_CONTROL_SELECT,
     TOUCH_CONTROL_START,
+    // Keep this last so older 7-control layout files remain compatible.
+    TOUCH_CONTROL_FAST_FORWARD,
     TOUCH_CONTROL_COUNT,
 };
 
@@ -74,9 +80,11 @@ static struct TouchControlConfig sTouchControls[TOUCH_CONTROL_COUNT] =
     [TOUCH_CONTROL_R]      = {920, 100, 125},
     [TOUCH_CONTROL_SELECT] = {430, 910, 125},
     [TOUCH_CONTROL_START]  = {570, 910, 125},
+    [TOUCH_CONTROL_FAST_FORWARD] = {790, 100, 125},
 };
 
 static bool sTouchLayoutEditing;
+static int sFastForwardMultiplier = 2;
 static bool sEditorPointerDown;
 static bool sEditorDragging;
 static int sEditorSelected = TOUCH_CONTROL_DPAD;
@@ -267,6 +275,15 @@ static struct TouchLayout GetTouchLayout(int width, int height)
     layout.startTop = startY - startHalfH;
     layout.startBottom = startY + startHalfH;
 
+    const int fastHalfW = ScaleTouchSizeFor(TOUCH_CONTROL_FAST_FORWARD, minDim / 12);
+    const int fastHalfH = ScaleTouchSizeFor(TOUCH_CONTROL_FAST_FORWARD, minDim / 28);
+    const int fastX = width * sTouchControls[TOUCH_CONTROL_FAST_FORWARD].xPermille / 1000;
+    const int fastY = height * sTouchControls[TOUCH_CONTROL_FAST_FORWARD].yPermille / 1000;
+    layout.fastLeft = fastX - fastHalfW;
+    layout.fastRight = fastX + fastHalfW;
+    layout.fastTop = fastY - fastHalfH;
+    layout.fastBottom = fastY + fastHalfH;
+
     return layout;
 }
 
@@ -297,6 +314,7 @@ static void SaveTouchLayout(void)
                 sTouchControls[i].xPermille,
                 sTouchControls[i].yPermille,
                 sTouchControls[i].sizePercent);
+    fprintf(file, "FF %d\n", sFastForwardMultiplier);
     fclose(file);
 }
 
@@ -310,29 +328,47 @@ static void LoadTouchLayout(void)
         return;
 
     struct TouchControlConfig loaded[TOUCH_CONTROL_COUNT];
-    bool valid = true;
+    memcpy(loaded, sTouchControls, sizeof(loaded));
+
+    int loadedCount = 0;
     for (int i = 0; i < TOUCH_CONTROL_COUNT; ++i)
     {
+        struct TouchControlConfig candidate;
         if (fscanf(file, "%d %d %d",
-                   &loaded[i].xPermille,
-                   &loaded[i].yPermille,
-                   &loaded[i].sizePercent) != 3)
-        {
-            valid = false;
+                   &candidate.xPermille,
+                   &candidate.yPermille,
+                   &candidate.sizePercent) != 3)
             break;
-        }
-        if (loaded[i].xPermille < 20 || loaded[i].xPermille > 980
-         || loaded[i].yPermille < 20 || loaded[i].yPermille > 980
-         || loaded[i].sizePercent < 60 || loaded[i].sizePercent > 200)
-        {
-            valid = false;
-            break;
-        }
-    }
-    fclose(file);
 
-    if (valid)
-        memcpy(sTouchControls, loaded, sizeof(sTouchControls));
+        if (candidate.xPermille < 20 || candidate.xPermille > 980
+         || candidate.yPermille < 20 || candidate.yPermille > 980
+         || candidate.sizePercent < 60 || candidate.sizePercent > 200)
+            break;
+
+        loaded[i] = candidate;
+        ++loadedCount;
+    }
+
+    // The previous format contained seven controls. Preserve those positions
+    // and simply use the default FF button when upgrading an existing install.
+    const int legacyControlCount = TOUCH_CONTROL_FAST_FORWARD;
+    if (loadedCount >= legacyControlCount)
+    {
+        for (int i = 0; i < loadedCount; ++i)
+            sTouchControls[i] = loaded[i];
+    }
+
+    if (loadedCount == TOUCH_CONTROL_COUNT)
+    {
+        char tag[8] = {0};
+        int multiplier = 0;
+        if (fscanf(file, "%7s %d", tag, &multiplier) == 2
+         && strcmp(tag, "FF") == 0
+         && multiplier >= 2 && multiplier <= 4)
+            sFastForwardMultiplier = multiplier;
+    }
+
+    fclose(file);
 }
 
 void PortRuntime_SetStoragePath(const char *path)
@@ -394,6 +430,8 @@ static int TouchControlAt(float x, float y, const struct TouchLayout *layout)
         return TOUCH_CONTROL_SELECT;
     if (PointInRect(x, y, layout->startLeft, layout->startTop, layout->startRight, layout->startBottom))
         return TOUCH_CONTROL_START;
+    if (PointInRect(x, y, layout->fastLeft, layout->fastTop, layout->fastRight, layout->fastBottom))
+        return TOUCH_CONTROL_FAST_FORWARD;
     if (PointInCircle(x, y, layout->dpadX, layout->dpadY, layout->dpadRadius))
         return TOUCH_CONTROL_DPAD;
     return -1;
@@ -506,6 +544,8 @@ uint32_t PortRuntime_ButtonsForTouch(float x, float y, int width, int height)
         buttons |= PORT_BUTTON_SELECT;
     if (PointInRect(x, y, layout.startLeft, layout.startTop, layout.startRight, layout.startBottom))
         buttons |= PORT_BUTTON_START;
+    if (PointInRect(x, y, layout.fastLeft, layout.fastTop, layout.fastRight, layout.fastBottom))
+        buttons |= PORT_BUTTON_FAST_FORWARD;
 
     return buttons;
 }
@@ -516,6 +556,7 @@ static uint8_t GlyphRow(char ch, int row)
     static const uint8_t glyphB[7] = {30, 17, 17, 30, 17, 17, 30};
     static const uint8_t glyphC[7] = {14, 17, 16, 16, 16, 17, 14};
     static const uint8_t glyphE[7] = {31, 16, 16, 30, 16, 16, 31};
+    static const uint8_t glyphF[7] = {31, 16, 16, 30, 16, 16, 16};
     static const uint8_t glyphK[7] = {17, 18, 20, 24, 20, 18, 17};
     static const uint8_t glyphL[7] = {16, 16, 16, 16, 16, 16, 31};
     static const uint8_t glyphO[7] = {14, 17, 17, 17, 17, 17, 14};
@@ -524,6 +565,10 @@ static uint8_t GlyphRow(char ch, int row)
     static const uint8_t glyphMinus[7] = {0, 0, 0, 31, 0, 0, 0};
     static const uint8_t glyphS[7] = {15, 16, 16, 14, 1, 1, 30};
     static const uint8_t glyphT[7] = {31, 4, 4, 4, 4, 4, 4};
+    static const uint8_t glyphX[7] = {17, 17, 10, 4, 10, 17, 17};
+    static const uint8_t glyph2[7] = {14, 17, 1, 2, 4, 8, 31};
+    static const uint8_t glyph3[7] = {30, 1, 1, 14, 1, 1, 30};
+    static const uint8_t glyph4[7] = {2, 6, 10, 18, 31, 2, 2};
 
     const uint8_t *glyph = NULL;
     switch (ch)
@@ -532,6 +577,7 @@ static uint8_t GlyphRow(char ch, int row)
     case 'B': glyph = glyphB; break;
     case 'C': glyph = glyphC; break;
     case 'E': glyph = glyphE; break;
+    case 'F': glyph = glyphF; break;
     case 'K': glyph = glyphK; break;
     case 'L': glyph = glyphL; break;
     case 'O': glyph = glyphO; break;
@@ -540,6 +586,10 @@ static uint8_t GlyphRow(char ch, int row)
     case '-': glyph = glyphMinus; break;
     case 'S': glyph = glyphS; break;
     case 'T': glyph = glyphT; break;
+    case 'X': glyph = glyphX; break;
+    case '2': glyph = glyph2; break;
+    case '3': glyph = glyph3; break;
+    case '4': glyph = glyph4; break;
     default: return 0;
     }
 
@@ -693,6 +743,19 @@ static void DrawTouchControls(uint32_t *pixels, int width, int height, int strid
                      (layout.startTop + layout.startBottom) / 2,
                      "START", 1, label, 230);
 
+    BlendFillRect(pixels, width, height, stridePixels,
+                  layout.fastLeft, layout.fastTop, layout.fastRight, layout.fastBottom,
+                  (held & PORT_BUTTON_FAST_FORWARD) ? active : idle,
+                  (held & PORT_BUTTON_FAST_FORWARD) ? activeAlpha : idleAlpha);
+    const char *fastLabel =
+        sFastForwardMultiplier == 4 ? "4X"
+      : sFastForwardMultiplier == 3 ? "3X"
+      : "2X";
+    DrawCenteredText(pixels, width, height, stridePixels,
+                     (layout.fastLeft + layout.fastRight) / 2,
+                     (layout.fastTop + layout.fastBottom) / 2,
+                     fastLabel, 2, label, 230);
+
     if (sTouchLayoutEditing)
     {
         const int chromeY = height * 7 / 100;
@@ -716,6 +779,8 @@ static void DrawTouchControls(uint32_t *pixels, int width, int height, int strid
             BlendFillRect(pixels, width, height, stridePixels, layout.selectLeft - 6, layout.selectTop - 6, layout.selectRight + 6, layout.selectBottom + 6, active, 70);
         else if (sEditorSelected == TOUCH_CONTROL_START)
             BlendFillRect(pixels, width, height, stridePixels, layout.startLeft - 6, layout.startTop - 6, layout.startRight + 6, layout.startBottom + 6, active, 70);
+        else if (sEditorSelected == TOUCH_CONTROL_FAST_FORWARD)
+            BlendFillRect(pixels, width, height, stridePixels, layout.fastLeft - 6, layout.fastTop - 6, layout.fastRight + 6, layout.fastBottom + 6, active, 70);
 
         BlendFillRect(pixels, width, height, stridePixels,
                       minusX - chromeHalfW, chromeY - chromeHalfH,
@@ -738,6 +803,7 @@ static void DrawTouchControls(uint32_t *pixels, int width, int height, int strid
 void PortRuntime_Init(void)
 {
     sPortState = (struct PortRuntimeState){0};
+    sFastForwardMultiplier = 2;
     sTouchLayoutEditing = false;
     sEditorPointerDown = false;
     sEditorDragging = false;
@@ -799,4 +865,29 @@ uint64_t PortRuntime_GetFrameCount(void)
 bool PortRuntime_IsGbaHostReady(void)
 {
     return sPortState.gbaHostReady;
+}
+
+
+bool PortRuntime_IsFastForwardEnabled(void)
+{
+    return (sPortState.input.buttons & PORT_BUTTON_FAST_FORWARD) != 0;
+}
+
+int PortRuntime_GetFastForwardMultiplier(void)
+{
+    return sFastForwardMultiplier;
+}
+
+void PortRuntime_SetFastForwardMultiplier(int multiplier)
+{
+    sFastForwardMultiplier = ClampInt(multiplier, 2, 4);
+    SaveTouchLayout();
+}
+
+void PortRuntime_CycleFastForwardMultiplier(void)
+{
+    ++sFastForwardMultiplier;
+    if (sFastForwardMultiplier > 4)
+        sFastForwardMultiplier = 2;
+    SaveTouchLayout();
 }
