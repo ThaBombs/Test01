@@ -32,6 +32,8 @@ static const u32 sPortBoy2Gfx[] =
     INCGFX_U32("graphics/object_events/pics/people/boy_2.png", ".4bpp", "-mwidth 2 -mheight 4");
 static const u32 sPortScientist1Gfx[] =
     INCGFX_U32("graphics/object_events/pics/people/scientist_1.png", ".4bpp", "-mwidth 2 -mheight 4");
+static const u32 sPortYoungsterGfx[] =
+    INCGFX_U32("graphics/object_events/pics/people/youngster.png", ".4bpp", "-mwidth 2 -mheight 4");
 
 static const u16 sPortNpc1Palette[] =
     INCGFX_U16("graphics/object_events/palettes/npc_1.pal", ".gbapal");
@@ -55,6 +57,10 @@ static const struct SpriteFrameImage sPortBoy2Frames[] =
 static const struct SpriteFrameImage sPortScientist1Frames[] =
 {
     overworld_ascending_frames(sPortScientist1Gfx, 2, 4),
+};
+static const struct SpriteFrameImage sPortYoungsterFrames[] =
+{
+    overworld_ascending_frames(sPortYoungsterGfx, 2, 4),
 };
 
 static const struct OamData sPortNpcOam =
@@ -185,6 +191,16 @@ static const struct SpriteTemplate sPortScientist1Template =
     .affineAnims = gDummySpriteAffineAnimTable,
     .callback = SpriteCallbackDummy,
 };
+static const struct SpriteTemplate sPortYoungsterTemplate =
+{
+    .tileTag = TAG_NONE,
+    .paletteTag = PORT_NPC_PAL_TAG_1,
+    .oam = &sPortNpcOam,
+    .anims = sPortNpcAnims,
+    .images = sPortYoungsterFrames,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
+};
 
 struct PortNpcRuntime
 {
@@ -247,6 +263,8 @@ static const struct SpriteTemplate *GetPortNpcSpriteTemplate(u16 graphicsId)
         return &sPortBoy2Template;
     case OBJ_EVENT_GFX_SCIENTIST_1:
         return &sPortScientist1Template;
+    case OBJ_EVENT_GFX_YOUNGSTER:
+        return &sPortYoungsterTemplate;
     default:
         return NULL;
     }
