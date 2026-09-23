@@ -77,6 +77,31 @@ static void DrawBgWindowFrames(void);
 EWRAM_DATA static bool8 sArrowPressed = FALSE;
 
 static const u8 gText_Option[]             = _("OPTION");
+#ifdef PLATFORM_ANDROID
+static const u8 gText_TextSpeedSlow[]      = _("SLOW");
+static const u8 gText_TextSpeedMid[]       = _("MID");
+static const u8 gText_TextSpeedFast[]      = _("FAST");
+static const u8 gText_BattleSceneOn[]      = _("ON");
+static const u8 gText_BattleSceneOff[]     = _("OFF");
+static const u8 gText_BattleStyleShift[]   = _("SHIFT");
+static const u8 gText_BattleStyleSet[]     = _("SET");
+static const u8 gText_SoundMono[]          = _("MONO");
+static const u8 gText_SoundStereo[]        = _("STEREO");
+static const u8 gText_FrameType[]          = _("TYPE");
+static const u8 gText_FrameTypeNumber[]    = _("");
+static const u8 gText_ButtonTypeNormal[]   = _("NORMAL");
+static const u8 gText_ButtonTypeLR[]       = _("LR");
+static const u8 gText_ButtonTypeLEqualsA[] = _("L=A");
+static const u8 gText_ButtonEdit[]         = _("EDIT");
+static const u8 gText_SelectedMarker[]     = _(">");
+
+static const u16 sOptionMenuText_Pal[] =
+{
+    [TEXT_COLOR_WHITE] = RGB_WHITE,
+    [TEXT_COLOR_DARK_GRAY] = RGB_BLACK,
+    [TEXT_COLOR_LIGHT_GRAY] = RGB_WHITE,
+};
+#else
 static const u8 gText_TextSpeedSlow[]      = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}SLOW");
 static const u8 gText_TextSpeedMid[]       = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}MID");
 static const u8 gText_TextSpeedFast[]      = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}FAST");
@@ -91,11 +116,9 @@ static const u8 gText_FrameTypeNumber[]    = _("{COLOR GREEN}{SHADOW LIGHT_GREEN
 static const u8 gText_ButtonTypeNormal[]   = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NORMAL");
 static const u8 gText_ButtonTypeLR[]       = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}LR");
 static const u8 gText_ButtonTypeLEqualsA[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}L=A");
-#ifdef PLATFORM_ANDROID
-static const u8 gText_ButtonEdit[]          = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}EDIT");
-#endif
 
 static const u16 sOptionMenuText_Pal[] = INCGFX_U16("graphics/interface/option_menu_text.pal", ".gbapal");
+#endif
 // note: this is only used in the Japanese release
 static const u8 sEqualSignGfx[] = INCGFX_U8("graphics/interface/option_menu_equals_sign.png", ".4bpp");
 
@@ -413,6 +436,26 @@ static void HighlightOptionMenuItem(u8 index)
 
 static void DrawOptionMenuChoice(const u8 *text, u8 x, u8 y, u8 style)
 {
+#ifdef PLATFORM_ANDROID
+    if (style != 0 && x >= 8)
+        AddTextPrinterParameterized(
+            WIN_OPTIONS,
+            FONT_NORMAL,
+            gText_SelectedMarker,
+            x - 8,
+            y + 1,
+            TEXT_SKIP_DRAW,
+            NULL);
+
+    AddTextPrinterParameterized(
+        WIN_OPTIONS,
+        FONT_NORMAL,
+        text,
+        x,
+        y + 1,
+        TEXT_SKIP_DRAW,
+        NULL);
+#else
     u8 dst[16];
     u16 i;
 
@@ -427,6 +470,7 @@ static void DrawOptionMenuChoice(const u8 *text, u8 x, u8 y, u8 style)
 
     dst[i] = EOS;
     AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, dst, x, y + 1, TEXT_SKIP_DRAW, NULL);
+#endif
 }
 
 static u8 TextSpeed_ProcessInput(u8 selection)

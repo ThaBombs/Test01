@@ -8,6 +8,7 @@
 #include "text.h"
 #include "text_window.h"
 #include "window.h"
+#include "constants/rgb.h"
 
 #define PORT_DIALOGUE_FRAME_TILE 0x1E0
 #define PORT_DIALOGUE_FRAME_PAL  14
@@ -24,11 +25,18 @@ static const struct WindowTemplate sDialogueWindow =
     .baseBlock = 0x40,
 };
 
+static const u16 sPortDialogueTextPalette[16] =
+{
+    [TEXT_COLOR_WHITE] = RGB_WHITE,
+    [TEXT_COLOR_DARK_GRAY] = RGB_BLACK,
+    [TEXT_COLOR_LIGHT_GRAY] = RGB_WHITE,
+};
+
 static const u8 sTextColors[] =
 {
+    TEXT_COLOR_WHITE,
     TEXT_COLOR_DARK_GRAY,
     TEXT_COLOR_WHITE,
-    TEXT_COLOR_LIGHT_GRAY,
 };
 
 static u8 sDialogueWindowId = WINDOW_NONE;
@@ -45,7 +53,7 @@ void PortTestDialogue_Init(void)
             PORT_DIALOGUE_FRAME_TILE,
             BG_PLTT_ID(PORT_DIALOGUE_FRAME_PAL));
         LoadPalette(
-            GetTextWindowPalette(3),
+            sPortDialogueTextPalette,
             BG_PLTT_ID(PORT_DIALOGUE_TEXT_PAL),
             PLTT_SIZE_4BPP);
     }

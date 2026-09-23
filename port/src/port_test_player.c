@@ -364,6 +364,7 @@ void PortTestPlayer_Init(void)
         REG_OFFSET_DISPCNT,
         DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
 
+    PortTestNpc_Update();
     AnimateSprites();
     BuildOamBuffer();
     LoadOam();
@@ -379,6 +380,7 @@ void PortTestPlayer_Update(void)
      && (gMain.newKeys & A_BUTTON)
      && TryInteractWithFacingEvent())
     {
+        PortTestNpc_Update();
         AnimateSprites();
         BuildOamBuffer();
         LoadOam();

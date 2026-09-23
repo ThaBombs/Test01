@@ -38,8 +38,6 @@ static const struct BgTemplate sPortOverworldBgTemplates[] =
 
 static void PortTestOverworld_Main(void)
 {
-    PortTestNpc_Update();
-
     if (!PortTestDialogue_Update())
     {
         if (!PortTestFieldMenu_Update())
