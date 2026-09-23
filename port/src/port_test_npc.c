@@ -179,9 +179,31 @@ struct PortNpcRuntime
     u8 facing;
 };
 
+struct PortNpcSavedState
+{
+    s16 originX;
+    s16 originY;
+    s16 x;
+    s16 y;
+    s16 targetX;
+    s16 targetY;
+    u16 idleFrames;
+    u8 stepFrames;
+    s8 stepDx;
+    s8 stepDy;
+    u8 facing;
+};
+
 static struct PortNpcRuntime sPortNpcs[PORT_NPC_MAX];
 static u8 sPortNpcCount;
 static u32 sPortNpcRng = 0x51F15EEDu;
+
+static struct PortNpcSavedState sPortNpcSaved[PORT_NPC_MAX];
+static u8 sPortNpcSavedCount;
+static u16 sPortNpcSavedMapGroup;
+static u16 sPortNpcSavedMapNum;
+static u32 sPortNpcSavedRng;
+static bool32 sPortNpcRestorePending;
 
 static u32 PortNpcNextRandom(void)
 {
@@ -229,6 +251,15 @@ static void PositionNpcFromMap(struct PortNpcRuntime *npc)
     sprite->y = DISPLAY_HEIGHT / 2
         + (npc->y - playerY) * 16;
 
+    // Preserve exact sub-tile progress when returning from a scene rebuild
+    // such as the Options menu.
+    if (npc->stepFrames != 0)
+    {
+        const u8 completedFrames = 8 - npc->stepFrames;
+        sprite->x += npc->stepDx * 2 * completedFrames;
+        sprite->y += npc->stepDy * 2 * completedFrames;
+    }
+
     UpdateNpcVisibility(npc);
 }
 
@@ -246,6 +277,11 @@ static void DestroyPortNpcs(void)
 
 void PortTestNpc_LoadMap(void)
 {
+    const bool32 restoreSavedState =
+        sPortNpcRestorePending
+        && sPortNpcSavedMapGroup == gSaveBlock1Ptr->location.mapGroup
+        && sPortNpcSavedMapNum == gSaveBlock1Ptr->location.mapNum;
+
     DestroyPortNpcs();
 
     const struct MapEvents *events = gMapHeader.events;
@@ -285,9 +321,35 @@ void PortTestNpc_LoadMap(void)
         npc->stepDx = 0;
         npc->stepDy = 0;
         npc->facing = PORT_NPC_FACE_SOUTH;
-        StartSpriteAnimIfDifferent(&gSprites[spriteId], npc->facing);
+
+        if (restoreSavedState && sPortNpcCount < sPortNpcSavedCount)
+        {
+            const struct PortNpcSavedState *saved =
+                &sPortNpcSaved[sPortNpcCount];
+            npc->originX = saved->originX;
+            npc->originY = saved->originY;
+            npc->x = saved->x;
+            npc->y = saved->y;
+            npc->targetX = saved->targetX;
+            npc->targetY = saved->targetY;
+            npc->idleFrames = saved->idleFrames;
+            npc->stepFrames = saved->stepFrames;
+            npc->stepDx = saved->stepDx;
+            npc->stepDy = saved->stepDy;
+            npc->facing = saved->facing;
+        }
+
+        StartSpriteAnimIfDifferent(
+            &gSprites[spriteId],
+            npc->stepFrames != 0 ? 4 + npc->facing : npc->facing);
         ++sPortNpcCount;
     }
+
+    if (restoreSavedState)
+        sPortNpcRng = sPortNpcSavedRng;
+
+    sPortNpcRestorePending = FALSE;
+    sPortNpcSavedCount = 0;
 
     PortTestNpc_Update();
 }
@@ -482,6 +544,41 @@ static void PortNpcTryBeginStep(u32 npcIndex, s16 playerX, s16 playerY)
     }
 
     npc->idleFrames = 18 + (PortNpcNextRandom() & 31u);
+}
+
+
+void PortTestNpc_SaveSceneState(void)
+{
+    sPortNpcSavedMapGroup = gSaveBlock1Ptr->location.mapGroup;
+    sPortNpcSavedMapNum = gSaveBlock1Ptr->location.mapNum;
+    sPortNpcSavedRng = sPortNpcRng;
+    sPortNpcSavedCount = sPortNpcCount;
+
+    for (u32 i = 0; i < sPortNpcCount; ++i)
+    {
+        const struct PortNpcRuntime *npc = &sPortNpcs[i];
+        struct PortNpcSavedState *saved = &sPortNpcSaved[i];
+
+        saved->originX = npc->originX;
+        saved->originY = npc->originY;
+        saved->x = npc->x;
+        saved->y = npc->y;
+        saved->targetX = npc->targetX;
+        saved->targetY = npc->targetY;
+        saved->idleFrames = npc->idleFrames;
+        saved->stepFrames = npc->stepFrames;
+        saved->stepDx = npc->stepDx;
+        saved->stepDy = npc->stepDy;
+        saved->facing = npc->facing;
+    }
+
+    sPortNpcRestorePending = TRUE;
+}
+
+void PortTestNpc_ClearSavedSceneState(void)
+{
+    sPortNpcRestorePending = FALSE;
+    sPortNpcSavedCount = 0;
 }
 
 void PortTestNpc_UpdateMovement(s16 playerX, s16 playerY)

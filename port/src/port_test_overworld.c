@@ -86,6 +86,9 @@ static void PortTestOverworld_LoadMapState(u16 mapGroup, u16 mapNum, s16 focusX,
 
 void PortGame_LoadTestMap(u16 mapGroup, u16 mapNum, s16 focusX, s16 focusY)
 {
+    // A genuine map transition must never consume a snapshot saved only for
+    // returning from a menu scene.
+    PortTestNpc_ClearSavedSceneState();
     PortTestOverworld_LoadMapState(mapGroup, mapNum, focusX, focusY);
     PortTestNpc_LoadMap();
 }
@@ -145,6 +148,30 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
     return FALSE;
 }
 
+
+bool32 PortGame_TryTestCoordEventAt(s16 x, s16 y)
+{
+    const struct MapEvents *events = gMapHeader.events;
+    if (events == NULL || events->coordEvents == NULL)
+        return FALSE;
+
+    for (u32 i = 0; i < events->coordEventCount; ++i)
+    {
+        const struct CoordEvent *event = &events->coordEvents[i];
+        if (event->x != x || event->y != y)
+            continue;
+        if (event->script == NULL)
+            return FALSE;
+
+        // The Android slice currently stores a displayable dialogue string in
+        // the script field. Later scripted-movement support can replace this
+        // with full Emerald bytecode execution without changing trigger lookup.
+        return PortTestDialogue_Open(event->script);
+    }
+
+    return FALSE;
+}
+
 static void PortTestOverworld_SetupScene(u16 mapGroup, u16 mapNum, s16 focusX, s16 focusY)
 {
     SetGpuReg(REG_OFFSET_DISPCNT, 0);
@@ -196,6 +223,7 @@ static void PortTestOverworld_SetupScene(u16 mapGroup, u16 mapNum, s16 focusX, s
 
 void PortGame_OpenTestOptions(void)
 {
+    PortTestNpc_SaveSceneState();
     FreeAllWindowBuffers();
     gMain.savedCallback = PortGame_ReturnToTestOverworld;
     SetMainCallback2(CB2_InitOptionMenu);
@@ -214,6 +242,7 @@ void PortGame_ReturnToTestOverworld(void)
 void PortGame_StartTestOverworld(void)
 {
     sPortWarpArrivalLocked = FALSE;
+    PortTestNpc_ClearSavedSceneState();
     PortTestOverworld_SetupScene(
         MAP_GROUP(MAP_LITTLEROOT_TOWN),
         MAP_NUM(MAP_LITTLEROOT_TOWN),

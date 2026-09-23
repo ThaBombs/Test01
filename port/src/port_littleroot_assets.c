@@ -233,6 +233,14 @@ static const u8 sPortText_LittlerootFatMan[] =
     _("The power of science is staggering!");
 static const u8 sPortText_LittlerootBoy[] =
     _("PROF. BIRCH studies POKéMON in his LAB\nand out in the wild.");
+static const u8 sPortText_NorthExitWarning[] =
+    _("It's dangerous to leave town without a POKéMON!");
+
+static const struct CoordEvent sPortLittlerootCoordEvents[] =
+{
+    { .x = 10, .y = 1, .elevation = 3, .trigger = 0, .index = 0, .script = sPortText_NorthExitWarning },
+    { .x = 11, .y = 1, .elevation = 3, .trigger = 0, .index = 0, .script = sPortText_NorthExitWarning },
+};
 
 static const struct ObjectEventTemplate sPortLittlerootObjectEvents[] =
 {
@@ -295,9 +303,11 @@ static const struct MapEvents sPortLittlerootEvents =
 {
     .objectEventCount = ARRAY_COUNT(sPortLittlerootObjectEvents),
     .warpCount = ARRAY_COUNT(sPortLittlerootWarps),
+    .coordEventCount = ARRAY_COUNT(sPortLittlerootCoordEvents),
     .bgEventCount = ARRAY_COUNT(sPortLittlerootBgEvents),
     .objectEvents = sPortLittlerootObjectEvents,
     .warps = sPortLittlerootWarps,
+    .coordEvents = sPortLittlerootCoordEvents,
     .bgEvents = sPortLittlerootBgEvents,
 };
 

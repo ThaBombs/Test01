@@ -413,6 +413,15 @@ void PortTestPlayer_Update(void)
                 return;
             }
 
+            if (PortGame_TryTestCoordEventAt(playerX, playerY))
+            {
+                AnimateSprites();
+                BuildOamBuffer();
+                LoadOam();
+                ProcessSpriteCopyRequests();
+                return;
+            }
+
             // Continue walking seamlessly when the direction is still held.
             if (gMain.heldKeys & DPAD_ANY)
                 TryBeginStepFromKeys(gMain.heldKeys);
