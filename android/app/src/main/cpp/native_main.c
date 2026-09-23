@@ -63,6 +63,9 @@ static uint32_t ButtonForKeyCode(int32_t keyCode)
         return PORT_BUTTON_R;
     case AKEYCODE_BUTTON_L1:
         return PORT_BUTTON_L;
+    case AKEYCODE_BUTTON_R2:
+    case AKEYCODE_F:
+        return PORT_BUTTON_FAST_FORWARD;
     default:
         return 0;
     }
@@ -321,7 +324,6 @@ void android_main(struct android_app *app)
             continue;
 
         PortGbaTiming_WaitForNextFrame();
-        PortGbaTiming_BeginVisibleFrame();
 
         const int64_t now = MonotonicNanos();
         double deltaSeconds = 1.0 / 60.0;
@@ -331,19 +333,33 @@ void android_main(struct android_app *app)
 
         PortRuntime_Step(&engine.input, deltaSeconds);
 
-        if (engineReady)
-            Game_RunFrame();
+        int simulatedFrames = 1;
+        if (PortRuntime_IsFastForwardEnabled())
+            simulatedFrames = PortRuntime_GetFastForwardMultiplier();
 
-        // Preserve a quick tap for one Emerald input sample, then return to
-        // the physical held state for the next frame.
+        // Fast-forward advances additional Emerald frames inside one Android
+        // presentation frame. Each simulated frame still receives a complete
+        // visible/VBlank cycle, so timers, movement and tasks stay internally
+        // consistent while rendering remains capped to the device cadence.
+        for (int i = 0; i < simulatedFrames; ++i)
+        {
+            PortGbaTiming_BeginVisibleFrame();
+
+            if (engineReady)
+                Game_RunFrame();
+
+            PortGbaTiming_EnterVBlank();
+
+            if (engineReady)
+                Game_VBlank();
+
+            PortGbaTiming_LeaveVBlank();
+        }
+
+        // Preserve a quick tap through the simulated frame batch, then return
+        // to the physical held state for the next Android presentation frame.
         ConsumeLatchedButtons(&engine);
 
-        PortGbaTiming_EnterVBlank();
-
-        if (engineReady)
-            Game_VBlank();
-
         RenderFrame(&engine);
-        PortGbaTiming_LeaveVBlank();
     }
 }
