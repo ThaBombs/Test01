@@ -93,6 +93,9 @@ static const u8 gText_ButtonTypeNormal[]   = _("NORMAL");
 static const u8 gText_ButtonTypeLR[]       = _("LR");
 static const u8 gText_ButtonTypeLEqualsA[] = _("L=A");
 static const u8 gText_ButtonEdit[]         = _("EDIT");
+static const u8 gText_FastForward2x[]      = _("2X");
+static const u8 gText_FastForward3x[]      = _("3X");
+static const u8 gText_FastForward4x[]      = _("4X");
 static const u8 gText_SelectedMarker[]     = _("▶");
 static const u8 sAndroidTextColors[] =
 {
@@ -770,6 +773,22 @@ static void FrameType_DrawChoices(u8 selection)
 static u8 ButtonMode_ProcessInput(u8 selection)
 {
 #ifdef PLATFORM_ANDROID
+    if (JOY_NEW(DPAD_RIGHT))
+    {
+        int multiplier = PortRuntime_GetFastForwardMultiplier() + 1;
+        if (multiplier > 4)
+            multiplier = 2;
+        PortRuntime_SetFastForwardMultiplier(multiplier);
+        sArrowPressed = TRUE;
+    }
+    if (JOY_NEW(DPAD_LEFT))
+    {
+        int multiplier = PortRuntime_GetFastForwardMultiplier() - 1;
+        if (multiplier < 2)
+            multiplier = 4;
+        PortRuntime_SetFastForwardMultiplier(multiplier);
+        sArrowPressed = TRUE;
+    }
     return selection;
 #else
     if (JOY_NEW(DPAD_RIGHT))
@@ -805,9 +824,17 @@ static void ButtonMode_DrawChoices(u8 selection)
         YPOS_BUTTONMODE,
         96,
         16);
+
+    const u8 *multiplierText = gText_FastForward2x;
+    if (PortRuntime_GetFastForwardMultiplier() == 3)
+        multiplierText = gText_FastForward3x;
+    else if (PortRuntime_GetFastForwardMultiplier() == 4)
+        multiplierText = gText_FastForward4x;
+
+    DrawOptionMenuChoice(gText_ButtonEdit, 148, YPOS_BUTTONMODE, 0);
     DrawOptionMenuChoice(
-        gText_ButtonEdit,
-        GetStringRightAlignXOffset(FONT_NORMAL, gText_ButtonEdit, 198),
+        multiplierText,
+        GetStringRightAlignXOffset(FONT_NORMAL, multiplierText, 198),
         YPOS_BUTTONMODE,
         0);
 #else
