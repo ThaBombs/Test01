@@ -3,5 +3,6 @@
 
 void PortTestPlayer_Init(void);
 void PortTestPlayer_Update(void);
+void PortTestPlayer_SetFacingDirection(u8 direction);
 
 #endif
