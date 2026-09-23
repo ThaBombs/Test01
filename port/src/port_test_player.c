@@ -14,6 +14,7 @@
 #include "constants/metatile_behaviors.h"
 
 #define PORT_PLAYER_PAL_TAG 0x7F01
+#define PORT_GRASS_PAL_TAG  0x7F02
 
 enum
 {
@@ -31,10 +32,18 @@ static const u32 sPortBrendanWalking[] =
     INCGFX_U32("graphics/object_events/pics/people/brendan/walking.png", ".4bpp", "-mwidth 2 -mheight 4");
 static const u16 sPortBrendanPalette[] =
     INCGFX_U16("graphics/object_events/palettes/brendan.pal", ".gbapal");
+static const u32 sPortTallGrassGfx[] =
+    INCGFX_U32("graphics/field_effects/pics/tall_grass.png", ".4bpp", "-mwidth 2 -mheight 2");
+static const u16 sPortGrassPalette[] =
+    INCGFX_U16("graphics/field_effects/palettes/general_1.pal", ".gbapal");
 
 static const struct SpriteFrameImage sPortBrendanFrames[] =
 {
     overworld_ascending_frames(sPortBrendanWalking, 2, 4),
+};
+static const struct SpriteFrameImage sPortTallGrassFrames[] =
+{
+    overworld_ascending_frames(sPortTallGrassGfx, 2, 2),
 };
 
 static const struct OamData sPortBrendanOam =
@@ -42,6 +51,12 @@ static const struct OamData sPortBrendanOam =
     .shape = SPRITE_SHAPE(16x32),
     .size = SPRITE_SIZE(16x32),
     .priority = 2,
+};
+static const struct OamData sPortGrassOam =
+{
+    .shape = SPRITE_SHAPE(16x16),
+    .size = SPRITE_SIZE(16x16),
+    .priority = 1,
 };
 
 static const union AnimCmd sFaceSouth[] =
@@ -109,11 +124,36 @@ static const union AnimCmd *const sPortBrendanAnims[] =
     sWalkEast,
 };
 
+static const union AnimCmd sPortTallGrassAnim[] =
+{
+    ANIMCMD_FRAME(1, 6),
+    ANIMCMD_FRAME(2, 6),
+    ANIMCMD_FRAME(3, 6),
+    ANIMCMD_FRAME(4, 6),
+    ANIMCMD_FRAME(0, 6),
+    ANIMCMD_END,
+};
+static const union AnimCmd *const sPortTallGrassAnims[] =
+{
+    sPortTallGrassAnim,
+};
+
 static const struct SpritePalette sPortBrendanSpritePalette =
 {
     .data = sPortBrendanPalette,
     .tag = PORT_PLAYER_PAL_TAG,
 };
+static const struct SpritePalette sPortGrassSpritePalette =
+{
+    .data = sPortGrassPalette,
+    .tag = PORT_GRASS_PAL_TAG,
+};
+
+static void PortGrassSpriteCallback(struct Sprite *sprite)
+{
+    if (sprite->animEnded)
+        DestroySprite(sprite);
+}
 
 static const struct SpriteTemplate sPortBrendanTemplate =
 {
@@ -125,12 +165,102 @@ static const struct SpriteTemplate sPortBrendanTemplate =
     .affineAnims = NULL,
     .callback = NULL,
 };
+static const struct SpriteTemplate sPortTallGrassTemplate =
+{
+    .tileTag = TAG_NONE,
+    .paletteTag = PORT_GRASS_PAL_TAG,
+    .oam = &sPortGrassOam,
+    .anims = sPortTallGrassAnims,
+    .images = sPortTallGrassFrames,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = PortGrassSpriteCallback,
+};
 
 static u32 sPortPlayerSpriteId = MAX_SPRITES;
 static u8 sPortFacing = PORT_ANIM_FACE_SOUTH;
 static u8 sPortStepFrames;
 static s8 sPortStepDx;
 static s8 sPortStepDy;
+static bool32 sPortLedgeJump;
+
+static bool32 IsTallGrassBehavior(u8 behavior)
+{
+    return behavior == MB_TALL_GRASS
+        || behavior == MB_CYCLING_ROAD_PULL_DOWN_GRASS;
+}
+
+static void SpawnTallGrassStepEffect(void)
+{
+    if (sPortPlayerSpriteId >= MAX_SPRITES)
+        return;
+
+    const s16 mapX = gSaveBlock1Ptr->pos.x;
+    const s16 mapY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
+    const u8 behavior =
+        MapGridGetMetatileBehaviorAt(mapX + MAP_OFFSET, mapY + MAP_OFFSET);
+
+    if (!IsTallGrassBehavior(behavior))
+        return;
+
+    CreateSprite(
+        &sPortTallGrassTemplate,
+        DISPLAY_WIDTH / 2,
+        DISPLAY_HEIGHT / 2 + 8,
+        0);
+}
+
+static bool32 IsMatchingLedgeBehavior(u8 behavior, s16 dx, s16 dy)
+{
+    if (dx > 0)
+        return behavior == MB_JUMP_EAST;
+    if (dx < 0)
+        return behavior == MB_JUMP_WEST;
+    if (dy > 0)
+        return behavior == MB_JUMP_SOUTH;
+    if (dy < 0)
+        return behavior == MB_JUMP_NORTH;
+    return FALSE;
+}
+
+static bool32 CanStartLedgeJump(s16 dx, s16 dy)
+{
+    const s16 currentMapX = gSaveBlock1Ptr->pos.x;
+    const s16 currentMapY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
+    const s16 ledgeMapX = currentMapX + dx;
+    const s16 ledgeMapY = currentMapY + dy;
+    const s16 landingMapX = currentMapX + dx * 2;
+    const s16 landingMapY = currentMapY + dy * 2;
+    const s16 ledgeGridX = ledgeMapX + MAP_OFFSET;
+    const s16 ledgeGridY = ledgeMapY + MAP_OFFSET;
+    const s16 landingGridX = landingMapX + MAP_OFFSET;
+    const s16 landingGridY = landingMapY + MAP_OFFSET;
+    const u8 ledgeBehavior =
+        MapGridGetMetatileBehaviorAt(ledgeGridX, ledgeGridY);
+
+    if (!IsMatchingLedgeBehavior(ledgeBehavior, dx, dy))
+        return FALSE;
+    if (PortTestNpc_BlocksTile(landingMapX, landingMapY))
+        return FALSE;
+    if (GetMapBorderIdAt(landingGridX, landingGridY) == CONNECTION_INVALID)
+        return FALSE;
+    if (MapGridGetCollisionAt(landingGridX, landingGridY) != 0)
+        return FALSE;
+
+    return TRUE;
+}
+
+static void BeginLedgeJump(s16 dx, s16 dy, u8 faceAnim)
+{
+    sPortFacing = faceAnim;
+    sPortStepDx = dx;
+    sPortStepDy = dy;
+    sPortStepFrames = 16;
+    sPortLedgeJump = TRUE;
+    gFieldCamera.movementSpeedX = dx * 2;
+    gFieldCamera.movementSpeedY = dy * 2;
+    gSprites[sPortPlayerSpriteId].y2 = 0;
+    StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], faceAnim);
+}
 
 static bool32 IsWarpEventAt(s16 x, s16 y)
 {
@@ -330,7 +460,12 @@ static bool32 CanStartStep(s16 dx, s16 dy)
             targetGridX, targetGridY,
             dx, dy))
         return FALSE;
+    // The reduced Android player does not yet track a persistent overworld
+    // elevation like Emerald's ObjectEvent does. Restrict this check to indoor
+    // maps, where it is needed for tables/counters, so outdoor ledges do not
+    // block the player several tiles before the actual jump edge.
     if (!targetIsWarp
+     && gMapHeader.mapType == MAP_TYPE_INDOOR
      && IsElevationMismatch(
             currentGridX, currentGridY,
             targetGridX, targetGridY))
@@ -343,6 +478,12 @@ static void BeginStep(s16 dx, s16 dy, u8 faceAnim, u8 walkAnim)
 {
     sPortFacing = faceAnim;
 
+    if (CanStartLedgeJump(dx, dy))
+    {
+        BeginLedgeJump(dx, dy, faceAnim);
+        return;
+    }
+
     if (!CanStartStep(dx, dy))
     {
         StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], faceAnim);
@@ -352,6 +493,7 @@ static void BeginStep(s16 dx, s16 dy, u8 faceAnim, u8 walkAnim)
     sPortStepDx = dx;
     sPortStepDy = dy;
     sPortStepFrames = 8;
+    sPortLedgeJump = FALSE;
 
     // CameraUpdateNoObjectRefresh consumes pixel speeds and updates/redraws the
     // map one tile boundary at a time. Two pixels for eight frames is a native
@@ -381,6 +523,7 @@ void PortTestPlayer_Init(void)
     ResetCameraUpdateInfo();
 
     LoadSpritePalette(&sPortBrendanSpritePalette);
+    LoadSpritePalette(&sPortGrassSpritePalette);
     sPortPlayerSpriteId = CreateSprite(
         &sPortBrendanTemplate,
         DISPLAY_WIDTH / 2,
@@ -391,6 +534,7 @@ void PortTestPlayer_Init(void)
     sPortStepFrames = 0;
     sPortStepDx = 0;
     sPortStepDy = 0;
+    sPortLedgeJump = FALSE;
     StartSpriteAnim(&gSprites[sPortPlayerSpriteId], sPortFacing);
 
     SetGpuRegBits(
@@ -428,13 +572,23 @@ void PortTestPlayer_Update(void)
         PortTestNpc_ApplyCameraDelta(cameraDx, cameraDy);
         --sPortStepFrames;
 
+        if (sPortLedgeJump)
+        {
+            const u8 elapsed = 16 - sPortStepFrames;
+            const u8 arc = elapsed <= 8 ? elapsed : 16 - elapsed;
+            gSprites[sPortPlayerSpriteId].y2 = -(s16)arc;
+        }
+
         if (sPortStepFrames == 0)
         {
             gFieldCamera.movementSpeedX = 0;
             gFieldCamera.movementSpeedY = 0;
             sPortStepDx = 0;
             sPortStepDy = 0;
+            sPortLedgeJump = FALSE;
+            gSprites[sPortPlayerSpriteId].y2 = 0;
             StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], sPortFacing);
+            SpawnTallGrassStepEffect();
 
             const s16 playerX = gSaveBlock1Ptr->pos.x;
             const s16 playerY =
@@ -476,4 +630,30 @@ void PortTestPlayer_Update(void)
     BuildOamBuffer();
     LoadOam();
     ProcessSpriteCopyRequests();
+}
+
+
+void PortTestPlayer_SetFacingDirection(u8 direction)
+{
+    if (sPortPlayerSpriteId >= MAX_SPRITES)
+        return;
+
+    switch (direction)
+    {
+    case DIR_NORTH:
+        sPortFacing = PORT_ANIM_FACE_NORTH;
+        break;
+    case DIR_WEST:
+        sPortFacing = PORT_ANIM_FACE_WEST;
+        break;
+    case DIR_EAST:
+        sPortFacing = PORT_ANIM_FACE_EAST;
+        break;
+    case DIR_SOUTH:
+    default:
+        sPortFacing = PORT_ANIM_FACE_SOUTH;
+        break;
+    }
+
+    StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], sPortFacing);
 }
