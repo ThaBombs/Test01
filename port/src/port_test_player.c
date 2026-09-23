@@ -224,13 +224,14 @@ static void SpawnTallGrassEffectAt(s16 mapX, s16 mapY)
     const s16 playerX = gSaveBlock1Ptr->pos.x;
     const s16 playerY = gSaveBlock1Ptr->pos.y - PORT_PLAYER_MAP_Y_BIAS;
 
-    // CreateSprite coordinates already refer to the center of this 16x16
-    // effect. Keep it on the exact world-tile center; the previous +8 offset
-    // pushed the rustle visibly toward the next row.
+    // The logical grass tile is correct, but the native player sprite is
+    // visually anchored one tile lower than DISPLAY_HEIGHT / 2. Offset only
+    // the effect's screen Y so the rustle sits at the player's feet while its
+    // stored map coordinates remain world-tied.
     const u8 spriteId = CreateSprite(
         &sPortTallGrassTemplate,
         DISPLAY_WIDTH / 2 + (mapX - playerX) * 16,
-        DISPLAY_HEIGHT / 2 + (mapY - playerY) * 16,
+        DISPLAY_HEIGHT / 2 + (mapY - playerY) * 16 + 16,
         0);
     if (spriteId < MAX_SPRITES)
     {
