@@ -122,75 +122,75 @@ static const struct SpriteTemplate sPortBrendanTemplate =
 
 static u32 sPortPlayerSpriteId = MAX_SPRITES;
 static u8 sPortFacing = PORT_ANIM_FACE_SOUTH;
-static u8 sPortWalkTimer;
-static u8 sPortRepeatTimer;
+static u8 sPortStepFrames;
+static s8 sPortStepDx;
+static s8 sPortStepDy;
 
-static bool32 TryMoveCameraFocus(s16 dx, s16 dy)
+static bool32 IsStaticEventObstacle(s16 x, s16 y)
+{
+    // Littleroot's sign/background events occupy these tiles. The temporary
+    // map slice does not yet spawn event objects, so keep their physical
+    // footprint here until the real map-event table is linked.
+    static const s16 signs[][2] =
+    {
+        {15, 13},
+        {6, 17},
+        {7, 8},
+        {12, 8},
+    };
+
+    for (u32 i = 0; i < ARRAY_COUNT(signs); ++i)
+        if (x == signs[i][0] && y == signs[i][1])
+            return TRUE;
+
+    return FALSE;
+}
+
+static bool32 CanStartStep(s16 dx, s16 dy)
 {
     const s16 targetX = gSaveBlock1Ptr->pos.x + MAP_OFFSET + dx;
     const s16 targetY = gSaveBlock1Ptr->pos.y + MAP_OFFSET + dy;
 
-    // The map buffer encodes ordinary impassable terrain in its collision bit.
-    // Undefined/out-of-map cells also report collision, keeping this test slice
-    // safely inside Littleroot until map connections are linked later.
     if (MapGridGetCollisionAt(targetX, targetY) != 0)
         return FALSE;
+    if (IsStaticEventObstacle(targetX, targetY))
+        return FALSE;
 
-    gSaveBlock1Ptr->pos.x += dx;
-    gSaveBlock1Ptr->pos.y += dy;
-    DrawWholeMapView();
     return TRUE;
 }
 
-static void FaceAndMaybeMove(u16 keys)
+static void BeginStep(s16 dx, s16 dy, u8 faceAnim, u8 walkAnim)
 {
-    s16 dx = 0;
-    s16 dy = 0;
-    u8 faceAnim;
-    u8 walkAnim;
+    sPortFacing = faceAnim;
 
-    if (keys & DPAD_UP)
+    if (!CanStartStep(dx, dy))
     {
-        dy = -1;
-        faceAnim = PORT_ANIM_FACE_NORTH;
-        walkAnim = PORT_ANIM_WALK_NORTH;
-    }
-    else if (keys & DPAD_DOWN)
-    {
-        dy = 1;
-        faceAnim = PORT_ANIM_FACE_SOUTH;
-        walkAnim = PORT_ANIM_WALK_SOUTH;
-    }
-    else if (keys & DPAD_LEFT)
-    {
-        dx = -1;
-        faceAnim = PORT_ANIM_FACE_WEST;
-        walkAnim = PORT_ANIM_WALK_WEST;
-    }
-    else if (keys & DPAD_RIGHT)
-    {
-        dx = 1;
-        faceAnim = PORT_ANIM_FACE_EAST;
-        walkAnim = PORT_ANIM_WALK_EAST;
-    }
-    else
-    {
+        StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], faceAnim);
         return;
     }
 
-    sPortFacing = faceAnim;
-    if (TryMoveCameraFocus(dx, dy))
-    {
-        StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], walkAnim);
-        sPortWalkTimer = 8;
-    }
-    else
-    {
-        StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], faceAnim);
-        sPortWalkTimer = 0;
-    }
+    sPortStepDx = dx;
+    sPortStepDy = dy;
+    sPortStepFrames = 8;
 
-    sPortRepeatTimer = 8;
+    // CameraUpdateNoObjectRefresh consumes pixel speeds and updates/redraws the
+    // map one tile boundary at a time. Two pixels for eight frames is a native
+    // 16-pixel Emerald tile step instead of the old instant tile snap.
+    gFieldCamera.movementSpeedX = dx * 2;
+    gFieldCamera.movementSpeedY = dy * 2;
+    StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], walkAnim);
+}
+
+static void TryBeginStepFromKeys(u16 keys)
+{
+    if (keys & DPAD_UP)
+        BeginStep(0, -1, PORT_ANIM_FACE_NORTH, PORT_ANIM_WALK_NORTH);
+    else if (keys & DPAD_DOWN)
+        BeginStep(0, 1, PORT_ANIM_FACE_SOUTH, PORT_ANIM_WALK_SOUTH);
+    else if (keys & DPAD_LEFT)
+        BeginStep(-1, 0, PORT_ANIM_FACE_WEST, PORT_ANIM_WALK_WEST);
+    else if (keys & DPAD_RIGHT)
+        BeginStep(1, 0, PORT_ANIM_FACE_EAST, PORT_ANIM_WALK_EAST);
 }
 
 void PortTestPlayer_Init(void)
@@ -198,6 +198,7 @@ void PortTestPlayer_Init(void)
     ResetSpriteData();
     FreeAllSpritePalettes();
     ClearSpriteCopyRequests();
+    ResetCameraUpdateInfo();
 
     LoadSpritePalette(&sPortBrendanSpritePalette);
     sPortPlayerSpriteId = CreateSprite(
@@ -207,8 +208,9 @@ void PortTestPlayer_Init(void)
         0);
 
     sPortFacing = PORT_ANIM_FACE_SOUTH;
-    sPortWalkTimer = 0;
-    sPortRepeatTimer = 0;
+    sPortStepFrames = 0;
+    sPortStepDx = 0;
+    sPortStepDy = 0;
     StartSpriteAnim(&gSprites[sPortPlayerSpriteId], sPortFacing);
 
     SetGpuRegBits(
@@ -226,23 +228,30 @@ void PortTestPlayer_Update(void)
     if (sPortPlayerSpriteId >= MAX_SPRITES)
         return;
 
-    if (sPortRepeatTimer != 0)
-        --sPortRepeatTimer;
+    if (sPortStepFrames != 0)
+    {
+        CameraUpdateNoObjectRefresh();
+        --sPortStepFrames;
 
-    if (gMain.newKeys & DPAD_ANY)
-    {
-        FaceAndMaybeMove(gMain.newKeys);
-    }
-    else if ((gMain.heldKeys & DPAD_ANY) && sPortRepeatTimer == 0)
-    {
-        FaceAndMaybeMove(gMain.heldKeys);
-    }
-
-    if (sPortWalkTimer != 0)
-    {
-        --sPortWalkTimer;
-        if (sPortWalkTimer == 0)
+        if (sPortStepFrames == 0)
+        {
+            gFieldCamera.movementSpeedX = 0;
+            gFieldCamera.movementSpeedY = 0;
+            sPortStepDx = 0;
+            sPortStepDy = 0;
             StartSpriteAnimIfDifferent(&gSprites[sPortPlayerSpriteId], sPortFacing);
+
+            // Continue walking seamlessly when the direction is still held.
+            if (gMain.heldKeys & DPAD_ANY)
+                TryBeginStepFromKeys(gMain.heldKeys);
+        }
+    }
+    else
+    {
+        if (gMain.newKeys & DPAD_ANY)
+            TryBeginStepFromKeys(gMain.newKeys);
+        else if (gMain.heldKeys & DPAD_ANY)
+            TryBeginStepFromKeys(gMain.heldKeys);
     }
 
     AnimateSprites();

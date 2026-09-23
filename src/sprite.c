@@ -589,8 +589,37 @@ void ResetOamRange(u32 start, u32 end)
 
 void LoadOam(void)
 {
-    if (!gMain.oamLoadDisabled)
-        CpuCopy32(gMain.oamBuffer, (void *)OAM, sizeof(gMain.oamBuffer));
+    if (gMain.oamLoadDisabled)
+        return;
+
+#ifdef PLATFORM_ANDROID
+    // Do not memcpy host C bitfields directly into emulated GBA OAM.
+    // Serialize the four GBA halfwords explicitly so Clang's host bitfield
+    // layout can never make sprites disappear or corrupt attributes.
+    volatile u16 *oam = (volatile u16 *)OAM;
+    for (u32 i = 0; i < 128; ++i)
+    {
+        const struct OamData *src = &gMain.oamBuffer[i];
+        oam[i * 4 + 0] =
+            (src->y & 0xFF)
+            | ((src->affineMode & 0x3) << 8)
+            | ((src->objMode & 0x3) << 10)
+            | ((src->mosaic & 0x1) << 12)
+            | ((src->bpp & 0x1) << 13)
+            | ((src->shape & 0x3) << 14);
+        oam[i * 4 + 1] =
+            (src->x & 0x1FF)
+            | ((src->matrixNum & 0x1F) << 9)
+            | ((src->size & 0x3) << 14);
+        oam[i * 4 + 2] =
+            (src->tileNum & 0x3FF)
+            | ((src->priority & 0x3) << 10)
+            | ((src->paletteNum & 0xF) << 12);
+        oam[i * 4 + 3] = src->affineParam;
+    }
+#else
+    CpuCopy32(gMain.oamBuffer, (void *)OAM, sizeof(gMain.oamBuffer));
+#endif
 }
 
 void ClearSpriteCopyRequests(void)
