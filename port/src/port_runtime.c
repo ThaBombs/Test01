@@ -480,11 +480,13 @@ uint32_t PortRuntime_ButtonsForTouch(float x, float y, int width, int height)
     const int dx = (int)x - layout.dpadX;
     const int dy = (int)y - layout.dpadY;
     const int dist2 = dx * dx + dy * dy;
-    if (dist2 <= layout.dpadRadius * layout.dpadRadius
+    const int dpadCaptureRadius = layout.dpadRadius * 145 / 100;
+    if (dist2 <= dpadCaptureRadius * dpadCaptureRadius
      && dist2 >= layout.dpadDead * layout.dpadDead)
     {
-        // Circular virtual stick, cardinalized for Emerald's four-direction
-        // movement. Dominant axis prevents accidental diagonals near corners.
+        // Keep movement active through a generous ring just outside the drawn
+        // stick. This makes small thumb drift behave as "keep going" rather
+        // than dropping movement the instant the finger crosses the artwork.
         if (AbsInt(dx) > AbsInt(dy))
             buttons |= (dx < 0) ? PORT_BUTTON_LEFT : PORT_BUTTON_RIGHT;
         else

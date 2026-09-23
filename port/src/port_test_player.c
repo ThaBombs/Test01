@@ -6,6 +6,7 @@
 #include "fieldmap.h"
 #include "gpu_regs.h"
 #include "main.h"
+#include "metatile_behavior.h"
 #include "sprite.h"
 #include "constants/maps.h"
 
@@ -128,23 +129,6 @@ static u8 sPortStepFrames;
 static s8 sPortStepDx;
 static s8 sPortStepDy;
 
-static bool32 IsStaticEventObstacle(s16 x, s16 y)
-{
-    const struct MapEvents *events = gMapHeader.events;
-    if (events == NULL || events->bgEvents == NULL)
-        return FALSE;
-
-    for (u32 i = 0; i < events->bgEventCount; ++i)
-    {
-        if (events->bgEvents[i].x == x
-         && events->bgEvents[i].y == y)
-            return TRUE;
-    }
-
-    return FALSE;
-}
-
-
 static bool32 IsWarpEventAt(s16 x, s16 y)
 {
     const struct MapEvents *events = gMapHeader.events;
@@ -161,6 +145,35 @@ static bool32 IsWarpEventAt(s16 x, s16 y)
     return FALSE;
 }
 
+static bool32 IsDirectionBlockedByMetatile(
+    s16 currentGridX,
+    s16 currentGridY,
+    s16 targetGridX,
+    s16 targetGridY,
+    s16 dx,
+    s16 dy)
+{
+    const u8 currentBehavior =
+        MapGridGetMetatileBehaviorAt(currentGridX, currentGridY);
+    const u8 targetBehavior =
+        MapGridGetMetatileBehaviorAt(targetGridX, targetGridY);
+
+    if (dy > 0)
+        return MetatileBehavior_IsSouthBlocked(currentBehavior)
+            || MetatileBehavior_IsNorthBlocked(targetBehavior);
+    if (dy < 0)
+        return MetatileBehavior_IsNorthBlocked(currentBehavior)
+            || MetatileBehavior_IsSouthBlocked(targetBehavior);
+    if (dx < 0)
+        return MetatileBehavior_IsWestBlocked(currentBehavior)
+            || MetatileBehavior_IsEastBlocked(targetBehavior);
+    if (dx > 0)
+        return MetatileBehavior_IsEastBlocked(currentBehavior)
+            || MetatileBehavior_IsWestBlocked(targetBehavior);
+
+    return FALSE;
+}
+
 static bool32 CanStartStep(s16 dx, s16 dy)
 {
     const s16 currentMapX = gSaveBlock1Ptr->pos.x;
@@ -171,27 +184,19 @@ static bool32 CanStartStep(s16 dx, s16 dy)
     const s16 currentGridY = currentMapY + MAP_OFFSET;
     const s16 targetGridX = targetMapX + MAP_OFFSET;
     const s16 targetGridY = targetMapY + MAP_OFFSET;
+    const bool32 targetIsWarp = IsWarpEventAt(targetMapX, targetMapY);
 
-    // Door/warp tiles are allowed to consume the step even when their
-    // metatile collision bit is set. Emerald's full field-control path handles
-    // this as a special warp interaction before ordinary collision rejection.
-    if (!IsWarpEventAt(targetMapX, targetMapY)
-     && MapGridGetCollisionAt(targetGridX, targetGridY) != 0)
+    // Use the same two pieces of static-map collision that Emerald relies on
+    // for ordinary walking: the collision bits plus directional metatile
+    // edges. Warp tiles remain enterable even when the doorway block itself
+    // carries a collision bit.
+    if (!targetIsWarp && MapGridGetCollisionAt(targetGridX, targetGridY) != 0)
         return FALSE;
-
-    // Match Emerald's basic elevation collision rule as well. Some visually
-    // solid building pieces rely on elevation rather than the 2-bit collision
-    // flag, which is why the earlier Android slice could enter parts of houses.
-    const u8 currentElevation = MapGridGetElevationAt(currentGridX, currentGridY);
-    const u8 targetElevation = MapGridGetElevationAt(targetGridX, targetGridY);
-    if (!IsWarpEventAt(targetMapX, targetMapY)
-     && currentElevation != ELEVATION_TRANSITION
-     && targetElevation != ELEVATION_TRANSITION
-     && targetElevation != ELEVATION_MULTI_LEVEL
-     && currentElevation != targetElevation)
-        return FALSE;
-
-    if (IsStaticEventObstacle(targetMapX, targetMapY))
+    if (!targetIsWarp
+     && IsDirectionBlockedByMetatile(
+            currentGridX, currentGridY,
+            targetGridX, targetGridY,
+            dx, dy))
         return FALSE;
 
     return TRUE;

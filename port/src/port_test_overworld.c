@@ -24,6 +24,7 @@ static u16 sPortBg0[BG_SCREEN_SIZE / sizeof(u16)];
 static u16 sPortBg1[BG_SCREEN_SIZE / sizeof(u16)];
 static u16 sPortBg2[BG_SCREEN_SIZE / sizeof(u16)];
 static u16 sPortBg3[BG_SCREEN_SIZE / sizeof(u16)];
+static bool32 sPortWarpArrivalLocked;
 
 static const struct BgTemplate sPortOverworldBgTemplates[] =
 {
@@ -89,6 +90,26 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
     if (events == NULL || events->warps == NULL)
         return FALSE;
 
+    if (sPortWarpArrivalLocked)
+    {
+        bool32 stillOnArrivalWarp = FALSE;
+        for (u32 i = 0; i < events->warpCount; ++i)
+        {
+            if (events->warps[i].x == x && events->warps[i].y == y)
+            {
+                stillOnArrivalWarp = TRUE;
+                break;
+            }
+        }
+
+        if (stillOnArrivalWarp)
+            return FALSE;
+
+        // Once the player has stepped off the destination warp, it can be
+        // triggered normally again on a future step.
+        sPortWarpArrivalLocked = FALSE;
+    }
+
     for (u32 i = 0; i < events->warpCount; ++i)
     {
         const struct WarpEvent *warp = &events->warps[i];
@@ -102,31 +123,16 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y)
          || warp->warpId >= destHeader->events->warpCount)
             return FALSE;
 
-        // Destination warp IDs refer to entries in the destination map's warp
-        // table. The full Emerald field engine performs an arrival step after a
-        // door transition; this lightweight Android path does not yet have that
-        // state machine, so place the player on the adjacent safe side instead
-        // of directly on a second warp tile.
+        // Land on the exact destination warp specified by Emerald's map data.
+        // A small arrival lock suppresses the reciprocal warp until the player
+        // has actually stepped away, avoiding both spawn offsets and loops.
         const struct WarpEvent *dest = &destHeader->events->warps[warp->warpId];
-        s16 spawnX = dest->x;
-        s16 spawnY = dest->y;
-
-        if (destHeader->mapType == MAP_TYPE_INDOOR)
-        {
-            if (spawnY > 0)
-                --spawnY;
-        }
-        else
-        {
-            if (spawnY + 1 < destHeader->mapLayout->height)
-                ++spawnY;
-        }
-
         PortGame_LoadTestMap(
             warp->mapGroup,
             warp->mapNum,
-            spawnX,
-            spawnY + PORT_PLAYER_MAP_Y_BIAS);
+            dest->x,
+            dest->y + PORT_PLAYER_MAP_Y_BIAS);
+        sPortWarpArrivalLocked = TRUE;
         return TRUE;
     }
 
@@ -185,6 +191,7 @@ void PortGame_ReturnToTestOverworld(void)
 
 void PortGame_StartTestOverworld(void)
 {
+    sPortWarpArrivalLocked = FALSE;
     PortTestOverworld_SetupScene(
         MAP_GROUP(MAP_LITTLEROOT_TOWN),
         MAP_NUM(MAP_LITTLEROOT_TOWN),
