@@ -451,15 +451,27 @@ add_dependencies(pokeemerald_native pokeemerald_real_battle_probe)
 set(REAL_BATTLE_SCRIPT_OBJECTS)
 foreach(REAL_BATTLE_SCRIPT_NAME IN ITEMS battle_scripts_1 battle_scripts_2)
     set(REAL_BATTLE_SCRIPT_INPUT "${REPO_ROOT}/data/${REAL_BATTLE_SCRIPT_NAME}.s")
+    set(REAL_BATTLE_SCRIPT_PREPROCESSED "${CMAKE_CURRENT_BINARY_DIR}/generated/${REAL_BATTLE_SCRIPT_NAME}_android.pre.s")
     set(REAL_BATTLE_SCRIPT_NORMALIZED "${CMAKE_CURRENT_BINARY_DIR}/generated/${REAL_BATTLE_SCRIPT_NAME}_android.S")
     set(REAL_BATTLE_SCRIPT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/generated/${REAL_BATTLE_SCRIPT_NAME}_android.o")
     add_custom_command(
         OUTPUT "${REAL_BATTLE_SCRIPT_OBJECT}"
-        BYPRODUCTS "${REAL_BATTLE_SCRIPT_NORMALIZED}"
+        BYPRODUCTS
+            "${REAL_BATTLE_SCRIPT_PREPROCESSED}"
+            "${REAL_BATTLE_SCRIPT_NORMALIZED}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+        # Match pokeemerald's upstream DATA_ASM build pipeline:
+        # preproc -s -> C preprocessor -> preproc -ie.
+        # The second preproc pass converts C enum declarations included by
+        # battle scripts into assembler constants before LLVM ever sees them.
+        COMMAND /bin/bash -o pipefail -c
+            "cd '${REPO_ROOT}' && tools/preproc/preproc -s 'data/${REAL_BATTLE_SCRIPT_NAME}.s' charmap.txt | '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -x assembler-with-cpp -iquote'${REPO_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DTESTING=0 - | tools/preproc/preproc -ie 'data/${REAL_BATTLE_SCRIPT_NAME}.s' charmap.txt > '${REAL_BATTLE_SCRIPT_PREPROCESSED}'"
+        # The upstream preprocessing has already expanded includes/enums.
+        # This pass only removes ARM-GAS syntax LLVM does not accept and keeps
+        # the Android pointer-width changes in battle_script.inc intact.
         COMMAND python3
             "${PORT_ROOT}/tools/normalize_battle_asm.py"
-            "${REAL_BATTLE_SCRIPT_INPUT}"
+            "${REAL_BATTLE_SCRIPT_PREPROCESSED}"
             "${REAL_BATTLE_SCRIPT_NORMALIZED}"
             --repo-root "${REPO_ROOT}"
         COMMAND "${CMAKE_C_COMPILER}"
@@ -469,14 +481,14 @@ foreach(REAL_BATTLE_SCRIPT_NAME IN ITEMS battle_scripts_1 battle_scripts_2)
             -x
             assembler-with-cpp
             -DPLATFORM_ANDROID=1
-            "-I${REPO_ROOT}"
-            "-I${REPO_ROOT}/include"
             "${REAL_BATTLE_SCRIPT_NORMALIZED}"
             -o
             "${REAL_BATTLE_SCRIPT_OBJECT}"
         DEPENDS
             "${REAL_BATTLE_SCRIPT_INPUT}"
             "${PORT_ROOT}/tools/normalize_battle_asm.py"
+            "${REPO_ROOT}/tools/preproc/preproc"
+            "${REPO_ROOT}/charmap.txt"
             "${REPO_ROOT}/asm/macros.inc"
             "${REPO_ROOT}/asm/macros/battle_script.inc"
             "${REPO_ROOT}/constants/constants.inc"
