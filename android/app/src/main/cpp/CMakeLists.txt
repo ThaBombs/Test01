@@ -447,6 +447,7 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     battle_ai_field_statuses
     battle_anim
     battle_intro
+    recorded_battle
     battle_util
     battle_util2
     battle_end_turn
