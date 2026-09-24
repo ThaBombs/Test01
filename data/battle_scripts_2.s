@@ -10,6 +10,9 @@
 #include "constants/game_stat.h"
 #ifdef PLATFORM_ANDROID
 	.set PLATFORM_ANDROID_ASM, 1
+#ifdef __LP64__
+	.set PLATFORM_ANDROID_PTR64, 1
+#endif
 #endif
 	.include "asm/macros.inc"
 	.include "asm/macros/battle_script.inc"
@@ -17,7 +20,7 @@
 
 	.section script_data, "aw", %progbits
 
-	.ifdef PLATFORM_ANDROID_ASM
+	.ifdef PLATFORM_ANDROID_PTR64
 		.balign 8
 	.else
 		.align 2
@@ -36,7 +39,7 @@ gBattlescriptsForUsingItem::
 	bscript_ptr BattleScript_ItemIncreaseStat             @ EFFECT_ITEM_INCREASE_ALL_STATS
 	bscript_ptr BattleScript_UsePokeFlute                 @ EFFECT_ITEM_USE_POKE_FLUTE
 
-	.ifdef PLATFORM_ANDROID_ASM
+	.ifdef PLATFORM_ANDROID_PTR64
 		.balign 8
 	.else
 		.align 2
