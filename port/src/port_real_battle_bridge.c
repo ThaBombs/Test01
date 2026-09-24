@@ -11,6 +11,7 @@
 #include "window.h"
 #include "constants/battle.h"
 #include "constants/items.h"
+#include "constants/pokemon.h"
 
 static void PortRealBattle_ReturnFromEngine(void)
 {
