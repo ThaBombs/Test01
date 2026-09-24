@@ -489,27 +489,6 @@ target_compile_options(
     -fdata-sections
     "-iquote${REPO_ROOT}/include"
 )
-set(REAL_BATTLE_COMBINED_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/generated/real_battle_combined.o")
-add_custom_command(
-    TARGET pokeemerald_real_battle_probe
-    POST_BUILD
-    # Collapse the archive to one relocatable object first. Running nm -u on
-    # the archive directly reports references that are actually satisfied by
-    # another battle object, which badly overstates the remaining closure.
-    COMMAND "${CMAKE_C_COMPILER}"
-        "--target=${CMAKE_C_COMPILER_TARGET}"
-        "--sysroot=${CMAKE_SYSROOT}"
-        -nostdlib
-        -no-pie
-        "-Wl,-r"
-        "-Wl,--whole-archive"
-        "$<TARGET_FILE:pokeemerald_real_battle_probe>"
-        "-Wl,--no-whole-archive"
-        -o "${REAL_BATTLE_COMBINED_OBJECT}"
-    COMMAND "${CMAKE_NM}" -u "${REAL_BATTLE_COMBINED_OBJECT}" > "${REPO_ROOT}/android/real-battle-unresolved.txt"
-    COMMENT "Real Emerald battle-engine dependency closure"
-    VERBATIM
-)
 add_dependencies(pokeemerald_real_battle_probe pokeemerald_real_battle_interface_assets)
 add_dependencies(pokeemerald_native pokeemerald_real_battle_probe)
 
@@ -569,7 +548,37 @@ add_custom_target(
     pokeemerald_real_battle_scripts_probe
     DEPENDS ${REAL_BATTLE_SCRIPT_OBJECTS}
 )
-add_dependencies(pokeemerald_native pokeemerald_real_battle_scripts_probe)
+
+# Compute dependency closure only after both the real Emerald C battle engine
+# and the complete native-width battle scripts exist. This prevents hundreds
+# of BattleScript_* references from being misreported as external deps.
+set(REAL_BATTLE_COMBINED_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/generated/real_battle_combined.o")
+add_custom_command(
+    OUTPUT "${REAL_BATTLE_COMBINED_OBJECT}"
+    COMMAND "${CMAKE_C_COMPILER}"
+        "--target=${CMAKE_C_COMPILER_TARGET}"
+        "--sysroot=${CMAKE_SYSROOT}"
+        -nostdlib
+        -no-pie
+        "-Wl,-r"
+        "-Wl,--whole-archive"
+        "$<TARGET_FILE:pokeemerald_real_battle_probe>"
+        "-Wl,--no-whole-archive"
+        ${REAL_BATTLE_SCRIPT_OBJECTS}
+        -o "${REAL_BATTLE_COMBINED_OBJECT}"
+    COMMAND "${CMAKE_NM}" -u "${REAL_BATTLE_COMBINED_OBJECT}" > "${REPO_ROOT}/android/real-battle-unresolved.txt"
+    DEPENDS
+        pokeemerald_real_battle_probe
+        ${REAL_BATTLE_SCRIPT_OBJECTS}
+    COMMENT "Real Emerald battle engine + scripts dependency closure"
+    VERBATIM
+)
+add_custom_target(
+    pokeemerald_real_battle_closure
+    DEPENDS "${REAL_BATTLE_COMBINED_OBJECT}"
+)
+add_dependencies(pokeemerald_real_battle_closure pokeemerald_real_battle_probe pokeemerald_real_battle_scripts_probe)
+add_dependencies(pokeemerald_native pokeemerald_real_battle_closure)
 
 
 # Compile-only probe for the Android boot handoff that replaces the skipped
