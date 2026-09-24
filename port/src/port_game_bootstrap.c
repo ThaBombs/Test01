@@ -34,7 +34,6 @@ struct PokemonStorage *gPokemonStoragePtr = &gPokemonStorage.block;
 u32 *gTrainerHillVBlankCounter = NULL;
 const bool8 gTestRunnerEnabled = FALSE;
 const bool8 gTestRunnerSkipIsFail = FALSE;
-u32 gBattleTypeFlags = 0;
 
 void CheckForFlashMemory(void)
 {
@@ -46,11 +45,6 @@ void PlayTimeCounter_Update(void)
     // The proper play-time module will replace this once the new-game/save
     // path is linked. Keeping it inert during bootstrap avoids advancing a
     // save before one has been initialized.
-}
-
-void ScanlineEffect_Stop(void)
-{
-    // Host rendering has no GBA scanline DMA running during bootstrap.
 }
 
 void PortGame_InitialCallback(void)
