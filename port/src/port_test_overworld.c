@@ -3,6 +3,7 @@
 #include "port_test_field_menu.h"
 #include "port_test_dialogue.h"
 #include "port_test_npc.h"
+#include "port_test_battle.h"
 
 #include "global.h"
 #include "bg.h"
@@ -30,6 +31,13 @@ static u16 sPortBg3[BG_SCREEN_SIZE / sizeof(u16)];
 static bool32 sPortWarpArrivalLocked;
 static u16 sPortEventVars[8];
 static u8 sPortChosenStarter = PORT_STARTER_NONE;
+static bool32 sPortFirstBattleComplete;
+
+static const u8 sPortText_FirstBattleWon[] =
+    _("PROF. BIRCH: Whew...\nYou saved me. Thanks a lot!\p"
+      "Come by my POKéMON LAB later, okay?");
+static const u8 sPortText_FirstBattleLost[] =
+    _("PROF. BIRCH: Try again!\nUse the POKéMON in my BAG!");
 
 static const struct BgTemplate sPortOverworldBgTemplates[] =
 {
@@ -41,8 +49,11 @@ static const struct BgTemplate sPortOverworldBgTemplates[] =
 
 static void PortTestOverworld_Main(void)
 {
-    if (!PortTestDialogue_Update())
+    const bool32 dialogueActive = PortTestDialogue_Update();
+    if (!dialogueActive)
     {
+        if (PortTestBattle_TryStartPending())
+            return;
         if (!PortTestFieldMenu_Update())
             PortTestPlayer_Update();
     }
@@ -384,6 +395,34 @@ u8 PortGame_GetChosenStarter(void)
     return sPortChosenStarter;
 }
 
+bool32 PortGame_IsFirstBattleComplete(void)
+{
+    return sPortFirstBattleComplete;
+}
+
+void PortGame_ReturnFromFirstBattle(bool32 won)
+{
+    const u16 mapGroup = gSaveBlock1Ptr->location.mapGroup;
+    const u16 mapNum = gSaveBlock1Ptr->location.mapNum;
+    const s16 focusX = gSaveBlock1Ptr->pos.x;
+    const s16 focusY = gSaveBlock1Ptr->pos.y;
+
+    if (won)
+        sPortFirstBattleComplete = TRUE;
+
+    PortTestNpc_ClearSavedSceneState();
+    PortTestOverworld_SetupScene(
+        mapGroup,
+        mapNum,
+        focusX,
+        focusY);
+
+    PortTestDialogue_Open(
+        won
+            ? sPortText_FirstBattleWon
+            : sPortText_FirstBattleLost);
+}
+
 void PortGame_OpenTestOptions(void)
 {
     PortTestNpc_SaveSceneState();
@@ -406,6 +445,7 @@ void PortGame_StartTestOverworld(void)
 {
     sPortWarpArrivalLocked = FALSE;
     sPortChosenStarter = PORT_STARTER_NONE;
+    sPortFirstBattleComplete = FALSE;
     memset(sPortEventVars, 0, sizeof(sPortEventVars));
     PortTestNpc_ClearSavedSceneState();
     PortTestOverworld_SetupScene(
