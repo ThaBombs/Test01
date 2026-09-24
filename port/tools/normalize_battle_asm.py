@@ -26,7 +26,107 @@ GLOBAL_LABEL_RE = re.compile(
     r'^(?P<indent>\s*)(?P<label>[A-Za-z_.$][A-Za-z0-9_.$]*)::(?P<rest>.*)$'
 )
 TRAILING_MACRO_COMMA_RE = re.compile(
-    r'^(?P<body>\s*[A-Za-z_.$][A-Za-z0-9_.$]*\s+[^,]+),\s*$'
+    r'^(?P<body>\s*[A-Za-z_.$][A-Za-z0-9_.$]*\s+[^,]+),\s*
+
+
+def strip_arm_comment(line: str) -> str:
+    """Strip an ARM '@' comment while preserving @ inside quoted strings."""
+    quote = None
+    escaped = False
+    for i, ch in enumerate(line):
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\":
+            escaped = True
+            continue
+        if quote is not None:
+            if ch == quote:
+                quote = None
+            continue
+        if ch in ('"', "'"):
+            quote = ch
+            continue
+        if ch == "@":
+            return line[:i].rstrip()
+    return line.rstrip("\n")
+
+
+def expand_file(path: Path, repo_root: Path, stack: tuple[Path, ...]) -> list[str]:
+    path = path.resolve()
+    if path in stack:
+        chain = " -> ".join(str(p) for p in (*stack, path))
+        raise RuntimeError(f"recursive .include detected: {chain}")
+
+    out: list[str] = []
+    text = path.read_text(encoding="utf-8")
+    for raw in text.splitlines():
+        include_match = INCLUDE_RE.match(raw)
+        if include_match:
+            include_path = (repo_root / include_match.group(1)).resolve()
+            if not include_path.is_file():
+                raise FileNotFoundError(
+                    f"{path}: assembler include not found: {include_match.group(1)}"
+                )
+            out.extend(expand_file(include_path, repo_root, (*stack, path)))
+            continue
+
+        line = strip_arm_comment(raw)
+
+        # GNU as accepts a trailing comma on a one-argument macro invocation
+        # (the upstream scripts contain `clearstatus BS_SCRIPTING,`). LLVM's
+        # integrated assembler rejects it as an empty second argument. Normalize
+        # that syntax here without changing the Emerald battle-script source.
+        trailing_macro_comma = TRAILING_MACRO_COMMA_RE.match(line)
+        if trailing_macro_comma:
+            line = trailing_macro_comma.group("body")
+
+        # The C-to-assembler preprocessing emits enum/constants as .set
+        # symbols into every battle-script translation unit. GNU ld tolerates
+        # duplicate absolute constants, while Android's lld treats them as
+        # duplicate global definitions. They are assembly-time constants only,
+        # so make their ELF binding local without changing their values/uses.
+        set_match = SET_SYMBOL_RE.match(line)
+        if set_match and not set_match.group("symbol").startswith(".L"):
+            out.append(
+                f'{set_match.group("indent")}.local {set_match.group("symbol")}'
+            )
+
+        label_match = GLOBAL_LABEL_RE.match(line)
+        if label_match:
+            indent = label_match.group("indent")
+            label = label_match.group("label")
+            rest = label_match.group("rest")
+            out.append(f"{indent}.global {label}")
+            out.append(f"{indent}{label}:{rest}")
+        else:
+            out.append(line)
+
+    return out
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input", type=Path)
+    parser.add_argument("output", type=Path)
+    parser.add_argument("--repo-root", type=Path, required=True)
+    args = parser.parse_args()
+
+    repo_root = args.repo_root.resolve()
+    source = args.input.resolve()
+    output = args.output.resolve()
+
+    lines = expand_file(source, repo_root, ())
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+if __name__ == "__main__":
+    main()
+
+)
+SET_SYMBOL_RE = re.compile(
+    r'^(?P<indent>\s*)\.set\s+(?P<symbol>[A-Za-z_.$][A-Za-z0-9_.$]*)\s*,'
 )
 
 
