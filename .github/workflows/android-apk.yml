@@ -102,6 +102,7 @@ jobs:
             build/emerald/src/fonts.o \
             build/emerald/src/text_window.o \
             build/emerald/src/pokemon.o \
+            build/emerald/src/data.o \
             build/emerald/src/graphics.o \
             build/emerald/src/battle_gimmick.o \
             build/emerald/src/starter_choose.o \
