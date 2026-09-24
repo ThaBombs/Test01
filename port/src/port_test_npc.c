@@ -18,6 +18,9 @@
 #define PORT_NPC_PAL_TAG_3 0x7F13
 #define PORT_NPC_PAL_TAG_4 0x7F14
 
+static const u8 sPortTextBirchAfterBattle[] =
+    _("PROF. BIRCH: Thanks again!\nCome by my POKéMON LAB.");
+
 enum
 {
     PORT_NPC_FACE_SOUTH,
@@ -440,6 +443,12 @@ void PortTestNpc_LoadMap(void)
     for (u32 i = 0; i < events->objectEventCount && sPortNpcCount < PORT_NPC_MAX; ++i)
     {
         const struct ObjectEventTemplate *event = &events->objectEvents[i];
+
+        if (PortGame_IsFirstBattleComplete()
+         && (event->graphicsId == OBJ_EVENT_GFX_BIRCHS_BAG
+          || event->graphicsId == OBJ_EVENT_GFX_ZIGZAGOON_1))
+            continue;
+
         const struct SpriteTemplate *template =
             GetPortNpcSpriteTemplate(event->graphicsId);
         if (template == NULL)
@@ -803,6 +812,10 @@ bool32 PortTestNpc_TryInteractAt(s16 x, s16 y, s16 playerX, s16 playerY)
 
         if (event->graphicsId == OBJ_EVENT_GFX_BIRCHS_BAG)
             return PortTestFieldMenu_OpenStarterChoice();
+
+        if (event->graphicsId == OBJ_EVENT_GFX_PROF_BIRCH
+         && PortGame_IsFirstBattleComplete())
+            return PortTestDialogue_Open(sPortTextBirchAfterBattle);
 
         if (!PortNpcIsInanimateGraphics(event->graphicsId))
         {
