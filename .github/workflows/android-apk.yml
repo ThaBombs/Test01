@@ -153,7 +153,7 @@ jobs:
             build/emerald/src/event_data.o \
             build/emerald/src/difficulty.o \
             build/emerald/src/data.o \
-            build/emerald/src/ow_abilities.o \
+            build/emerald/src/ow_abilities.o
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
