@@ -542,7 +542,6 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     battle_z_move
     battle_dynamax
     ow_abilities
-    data
     difficulty
     event_data
 )
