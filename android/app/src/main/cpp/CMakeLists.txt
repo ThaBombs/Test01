@@ -450,6 +450,25 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     battle_controllers
     battle_controller_player
     battle_controller_opponent
+    secret_base
+    sound
+    berry
+    field_player_avatar
+    metatile_behavior
+    field_weather
+    party_menu
+    pokeball
+    battle_tv
+    battle_arena
+    battle_controller_wally
+    battle_controller_safari
+    battle_controller_recorded_player
+    battle_controller_recorded_partner
+    battle_controller_recorded_opponent
+    battle_controller_player_partner
+    battle_controller_oak_old_man
+    battle_controller_link_partner
+    battle_controller_link_opponent
     battle_message
     battle_bg
     battle_interface
