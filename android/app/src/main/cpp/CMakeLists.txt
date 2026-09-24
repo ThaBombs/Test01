@@ -248,6 +248,21 @@ add_custom_command(
     VERBATIM
 )
 
+# Emerald's shared encoded strings. Link the real data rather than Android
+# placeholder copies so battle/menu text continues to use the original engine data.
+set(STRINGS_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/strings_android.c")
+add_custom_command(
+    OUTPUT "${STRINGS_ANDROID_C}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    COMMAND /bin/bash -o pipefail -c
+        "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DPORT_BOOTSTRAP_MENU_ONLY=1 '${REPO_ROOT}/src/strings.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${REPO_ROOT}/src/strings.c' '${REPO_ROOT}/charmap.txt' > '${STRINGS_ANDROID_C}'"
+    DEPENDS
+        "${REPO_ROOT}/src/strings.c"
+        "${REPO_ROOT}/tools/preproc/preproc"
+        "${REPO_ROOT}/charmap.txt"
+    VERBATIM
+)
+
 # Real Emerald option menu used by the Android main-menu OPTION entry.
 set(OPTION_MENU_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/option_menu_android.c")
 add_custom_command(
@@ -756,6 +771,7 @@ target_sources(
     PRIVATE
     "${PORT_ROOT}/src/port_main_menu_startup.c"
     "${PORT_ROOT}/src/port_menu_only_stubs.c"
+    "${PORT_ROOT}/src/port_battle_runtime_stubs.c"
     "${PORT_ROOT}/src/port_test_overworld.c"
     "${REPO_ROOT}/src/fieldmap.c"
     "${REPO_ROOT}/src/field_camera.c"
@@ -776,4 +792,5 @@ target_sources(
     "${TEXT_WINDOW_ANDROID_C}"
     "${OPTION_MENU_ANDROID_C}"
     "${STRING_UTIL_ANDROID_C}"
+    "${STRINGS_ANDROID_C}"
 )
