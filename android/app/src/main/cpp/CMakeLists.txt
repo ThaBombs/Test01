@@ -555,15 +555,11 @@ add_custom_target(
 set(REAL_BATTLE_COMBINED_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/generated/real_battle_combined.o")
 add_custom_command(
     OUTPUT "${REAL_BATTLE_COMBINED_OBJECT}"
-    COMMAND "${CMAKE_C_COMPILER}"
-        "--target=${CMAKE_C_COMPILER_TARGET}"
-        "--sysroot=${CMAKE_SYSROOT}"
-        -nostdlib
-        -no-pie
-        "-Wl,-r"
-        "-Wl,--whole-archive"
+    COMMAND "${CMAKE_LINKER}"
+        -r
+        --whole-archive
         "$<TARGET_FILE:pokeemerald_real_battle_probe>"
-        "-Wl,--no-whole-archive"
+        --no-whole-archive
         ${REAL_BATTLE_SCRIPT_OBJECTS}
         -o "${REAL_BATTLE_COMBINED_OBJECT}"
     COMMAND "${CMAKE_NM}" -u "${REAL_BATTLE_COMBINED_OBJECT}" > "${REPO_ROOT}/android/real-battle-unresolved.txt"
