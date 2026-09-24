@@ -70,7 +70,7 @@ def strip_arm_comment(line: str) -> str:
     return line.rstrip("\n")
 
 
-def expand_file(path: Path, repo_root: Path, stack: tuple[Path, ...]) -> list[str]:
+def expand_file(\n    path: Path,\n    repo_root: Path,\n    stack: tuple[Path, ...],\n    normalize_safari_reactions: bool,\n) -> list[str]:
     path = path.resolve()
     if path in stack:
         chain = " -> ".join(str(p) for p in (*stack, path))
@@ -87,7 +87,7 @@ def expand_file(path: Path, repo_root: Path, stack: tuple[Path, ...]) -> list[st
                 raise FileNotFoundError(
                     f"{path}: assembler include not found: {include_match.group(1)}"
                 )
-            out.extend(expand_file(include_path, repo_root, (*stack, path)))
+            out.extend(\n                expand_file(\n                    include_path,\n                    repo_root,\n                    (*stack, path),\n                    normalize_safari_reactions,\n                )\n            )
             continue
 
         line = strip_arm_comment(raw)
@@ -99,10 +99,14 @@ def expand_file(path: Path, repo_root: Path, stack: tuple[Path, ...]) -> list[st
                 f"call{uppercase_call.group('rest')}"
             )
 
-        # Safari reaction IDs are a local enum with values 0, 1, and 2.
-        # Resolve them here so LLVM does not leave them as linker symbols.
-        for symbol, value in SAFARI_REACTION_IDS.items():
-            line = re.sub(rf'\b{symbol}\b', value, line)
+        # battle_anim_scripts.s uses Safari-reaction enum names as animation
+        # bytecode operands without importing their C enum definitions. Resolve
+        # those operands only for the animation-script translation unit. Doing
+        # this to the regular battle scripts would also rewrite the enum
+        # definitions themselves (for example ".global NAME" -> ".global 0").
+        if normalize_safari_reactions:
+            for symbol, value in SAFARI_REACTION_IDS.items():
+                line = re.sub(rf'\b{symbol}\b', value, line)
 
         # Tera Starstorm uses ANIM_BATTLER in createsprite. That macro only
         # distinguishes target from non-target here, and the sprite callback
@@ -150,7 +154,13 @@ def main() -> None:
     source = args.input.resolve()
     output = args.output.resolve()
 
-    lines = expand_file(source, repo_root, ())
+    normalize_safari_reactions = "battle_anim_scripts" in source.name
+    lines = expand_file(
+        source,
+        repo_root,
+        (),
+        normalize_safari_reactions,
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
 
     prefix = [
