@@ -445,6 +445,7 @@ add_custom_target(
 # These sources use pokeemerald's encoded-string macros, so run them through
 # the repository preprocessor exactly like the sources that ship in the APK.
 set(REAL_BATTLE_PROBE_SOURCE_NAMES
+    data
     battle_main
     battle_setup
     battle_controllers
