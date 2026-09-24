@@ -445,6 +445,35 @@ add_custom_command(
 )
 add_dependencies(pokeemerald_native pokeemerald_real_battle_probe)
 
+# Native-width battle-script data probe. The script command parser uses packed
+# structs containing native pointers, so Android script data must emit 64-bit
+# pointer operands while ordinary u32 command operands remain 32-bit.
+set(REAL_BATTLE_SCRIPT_OBJECTS)
+foreach(REAL_BATTLE_SCRIPT_NAME IN ITEMS battle_scripts_1 battle_scripts_2)
+    set(REAL_BATTLE_SCRIPT_INPUT "${REPO_ROOT}/data/${REAL_BATTLE_SCRIPT_NAME}.s")
+    set(REAL_BATTLE_SCRIPT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/generated/${REAL_BATTLE_SCRIPT_NAME}_android.o")
+    add_custom_command(
+        OUTPUT "${REAL_BATTLE_SCRIPT_OBJECT}"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+        COMMAND /bin/bash -o pipefail -c
+            "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -c -x assembler-with-cpp -DPLATFORM_ANDROID=1 -I'${REPO_ROOT}' -I'${REPO_ROOT}/include' '${REAL_BATTLE_SCRIPT_INPUT}' -o '${REAL_BATTLE_SCRIPT_OBJECT}'"
+        DEPENDS
+            "${REAL_BATTLE_SCRIPT_INPUT}"
+            "${REPO_ROOT}/asm/macros.inc"
+            "${REPO_ROOT}/asm/macros/battle_script.inc"
+            "${REPO_ROOT}/constants/constants.inc"
+        VERBATIM
+    )
+    list(APPEND REAL_BATTLE_SCRIPT_OBJECTS "${REAL_BATTLE_SCRIPT_OBJECT}")
+endforeach()
+
+add_custom_target(
+    pokeemerald_real_battle_scripts_probe
+    DEPENDS ${REAL_BATTLE_SCRIPT_OBJECTS}
+)
+add_dependencies(pokeemerald_native pokeemerald_real_battle_scripts_probe)
+
+
 # Compile-only probe for the Android boot handoff that replaces the skipped
 # copyright/intro/title presentation flow. Once its dependencies are linked,
 # this source becomes part of pokeemerald_native and PortGame_InitialCallback
