@@ -463,15 +463,17 @@ foreach(REAL_BATTLE_SCRIPT_NAME IN ITEMS battle_scripts_1 battle_scripts_2)
             "${REAL_BATTLE_SCRIPT_NORMALIZED}"
             --repo-root "${REPO_ROOT}"
         COMMAND "${CMAKE_C_COMPILER}"
-            --target=${CMAKE_C_COMPILER_TARGET}
-            --sysroot="${CMAKE_SYSROOT}"
+            "--target=${CMAKE_C_COMPILER_TARGET}"
+            "--sysroot=${CMAKE_SYSROOT}"
             -c
-            -x assembler-with-cpp
+            -x
+            assembler-with-cpp
             -DPLATFORM_ANDROID=1
-            -I"${REPO_ROOT}"
-            -I"${REPO_ROOT}/include"
+            "-I${REPO_ROOT}"
+            "-I${REPO_ROOT}/include"
             "${REAL_BATTLE_SCRIPT_NORMALIZED}"
-            -o "${REAL_BATTLE_SCRIPT_OBJECT}"
+            -o
+            "${REAL_BATTLE_SCRIPT_OBJECT}"
         DEPENDS
             "${REAL_BATTLE_SCRIPT_INPUT}"
             "${PORT_ROOT}/tools/normalize_battle_asm.py"
