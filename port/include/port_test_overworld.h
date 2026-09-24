@@ -25,5 +25,7 @@ void PortGame_OpenTestOptions(void);
 void PortGame_ReturnToTestOverworld(void);
 void PortGame_SetChosenStarter(u8 starter);
 u8 PortGame_GetChosenStarter(void);
+bool32 PortGame_IsFirstBattleComplete(void);
+void PortGame_ReturnFromFirstBattle(bool32 won);
 
 #endif
