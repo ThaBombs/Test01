@@ -96,7 +96,11 @@
 
 #ifdef PLATFORM_ANDROID
 #define DmaSetUnchecked(dmaNum, src, dest, control) \
-    PortGbaDma_Set((dmaNum), (src), (dest), (control))
+    PortGbaDma_Set( \
+        (dmaNum), \
+        (const void *)(uintptr_t)(src), \
+        (void *)(uintptr_t)(dest), \
+        (control))
 #else
 #define DmaSetUnchecked(dmaNum, src, dest, control) \
 {                                                 \
