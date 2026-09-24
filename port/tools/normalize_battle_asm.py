@@ -36,7 +36,13 @@ UPPERCASE_CALL_RE = re.compile(r'^(?P<indent>\s*)Call(?P<rest>\s+.*)$')
 SET_SYMBOL_RE = re.compile(
     r'^(?P<indent>\s*)\.set\s+(?P<symbol>[A-Za-z_.$][A-Za-z0-9_.$]*)\s*,'
 )
-SAFARI_REACTION_IDS = {\n    \"B_MSG_MON_WATCHING\": \"0\",\n    \"B_MSG_MON_ANGRY\": \"1\",\n    \"B_MSG_MON_EATING\": \"2\",\n}\n\nENUM_EQUIV_RE = re.compile(\n    r'^(?P<indent>\s*)\.global\s+(?P<symbol>[A-Za-z_.$][A-Za-z0-9_.$]*)\s*;'
+SAFARI_REACTION_IDS = {
+    "B_MSG_MON_WATCHING": "0",
+    "B_MSG_MON_ANGRY": "1",
+    "B_MSG_MON_EATING": "2",
+}
+ENUM_EQUIV_RE = re.compile(
+    r'^(?P<indent>\s*)\.global\s+(?P<symbol>[A-Za-z_.$][A-Za-z0-9_.$]*)\s*;'
     r'\s*\.equiv\s+(?P=symbol)\s*,(?P<value>.*)$'
 )
 
@@ -86,8 +92,6 @@ def expand_file(path: Path, repo_root: Path, stack: tuple[Path, ...]) -> list[st
 
         line = strip_arm_comment(raw)
 
-        # Two modern animation scripts use uppercase "Call"; LLVM macro names
-        # are case-sensitive.
         uppercase_call = UPPERCASE_CALL_RE.match(line)
         if uppercase_call:
             line = (
@@ -95,18 +99,20 @@ def expand_file(path: Path, repo_root: Path, stack: tuple[Path, ...]) -> list[st
                 f"call{uppercase_call.group('rest')}"
             )
 
-        # Safari reaction IDs are a local enum (0, 1, 2). The animation\n        # source uses their C names without importing the enum into assembler,\n        # so resolve them here as immediate bytecode arguments rather than\n        # leaving them as undefined linker symbols.\n        for symbol, value in SAFARI_REACTION_IDS.items():\n            line = re.sub(rf'\\b{symbol}\\b', value, line)\n\n        # Tera Starstorm uses ANIM_BATTLER in createsprite. That macro only\n        # needs attacker-vs-target here, and its sprite callback anchors to the
-        # attacker, so normalize this placeholder to ANIM_ATTACKER.
+        # Safari reaction IDs are a local enum with values 0, 1, and 2.
+        # Resolve them here so LLVM does not leave them as linker symbols.
+        for symbol, value in SAFARI_REACTION_IDS.items():
+            line = re.sub(rf'\b{symbol}\b', value, line)
+
+        # Tera Starstorm uses ANIM_BATTLER in createsprite. That macro only
+        # distinguishes target from non-target here, and the sprite callback
+        # anchors to the attacker.
         line = re.sub(r'\bANIM_BATTLER\b', 'ANIM_ATTACKER', line)
 
-        # GNU as accepts a trailing comma on a one-argument macro invocation.
         trailing_macro_comma = TRAILING_MACRO_COMMA_RE.match(line)
         if trailing_macro_comma:
             line = trailing_macro_comma.group("body")
 
-        # preproc -ie emits enum members as:
-        #   .global NAME; .equiv NAME, value
-        # They are assembly-time constants rather than exported game symbols.
         enum_equiv_match = ENUM_EQUIV_RE.match(line)
         if enum_equiv_match:
             indent = enum_equiv_match.group("indent")
@@ -114,7 +120,6 @@ def expand_file(path: Path, repo_root: Path, stack: tuple[Path, ...]) -> list[st
             value = enum_equiv_match.group("value")
             line = f"{indent}.local {symbol}; .equiv {symbol},{value}"
 
-        # Keep support for ordinary .set constants as well.
         set_match = SET_SYMBOL_RE.match(line)
         if set_match and not set_match.group("symbol").startswith(".L"):
             out.append(
