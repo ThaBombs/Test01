@@ -1,5 +1,6 @@
 #include "port_test_npc.h"
 #include "port_test_dialogue.h"
+#include "port_test_field_menu.h"
 #include "port_test_overworld.h"
 
 #include "global.h"
@@ -799,6 +800,9 @@ bool32 PortTestNpc_TryInteractAt(s16 x, s16 y, s16 playerX, s16 playerY)
          || npc->x != x
          || npc->y != y)
             continue;
+
+        if (event->graphicsId == OBJ_EVENT_GFX_BIRCHS_BAG)
+            return PortTestFieldMenu_OpenStarterChoice();
 
         if (!PortNpcIsInanimateGraphics(event->graphicsId))
         {
