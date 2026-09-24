@@ -18,21 +18,6 @@ bool8 FlagGet(u16 id)
     return FALSE;
 }
 
-void PlayBGM(u16 songNum)
-{
-    (void)songNum;
-}
-
-void PlaySE(u16 songNum)
-{
-    (void)songNum;
-}
-
-bool8 IsSEPlaying(void)
-{
-    return FALSE;
-}
-
 u16 FontFunc_Braille(struct TextPrinter *textPrinter)
 {
     (void)textPrinter;
