@@ -463,3 +463,20 @@ void BeginEvolutionScene(struct Pokemon *mon, enum Species postEvoSpecies, bool3
     (void)canStopEvo;
     (void)partyId;
 }
+
+
+/*
+ * Battle Palace nature-description text lives in map script data. The first
+ * Android battle never enters that map/UI, but pokemon.c keeps pointers to the
+ * strings in gNaturesInfo. Empty sentinel strings satisfy those dormant
+ * references until the full event-script data archive is linked.
+ */
+const u8 BattleFrontier_Lounge5_Text_NatureGirlAttackHighAttackLow[] = {EOS};
+const u8 BattleFrontier_Lounge5_Text_NatureGirlAttackHighDefenseLow[] = {EOS};
+const u8 BattleFrontier_Lounge5_Text_NatureGirlAttackHighSupportLow[] = {EOS};
+const u8 BattleFrontier_Lounge5_Text_NatureGirlDefenseHighAttackLow[] = {EOS};
+const u8 BattleFrontier_Lounge5_Text_NatureGirlDefenseHighDefenseLow[] = {EOS};
+const u8 BattleFrontier_Lounge5_Text_NatureGirlDefenseHighSupportLow[] = {EOS};
+const u8 BattleFrontier_Lounge5_Text_NatureGirlSupportHighAttackLow[] = {EOS};
+const u8 BattleFrontier_Lounge5_Text_NatureGirlSupportHighDefenseLow[] = {EOS};
+const u8 BattleFrontier_Lounge5_Text_NatureGirlSupportHighSupportLow[] = {EOS};
