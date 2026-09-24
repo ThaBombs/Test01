@@ -178,27 +178,6 @@ u8 CurrentBattlePyramidLocation(void)
     return PYRAMID_LOCATION_NONE;
 }
 
-void ItemUseOutOfBattle_Medicine(u8 taskId)
-{
-    (void)taskId;
-}
-
-void ItemUseOutOfBattle_SacredAsh(u8 taskId)
-{
-    (void)taskId;
-}
-
-void ItemUseOutOfBattle_PPRecovery(u8 taskId)
-{
-    (void)taskId;
-}
-
-void ItemUseOutOfBattle_CannotUse(u8 taskId)
-{
-    (void)taskId;
-}
-
-
 /* Android-only peripheral compatibility data follows. Core battle sprite/data tables now come from Emerald's real data.c. */
 
 const s8 gPokeblockFlavorCompatibilityTable[NUM_NATURES * FLAVOR_COUNT] =
@@ -233,13 +212,6 @@ const s8 gPokeblockFlavorCompatibilityTable[NUM_NATURES * FLAVOR_COUNT] =
 mapsec_u8_t GetCurrentRegionMapSectionId(void)
 {
     return gMapHeader.regionMapSectionId;
-}
-
-u16 GetUnownLetterByPersonality(u32 personality)
-{
-    if (!personality)
-        return 0;
-    return GET_UNOWN_LETTER(personality);
 }
 
 u8 StorageGetCurrentBox(void)
@@ -331,16 +303,6 @@ bool8 InBattlePike(void)
     return FALSE;
 }
 
-void BeginEvolutionScene(struct Pokemon *mon, enum Species postEvoSpecies, bool32 canStopEvo, u8 partyId)
-{
-    (void)mon;
-    (void)postEvoSpecies;
-    (void)canStopEvo;
-    (void)partyId;
-}
-
-
-
 /*
  * Link-only support adapters for peripheral Emerald subsystems that are not
  * entered by the Android single-player overworld/battle milestone.
@@ -359,47 +321,6 @@ void UpdateTimeOfDay(bool32 updateBlend)
     gTimeOfDay = TIME_DAY;
 }
 
-#define ANDROID_FIELD_ITEM_STUB(func) \
-    void func(u8 taskId)              \
-    {                                 \
-        ItemUseOutOfBattle_CannotUse(taskId); \
-    }
-
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_PPUp)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_AbilityCapsule)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_AbilityPatch)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Mint)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_RareCandy)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_DynamaxCandy)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_BlackWhiteFlute)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Repel)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Lure)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_EscapeRope)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Honey)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Mail)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_EvolutionStone)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_FormChange_ConsumedOnUse)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_ExpShare)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_ReduceEV)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_EnigmaBerry)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_TMHM)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_RotomCatalog)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_FormChange)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Fusion)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_ZygardeCube)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Bike)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Rod)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Itemfinder)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_TownMap)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_PokemonBoxLink)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_CoinCase)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_PowderJar)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_WailmerPail)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_PokeblockCase)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_PokeFlute)
-ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_ResetEVs)
-
-#undef ANDROID_FIELD_ITEM_STUB
 
 void InitTrainerTowerBattleStruct(void)
 {
@@ -437,11 +358,6 @@ u32 TryWriteSpecialSaveSector(u8 sector, u8 *src)
     (void)sector;
     (void)src;
     return SAVE_STATUS_OK;
-}
-
-bool8 ItemIsMail(enum Item itemId)
-{
-    return GetItemType(itemId) == ITEM_TYPE_MAIL;
 }
 
 bool8 IsSpeciesNotUnown(enum Species species)
@@ -499,11 +415,6 @@ u16 GetBattlePyramidPickupItemId(void)
 void IncrementGameStat(u8 statId)
 {
     (void)statId;
-}
-
-bool32 CanThrowBall(void)
-{
-    return (gBattleTypeFlags & BATTLE_TYPE_TRAINER) == 0;
 }
 
 void CreateBattlerSprite(enum BattlerId battler)
@@ -672,27 +583,6 @@ u8 GetFrontierTrainerFrontSpriteId(u16 trainerId)
 {
     (void)trainerId;
     return TRAINER_PIC_BRENDAN;
-}
-
-u8 GetLRKeysPressedAndHeld(void)
-{
-    return 0;
-}
-
-bool8 MenuHelpers_IsLinkActive(void)
-{
-    return FALSE;
-}
-
-bool8 MenuHelpers_ShouldWaitForLinkRecv(void)
-{
-    return FALSE;
-}
-
-bool16 RunTextPrintersRetIsActive(u8 textPrinterId)
-{
-    (void)textPrinterId;
-    return FALSE;
 }
 
 void ReshowBattleScreenDummy(void)
