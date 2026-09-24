@@ -374,6 +374,7 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     battle_controller_opponent
     battle_message
     battle_bg
+    battle_environment
     battle_interface
     battle_util
     battle_util2
@@ -438,10 +439,23 @@ target_compile_options(
     -fdata-sections
     "-iquote${REPO_ROOT}/include"
 )
+set(REAL_BATTLE_COMBINED_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/generated/real_battle_combined.o")
 add_custom_command(
     TARGET pokeemerald_real_battle_probe
     POST_BUILD
-    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_real_battle_probe>" > "${REPO_ROOT}/android/real-battle-unresolved.txt"
+    # Collapse the archive to one relocatable object first. Running nm -u on
+    # the archive directly reports references that are actually satisfied by
+    # another battle object, which badly overstates the remaining closure.
+    COMMAND "${CMAKE_C_COMPILER}"
+        "--target=${CMAKE_C_COMPILER_TARGET}"
+        "--sysroot=${CMAKE_SYSROOT}"
+        -nostdlib
+        "-Wl,-r"
+        "-Wl,--whole-archive"
+        "$<TARGET_FILE:pokeemerald_real_battle_probe>"
+        "-Wl,--no-whole-archive"
+        -o "${REAL_BATTLE_COMBINED_OBJECT}"
+    COMMAND "${CMAKE_NM}" -u "${REAL_BATTLE_COMBINED_OBJECT}" > "${REPO_ROOT}/android/real-battle-unresolved.txt"
     COMMENT "Real Emerald battle-engine dependency closure"
     VERBATIM
 )
