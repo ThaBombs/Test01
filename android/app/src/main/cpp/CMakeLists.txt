@@ -373,6 +373,8 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     battle_controller_player
     battle_controller_opponent
     battle_message
+    battle_bg
+    battle_interface
     battle_util
     battle_util2
     battle_end_turn
