@@ -157,6 +157,7 @@ jobs:
             build/emerald/src/battle_z_move.o \
             build/emerald/src/battle_ai_record.o \
             build/emerald/src/battle_set_effect.o \
+            build/emerald/src/caps.o \
             build/emerald/src/ow_abilities.o
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
