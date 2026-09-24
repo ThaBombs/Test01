@@ -374,7 +374,6 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     battle_controller_opponent
     battle_message
     battle_bg
-    battle_environment
     battle_interface
     battle_util
     battle_util2
