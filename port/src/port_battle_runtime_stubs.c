@@ -434,12 +434,6 @@ struct Pokemon *GetFirstLiveMon(void)
     }
     return &gParties[B_TRAINER_PLAYER][0];
 }
-
-enum TimeOfDay GetTimeOfDay(void)
-{
-    return TIME_DAY;
-}
-
 const struct Trainer *GetDebugAiTrainer(void)
 {
     return NULL;
