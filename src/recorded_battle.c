@@ -30,8 +30,14 @@ struct PlayerInfo
     u16 language;
 };
 
-// Save data using TryWriteSpecialSaveSector is allowed to exceed SECTOR_DATA_SIZE (up to the counter field)
+// Save data using TryWriteSpecialSaveSector is allowed to exceed SECTOR_DATA_SIZE (up to the counter field).
+// This assertion validates the GBA's serialized save-sector ABI. Android uses
+// native-width pointers in runtime structures and does not write this struct
+// directly into a GBA flash sector, so the 32-bit flash-layout assertion does
+// not apply to the native runtime build.
+#ifndef PLATFORM_ANDROID
 STATIC_ASSERT(sizeof(struct RecordedBattleSave) <= SECTOR_COUNTER_OFFSET, RecordedBattleSaveFreeSpace);
+#endif
 
 EWRAM_DATA rng_value_t gRecordedBattleRngSeed = RNG_VALUE_EMPTY;
 EWRAM_DATA rng_value_t gBattlePalaceMoveSelectionRngValue = RNG_VALUE_EMPTY;
