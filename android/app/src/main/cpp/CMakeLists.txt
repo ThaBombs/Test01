@@ -410,6 +410,7 @@ add_library(
     pokeemerald_real_battle_probe
     STATIC
     ${REAL_BATTLE_ANDROID_SOURCES}
+    "${PORT_ROOT}/src/port_real_battle_bridge.c"
 )
 target_include_directories(
     pokeemerald_real_battle_probe
