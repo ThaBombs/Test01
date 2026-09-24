@@ -2188,7 +2188,7 @@ static void Cmd_waitplaysewithpan(void)
     gTasks[taskId].tFramesToWait = framesToWait;
 
     gAnimSoundTaskCount++;
-    sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
+    sBattleAnimScriptPtr += 4;
 }
 
 static void Task_WaitAndPlaySE(u8 taskId)
