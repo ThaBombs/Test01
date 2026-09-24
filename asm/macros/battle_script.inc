@@ -3,7 +3,7 @@
 @ 64-bit, and battle_script_commands.c intentionally parses pointer operands
 @ using native pointer fields in packed CMD_ARGS structs.
 .macro bscript_ptr value:req
-    .ifdef PLATFORM_ANDROID_ASM
+    .ifdef PLATFORM_ANDROID_PTR64
         .8byte \value
     .else
         .4byte \value
