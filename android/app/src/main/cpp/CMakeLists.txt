@@ -325,6 +325,30 @@ add_custom_command(
     VERBATIM
 )
 
+# Playable Android first-battle slice using the original starter / Zigzagoon art.
+set(TEST_BATTLE_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/test_battle_android.c")
+add_custom_command(
+    OUTPUT "${TEST_BATTLE_ANDROID_C}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    COMMAND /bin/bash -o pipefail -c
+        "cd '${REPO_ROOT}' && mkdir -p build/assets/graphics/pokemon/treecko build/assets/graphics/pokemon/torchic build/assets/graphics/pokemon/mudkip build/assets/graphics/pokemon/zigzagoon && tools/gbagfx/gbagfx graphics/pokemon/treecko/back_gba.png build/assets/graphics/pokemon/treecko/back_gba.png.4bpp && tools/gbagfx/gbagfx graphics/pokemon/torchic/back_gba.png build/assets/graphics/pokemon/torchic/back_gba.png.4bpp && tools/gbagfx/gbagfx graphics/pokemon/mudkip/back_gba.png build/assets/graphics/pokemon/mudkip/back_gba.png.4bpp && tools/gbagfx/gbagfx graphics/pokemon/zigzagoon/anim_front_gba.png build/assets/graphics/pokemon/zigzagoon/anim_front_gba.png.4bpp && tools/gbagfx/gbagfx graphics/pokemon/treecko/normal_gba.pal build/assets/graphics/pokemon/treecko/normal_gba.pal.gbapal && tools/gbagfx/gbagfx graphics/pokemon/torchic/normal_gba.pal build/assets/graphics/pokemon/torchic/normal_gba.pal.gbapal && tools/gbagfx/gbagfx graphics/pokemon/mudkip/normal_gba.pal build/assets/graphics/pokemon/mudkip/normal_gba.pal.gbapal && tools/gbagfx/gbagfx graphics/pokemon/zigzagoon/normal_gba.pal build/assets/graphics/pokemon/zigzagoon/normal_gba.pal.gbapal && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DPORT_BOOTSTRAP_MENU_ONLY=1 -DPORT_BOOTSTRAP_NO_OVERWORLD=1 '${PORT_ROOT}/src/port_test_battle.c' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${PORT_ROOT}/src/port_test_battle.c' '${REPO_ROOT}/charmap.txt' > '${TEST_BATTLE_ANDROID_C}'"
+    DEPENDS
+        "${PORT_ROOT}/src/port_test_battle.c"
+        "${PORT_ROOT}/include/port_test_battle.h"
+        "${REPO_ROOT}/graphics/pokemon/treecko/back_gba.png"
+        "${REPO_ROOT}/graphics/pokemon/treecko/normal_gba.pal"
+        "${REPO_ROOT}/graphics/pokemon/torchic/back_gba.png"
+        "${REPO_ROOT}/graphics/pokemon/torchic/normal_gba.pal"
+        "${REPO_ROOT}/graphics/pokemon/mudkip/back_gba.png"
+        "${REPO_ROOT}/graphics/pokemon/mudkip/normal_gba.pal"
+        "${REPO_ROOT}/graphics/pokemon/zigzagoon/anim_front_gba.png"
+        "${REPO_ROOT}/graphics/pokemon/zigzagoon/normal_gba.pal"
+        "${REPO_ROOT}/tools/preproc/preproc"
+        "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/charmap.txt"
+    VERBATIM
+)
+
 # Reduced Emerald-style field Start menu used by the Android overworld slice.
 set(TEST_FIELD_MENU_ANDROID_C "${CMAKE_CURRENT_BINARY_DIR}/generated/test_field_menu_android.c")
 add_custom_command(
@@ -411,6 +435,7 @@ set_source_files_properties(
     "${LITTLEROOT_ANDROID_C}"
     "${TEST_PLAYER_ANDROID_C}"
     "${TEST_NPC_ANDROID_C}"
+    "${TEST_BATTLE_ANDROID_C}"
     "${TEST_FIELD_MENU_ANDROID_C}"
     "${PORT_ROOT}/src/port_test_dialogue.c"
     PROPERTIES
@@ -430,6 +455,7 @@ target_sources(
     "${LITTLEROOT_ANDROID_C}"
     "${TEST_PLAYER_ANDROID_C}"
     "${TEST_NPC_ANDROID_C}"
+    "${TEST_BATTLE_ANDROID_C}"
     "${TEST_FIELD_MENU_ANDROID_C}"
     "${PORT_ROOT}/src/port_test_dialogue.c"
     "${REPO_ROOT}/src/window.c"
