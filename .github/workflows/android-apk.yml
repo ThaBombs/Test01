@@ -102,7 +102,8 @@ jobs:
             build/emerald/src/fonts.o \
             build/emerald/src/text_window.o \
             build/emerald/src/pokemon.o \
-            build/emerald/src/battle_gimmick.o
+            build/emerald/src/battle_gimmick.o \
+            build/emerald/src/starter_choose.o
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -146,7 +147,9 @@ jobs:
             exit 1
           fi
           echo "Real battle probe: $PROBE"
-          "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u | tee android/real-battle-unresolved.txt
+          "$NDK_NM" --defined-only "$PROBE" | awk 'NF {print $NF}' | sort -u > android/real-battle-defined.txt
+          "$NDK_NM" -u "$PROBE" | sed -E '/:$/d; s/^[[:space:]]*U[[:space:]]+//' | sort -u > android/real-battle-referenced.txt
+          comm -23 android/real-battle-referenced.txt android/real-battle-defined.txt | tee android/real-battle-unresolved.txt
 
       - name: Upload real battle probe diagnostics
         uses: actions/upload-artifact@v4
