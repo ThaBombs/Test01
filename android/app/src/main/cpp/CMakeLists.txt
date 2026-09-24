@@ -531,11 +531,13 @@ foreach(REAL_BATTLE_SCRIPT_NAME IN ITEMS battle_scripts_1 battle_scripts_2)
     set(REAL_BATTLE_SCRIPT_PREPROCESSED "${CMAKE_CURRENT_BINARY_DIR}/generated/${REAL_BATTLE_SCRIPT_NAME}_android.pre.s")
     set(REAL_BATTLE_SCRIPT_NORMALIZED "${CMAKE_CURRENT_BINARY_DIR}/generated/${REAL_BATTLE_SCRIPT_NAME}_android.S")
     set(REAL_BATTLE_SCRIPT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/generated/${REAL_BATTLE_SCRIPT_NAME}_android.o")
+    set(REAL_BATTLE_SCRIPT_ABSOLUTE_SYMBOLS "${CMAKE_CURRENT_BINARY_DIR}/generated/${REAL_BATTLE_SCRIPT_NAME}_absolute_symbols.txt")
     add_custom_command(
         OUTPUT "${REAL_BATTLE_SCRIPT_OBJECT}"
         BYPRODUCTS
             "${REAL_BATTLE_SCRIPT_PREPROCESSED}"
             "${REAL_BATTLE_SCRIPT_NORMALIZED}"
+            "${REAL_BATTLE_SCRIPT_ABSOLUTE_SYMBOLS}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
         # Match pokeemerald's upstream DATA_ASM build pipeline:
         # preproc -s -> C preprocessor -> preproc -ie.
@@ -561,6 +563,12 @@ foreach(REAL_BATTLE_SCRIPT_NAME IN ITEMS battle_scripts_1 battle_scripts_2)
             "${REAL_BATTLE_SCRIPT_NORMALIZED}"
             -o
             "${REAL_BATTLE_SCRIPT_OBJECT}"
+        # preproc -ie emits C enum values as absolute ELF symbols. They are
+        # assembler constants, not linkable game data. Localize every absolute
+        # symbol after assembly so both full battle-script objects can coexist
+        # under lld without weakening duplicate checks for real labels/data.
+        COMMAND /bin/bash -o pipefail -c
+            "'${CMAKE_NM}' --defined-only '${REAL_BATTLE_SCRIPT_OBJECT}' | awk '$2 ~ /^[Aa]$/ {print $3}' > '${REAL_BATTLE_SCRIPT_ABSOLUTE_SYMBOLS}' && if [ -s '${REAL_BATTLE_SCRIPT_ABSOLUTE_SYMBOLS}' ]; then '${CMAKE_OBJCOPY}' --localize-symbols='${REAL_BATTLE_SCRIPT_ABSOLUTE_SYMBOLS}' '${REAL_BATTLE_SCRIPT_OBJECT}'; fi"
         DEPENDS
             "${REAL_BATTLE_SCRIPT_INPUT}"
             "${PORT_ROOT}/tools/normalize_battle_asm.py"
