@@ -140,16 +140,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          NDK_NM="$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
-          PROBE="$(find android/app -type f -name 'libpokeemerald_real_battle_probe.a' -path '*arm64-v8a*' | head -n 1)"
-          if [ -z "$PROBE" ]; then
-            echo "Real battle probe archive was not built." >&2
+          # CMake computes this from the combined relocatable object containing
+          # both the real Emerald battle C engine and both full battle-script
+          # objects. Do not overwrite it with the older C-only archive report.
+          if [ ! -f android/real-battle-unresolved.txt ]; then
+            echo "Combined real battle dependency report was not generated." >&2
             exit 1
           fi
-          echo "Real battle probe: $PROBE"
-          "$NDK_NM" --defined-only "$PROBE" | awk 'NF {print $NF}' | sort -u > android/real-battle-defined.txt
-          "$NDK_NM" -u "$PROBE" | sed -E '/:$/d; s/^[[:space:]]*U[[:space:]]+//' | sort -u > android/real-battle-referenced.txt
-          comm -23 android/real-battle-referenced.txt android/real-battle-defined.txt | tee android/real-battle-unresolved.txt
+          echo "Combined Emerald battle engine + scripts unresolved symbols:"
+          cat android/real-battle-unresolved.txt
 
       - name: Upload real battle probe diagnostics
         uses: actions/upload-artifact@v4
