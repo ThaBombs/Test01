@@ -25,6 +25,10 @@ INCLUDE_RE = re.compile(r'^\s*\.include\s+"([^"]+)"\s*(?:@.*)?$')
 GLOBAL_LABEL_RE = re.compile(
     r'^(?P<indent>\s*)(?P<label>[A-Za-z_.$][A-Za-z0-9_.$]*)::(?P<rest>.*)$'
 )
+TRAILING_MACRO_COMMA_RE = re.compile(
+    r'^(?P<body>\\s*[A-Za-z_.$][A-Za-z0-9_.$]*\\s+[^,]+),\\s*$'
+)
+
 
 
 def strip_arm_comment(line: str) -> str:
