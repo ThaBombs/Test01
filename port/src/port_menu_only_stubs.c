@@ -30,14 +30,6 @@ void TrySpawnAndShowNamebox(const u8 *speaker, u32 tileNum)
 }
 
 
-void SetPokemonCryStereo(u32 val)
-{
-    // Audio output is not connected yet. Keep the real Emerald option menu
-    // functional and preserve the selected preference in gSaveBlock2.
-    (void)val;
-}
-
-
 u32 GetGlyphWidth_Braille(u16 glyphId, bool32 isJapanese)
 {
     // Emerald's Braille font is fixed-width at 16 pixels.
