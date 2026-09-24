@@ -12,12 +12,6 @@
 // (save/event flags, m4a audio, Braille, and overworld dialogue nameboxes)
 // are linked back in as their Android ports come online.
 
-bool8 FlagGet(u16 id)
-{
-    (void)id;
-    return FALSE;
-}
-
 u16 FontFunc_Braille(struct TextPrinter *textPrinter)
 {
     (void)textPrinter;
