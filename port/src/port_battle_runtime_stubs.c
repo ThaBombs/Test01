@@ -37,6 +37,7 @@
 #include "safari_zone.h"
 #include "save.h"
 #include "sound.h"
+#include "string_util.h"
 #include "trainer_hill.h"
 #include "trainer_tower.h"
 #include "constants/moves.h"
@@ -583,13 +584,13 @@ void CopyFrontierTrainerText(u8 whichText, u16 trainerId)
 
 enum TrainerClassID GetFrontierBrainTrainerClass(void)
 {
-    return TRAINER_CLASS_NONE;
+    return TRAINER_CLASS_PKMN_TRAINER_1;
 }
 
 enum TrainerClassID GetFrontierOpponentClass(u16 trainerId)
 {
     (void)trainerId;
-    return TRAINER_CLASS_NONE;
+    return TRAINER_CLASS_PKMN_TRAINER_1;
 }
 
 void GetTrainerTowerOpponentWinText(u8 *dest, u8 opponentIdx)
@@ -614,7 +615,7 @@ void GetTrainerTowerOpponentName(u8 *text)
 
 u8 GetTrainerTowerOpponentClass(void)
 {
-    return TRAINER_CLASS_NONE;
+    return TRAINER_CLASS_PKMN_TRAINER_1;
 }
 
 void CopyTrainerHillTrainerText(u8 which, u16 trainerId)
@@ -634,12 +635,12 @@ void GetTrainerHillTrainerName(u8 *dst, u16 trainerId)
 enum TrainerClassID GetTrainerHillOpponentClass(u16 trainerId)
 {
     (void)trainerId;
-    return TRAINER_CLASS_NONE;
+    return TRAINER_CLASS_PKMN_TRAINER_1;
 }
 
 u8 GetEreaderTrainerClassId(void)
 {
-    return TRAINER_CLASS_NONE;
+    return TRAINER_CLASS_PKMN_TRAINER_1;
 }
 
 void GetEreaderTrainerName(u8 *dst)
