@@ -36,8 +36,7 @@ UPPERCASE_CALL_RE = re.compile(r'^(?P<indent>\s*)Call(?P<rest>\s+.*)$')
 SET_SYMBOL_RE = re.compile(
     r'^(?P<indent>\s*)\.set\s+(?P<symbol>[A-Za-z_.$][A-Za-z0-9_.$]*)\s*,'
 )
-ENUM_EQUIV_RE = re.compile(
-    r'^(?P<indent>\s*)\.global\s+(?P<symbol>[A-Za-z_.$][A-Za-z0-9_.$]*)\s*;'
+SAFARI_REACTION_IDS = {\n    \"B_MSG_MON_WATCHING\": \"0\",\n    \"B_MSG_MON_ANGRY\": \"1\",\n    \"B_MSG_MON_EATING\": \"2\",\n}\n\nENUM_EQUIV_RE = re.compile(\n    r'^(?P<indent>\s*)\.global\s+(?P<symbol>[A-Za-z_.$][A-Za-z0-9_.$]*)\s*;'
     r'\s*\.equiv\s+(?P=symbol)\s*,(?P<value>.*)$'
 )
 
@@ -96,8 +95,7 @@ def expand_file(path: Path, repo_root: Path, stack: tuple[Path, ...]) -> list[st
                 f"call{uppercase_call.group('rest')}"
             )
 
-        # Tera Starstorm uses ANIM_BATTLER in createsprite. That macro only
-        # needs attacker-vs-target here, and its sprite callback anchors to the
+        # Safari reaction IDs are a local enum (0, 1, 2). The animation\n        # source uses their C names without importing the enum into assembler,\n        # so resolve them here as immediate bytecode arguments rather than\n        # leaving them as undefined linker symbols.\n        for symbol, value in SAFARI_REACTION_IDS.items():\n            line = re.sub(rf'\\b{symbol}\\b', value, line)\n\n        # Tera Starstorm uses ANIM_BATTLER in createsprite. That macro only\n        # needs attacker-vs-target here, and its sprite callback anchors to the
         # attacker, so normalize this placeholder to ANIM_ATTACKER.
         line = re.sub(r'\bANIM_BATTLER\b', 'ANIM_ATTACKER', line)
 
