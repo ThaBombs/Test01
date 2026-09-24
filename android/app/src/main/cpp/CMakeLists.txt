@@ -445,6 +445,9 @@ add_custom_target(
 # the repository preprocessor exactly like the sources that ship in the APK.
 set(REAL_BATTLE_PROBE_SOURCE_NAMES
     data
+    math_util
+    money
+    line_break
     item_icon
     pokemon_spots
     battle_main
