@@ -17,6 +17,9 @@
 #include "constants/trainers.h"
 #include "constants/species.h"
 #include "constants/config_changes.h"
+#ifdef PLATFORM_ANDROID
+	.set PLATFORM_ANDROID_ASM, 1
+#endif
 	.include "asm/macros.inc"
 	.include "asm/macros/battle_script.inc"
 	.include "constants/constants.inc"
