@@ -70,6 +70,15 @@ def expand_file(path: Path, repo_root: Path, stack: tuple[Path, ...]) -> list[st
             continue
 
         line = strip_arm_comment(raw)
+
+        # GNU as accepts a trailing comma on a one-argument macro invocation
+        # (the upstream scripts contain `clearstatus BS_SCRIPTING,`). LLVM's
+        # integrated assembler rejects it as an empty second argument. Normalize
+        # that syntax here without changing the Emerald battle-script source.
+        trailing_macro_comma = TRAILING_MACRO_COMMA_RE.match(line)
+        if trailing_macro_comma:
+            line = trailing_macro_comma.group("body")
+
         label_match = GLOBAL_LABEL_RE.match(line)
         if label_match:
             indent = label_match.group("indent")
