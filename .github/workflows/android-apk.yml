@@ -151,6 +151,27 @@ jobs:
         if: steps.build_apk.outputs.status != '0'
         run: exit 1
 
+      - name: Report real battle probe dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          NDK_NM="$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
+          PROBE="$(find android/app -type f -name 'libpokeemerald_real_battle_probe.a' -path '*arm64-v8a*' | head -n 1)"
+          if [ -z "$PROBE" ]; then
+            echo "Real battle probe archive was not built." >&2
+            exit 1
+          fi
+          echo "Real battle probe: $PROBE"
+          "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u | tee android/real-battle-unresolved.txt
+
+      - name: Upload real battle probe diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-battle-probe-${{ github.sha }}
+          path: android/real-battle-unresolved.txt
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Report engine probe dependencies
         shell: bash
         run: |
