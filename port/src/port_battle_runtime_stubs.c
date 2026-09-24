@@ -29,12 +29,16 @@
 #include "battle_dynamax.h"
 #include "battle_z_move.h"
 #include "debug.h"
+#include "battle_debug.h"
+#include "easy_chat.h"
 #include "event_data.h"
 #include "event_object_movement.h"
 #include "follower_npc.h"
 #include "link.h"
 #include "link_rfu.h"
 #include "party_menu.h"
+#include "player_pc.h"
+#include "pokemon_jump.h"
 #include "safari_zone.h"
 #include "save.h"
 #include "sound.h"
@@ -770,6 +774,103 @@ void MoveCoords(enum Direction direction, s16 *x, s16 *y)
         (*x)++;
         break;
     }
+}
+
+
+/* Exact/lightweight shared helpers used by ordinary battle calculations. */
+u16 GetNationalPokedexCount(u8 caseID)
+{
+    u16 count = 0;
+
+    for (u16 i = 0; i < NATIONAL_DEX_COUNT; i++)
+    {
+        switch (caseID)
+        {
+        case FLAG_GET_SEEN:
+            if (GetSetPokedexFlag(i + 1, FLAG_GET_SEEN))
+                count++;
+            break;
+        case FLAG_GET_CAUGHT:
+            if (GetSetPokedexFlag(i + 1, FLAG_GET_CAUGHT))
+                count++;
+            break;
+        }
+    }
+
+    return count;
+}
+
+enum MapType GetCurrentMapType(void)
+{
+    return gMapHeader.mapType;
+}
+
+u8 gDisableMapMusicChangeOnMapLoad = 0;
+
+/* Dormant side-mode/UI adapters not entered by the first Android battle. */
+const u8 SecretBase_Text_Trainer0Defeated[] = {EOS};
+const u8 SecretBase_Text_Trainer1Defeated[] = {EOS};
+const u8 SecretBase_Text_Trainer2Defeated[] = {EOS};
+const u8 SecretBase_Text_Trainer3Defeated[] = {EOS};
+const u8 SecretBase_Text_Trainer4Defeated[] = {EOS};
+const u8 SecretBase_Text_Trainer5Defeated[] = {EOS};
+const u8 SecretBase_Text_Trainer6Defeated[] = {EOS};
+const u8 SecretBase_Text_Trainer7Defeated[] = {EOS};
+const u8 SecretBase_Text_Trainer8Defeated[] = {EOS};
+const u8 SecretBase_Text_Trainer9Defeated[] = {EOS};
+
+enum TrainerPicID GetFrontierBrainTrainerPicIndex(void)
+{
+    return TRAINER_PIC_BRENDAN;
+}
+
+u8 GetTrainerTowerTrainerFrontSpriteId(void)
+{
+    return TRAINER_PIC_BRENDAN;
+}
+
+u8 GetTrainerHillTrainerFrontSpriteId(u16 trainerId)
+{
+    (void)trainerId;
+    return TRAINER_PIC_BRENDAN;
+}
+
+u8 GetEreaderTrainerFrontSpriteId(void)
+{
+    return TRAINER_PIC_BRENDAN;
+}
+
+bool32 IsSpeciesAllowedInPokemonJump(enum Species species)
+{
+    (void)species;
+    return FALSE;
+}
+
+u8 GetContestEntryEligibility(struct Pokemon *pkmn)
+{
+    (void)pkmn;
+    return 0;
+}
+
+void CB2_BattleDebugMenu(void)
+{
+    SetMainCallback2(BattleMainCB2);
+}
+
+void CB2_ChooseBall(void)
+{
+    SetMainCallback2(BattleMainCB2);
+}
+
+struct PlayerPCItemPageStruct gPlayerPCItemPageInfo = {0};
+
+void DoEasyChatScreen(u8 type, u16 *words, MainCallback exitCallback, u8 displayedPersonType)
+{
+    (void)type;
+    (void)words;
+    (void)displayedPersonType;
+    if (exitCallback != NULL)
+        SetMainCallback2(exitCallback);
 }
 
 /*
