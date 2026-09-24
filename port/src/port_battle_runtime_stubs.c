@@ -2,12 +2,17 @@
 #include "constants/characters.h"
 
 #include "battle.h"
+#include "battle_factory.h"
+#include "battle_main.h"
 #include "data.h"
 #include "evolution_scene.h"
 #include "frontier_util.h"
 #include "overworld.h"
 #include "pokedex.h"
 #include "pokemon_storage_system.h"
+#include "pokemon_summary_screen.h"
+#include "naming_screen.h"
+#include "load_save.h"
 #include "rtc.h"
 #include "trainer.h"
 #include "constants/pokedex.h"
@@ -24,6 +29,7 @@
 #include "battle_z_move.h"
 #include "debug.h"
 #include "event_data.h"
+#include "event_object_movement.h"
 #include "follower_npc.h"
 #include "link.h"
 #include "link_rfu.h"
@@ -35,6 +41,8 @@
 #include "trainer_tower.h"
 #include "constants/moves.h"
 #include "constants/battle_pyramid.h"
+#include "constants/map_types.h"
+#include "constants/trainers.h"
 
 // Android battle-runtime compatibility shims.
 //
@@ -432,6 +440,212 @@ bool8 ItemIsMail(enum Item itemId)
 bool8 IsSpeciesNotUnown(enum Species species)
 {
     return species != SPECIES_UNOWN;
+}
+
+
+/*
+ * Remaining non-core battle support for the Android milestone.
+ *
+ * Shared arithmetic, money and line-breaking helpers are linked from Emerald
+ * directly. The definitions below are only for surrounding modes/UIs that the
+ * first Android battle cannot enter yet: Frontier variants, e-Reader, contest,
+ * follower battles, caught-mon naming/storage UI and overworld follower
+ * metadata carried by gSpeciesInfo.
+ */
+
+EWRAM_DATA u64 gDebugAIFlags = 0;
+
+const struct OamData gObjectEventBaseOam_32x32 = {0};
+const struct OamData gObjectEventBaseOam_64x64 = {0};
+const struct SubspriteTable sOamTables_32x32[] = {{0}};
+const struct SubspriteTable sOamTables_64x64[] = {{0}};
+const union AnimCmd *const sAnimTable_Following[] = {NULL};
+const union AnimCmd *const sAnimTable_Following_Asym[] = {NULL};
+
+const struct CompressedSpriteSheet gSpriteSheet_CategoryIcons = {0};
+const struct SpritePalette gSpritePal_CategoryIcons = {0};
+
+enum MapBattleScene GetCurrentMapBattleScene(void)
+{
+    return MAP_BATTLE_SCENE_NORMAL;
+}
+
+bool32 IsNPCFollowerWildBattle(void)
+{
+    return FALSE;
+}
+
+void LoadContestBgAfterMoveAnim(void)
+{
+}
+
+u64 GetAiScriptsInBattleFactory(void)
+{
+    return 0;
+}
+
+u16 GetBattlePyramidPickupItemId(void)
+{
+    return ITEM_NONE;
+}
+
+void IncrementGameStat(u8 statId)
+{
+    (void)statId;
+}
+
+bool32 CanThrowBall(void)
+{
+    return (gBattleTypeFlags & BATTLE_TYPE_TRAINER) == 0;
+}
+
+void CreateBattlerSprite(enum BattlerId battler)
+{
+    (void)battler;
+}
+
+u8 GetMoveSlotToReplace(void)
+{
+    return MAX_MON_MOVES;
+}
+
+void ShowSelectMovePokemonSummaryScreen(struct Pokemon *mons, u8 monIndex, void (*callback)(void), u16 newMove)
+{
+    (void)mons;
+    (void)monIndex;
+    (void)newMove;
+    if (callback != NULL)
+        SetMainCallback2(callback);
+}
+
+void ReshowBattleScreenAfterMenu(void)
+{
+    SetMainCallback2(BattleMainCB2);
+}
+
+void ReshowBlankBattleScreenAfterMenu(void)
+{
+    SetMainCallback2(BattleMainCB2);
+}
+
+void SavePlayerParty(void)
+{
+}
+
+void LoadPlayerParty(void)
+{
+}
+
+static u8 sAndroidBoxName[] = {EOS};
+
+u8 *GetBoxNamePtr(u8 boxId)
+{
+    (void)boxId;
+    return sAndroidBoxName;
+}
+
+bool32 ShouldShowBoxWasFullMessage(void)
+{
+    return FALSE;
+}
+
+u8 DisplayCaughtMonDexPage(enum Species species, bool32 isShiny, u32 personality)
+{
+    (void)species;
+    (void)isShiny;
+    (void)personality;
+    return 0;
+}
+
+void DoNamingScreen(u8 templateNum, u8 *destBuffer, u16 monSpeciesOrPlayerGender, u16 monGender, u32 monPersonality, MainCallback returnCallback)
+{
+    (void)templateNum;
+    (void)destBuffer;
+    (void)monSpeciesOrPlayerGender;
+    (void)monGender;
+    (void)monPersonality;
+    if (returnCallback != NULL)
+        SetMainCallback2(returnCallback);
+}
+
+void CopyFrontierBrainTrainerName(u8 *dst)
+{
+    if (dst != NULL)
+        dst[0] = EOS;
+}
+
+void CopyFrontierTrainerText(u8 whichText, u16 trainerId)
+{
+    (void)whichText;
+    (void)trainerId;
+    gStringVar4[0] = EOS;
+}
+
+enum TrainerClassID GetFrontierBrainTrainerClass(void)
+{
+    return TRAINER_CLASS_NONE;
+}
+
+enum TrainerClassID GetFrontierOpponentClass(u16 trainerId)
+{
+    (void)trainerId;
+    return TRAINER_CLASS_NONE;
+}
+
+void GetTrainerTowerOpponentWinText(u8 *dest, u8 opponentIdx)
+{
+    (void)opponentIdx;
+    if (dest != NULL)
+        dest[0] = EOS;
+}
+
+void GetTrainerTowerOpponentLoseText(u8 *dest, u8 opponentIdx)
+{
+    (void)opponentIdx;
+    if (dest != NULL)
+        dest[0] = EOS;
+}
+
+void GetTrainerTowerOpponentName(u8 *text)
+{
+    if (text != NULL)
+        text[0] = EOS;
+}
+
+u8 GetTrainerTowerOpponentClass(void)
+{
+    return TRAINER_CLASS_NONE;
+}
+
+void CopyTrainerHillTrainerText(u8 which, u16 trainerId)
+{
+    (void)which;
+    (void)trainerId;
+    gStringVar4[0] = EOS;
+}
+
+void GetTrainerHillTrainerName(u8 *dst, u16 trainerId)
+{
+    (void)trainerId;
+    if (dst != NULL)
+        dst[0] = EOS;
+}
+
+enum TrainerClassID GetTrainerHillOpponentClass(u16 trainerId)
+{
+    (void)trainerId;
+    return TRAINER_CLASS_NONE;
+}
+
+u8 GetEreaderTrainerClassId(void)
+{
+    return TRAINER_CLASS_NONE;
+}
+
+void GetEreaderTrainerName(u8 *dst)
+{
+    if (dst != NULL)
+        dst[0] = EOS;
 }
 
 /*
