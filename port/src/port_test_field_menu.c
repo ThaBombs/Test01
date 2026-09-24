@@ -37,9 +37,7 @@ enum
     PORT_STARTER_MENU_COUNT,
 };
 
-// menu.c expects this common Emerald cursor string from strings.c. Pulling the
-// entire strings translation unit would retain a large unrelated data set.
-const u8 gText_SelectorArrow3[] = _("▶");
+// Common Emerald UI strings now come from the real strings.c translation unit.
 
 static const u8 sTextOption[] = _("OPTION");
 static const u8 sTextClose[] = _("CLOSE");
