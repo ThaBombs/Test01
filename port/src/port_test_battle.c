@@ -275,6 +275,11 @@ static const u8 sTextEnemyTackle[] = _("Wild ZIGZAGOON used TACKLE!");
 static const u8 sTextEnemyFainted[] = _("Wild ZIGZAGOON fainted!");
 static const u8 sTextBattleWon[] = _("You won the battle!");
 static const u8 sTextBattleLost[] = _("Your POKéMON fainted!");
+static const u8 sTextFirstBattleWon[] =
+    _("PROF. BIRCH: Whew...\nYou saved me. Thanks a lot!\p"
+      "Come by my POKéMON LAB later, okay?");
+static const u8 sTextFirstBattleLost[] =
+    _("PROF. BIRCH: Try again!\nUse the POKéMON in my BAG!");
 static const u8 sTextBlocked[] = _("That option isn't available\nin this first battle.");
 static const u8 sTextDefenseFell[] = _("Wild ZIGZAGOON's DEFENSE fell!");
 static const u8 sTextAttackFell[] = _("Wild ZIGZAGOON's ATTACK fell!");
@@ -835,4 +840,9 @@ bool32 PortTestBattle_TryStartPending(void)
 bool32 PortTestBattle_IsPending(void)
 {
     return sBattlePending;
+}
+
+const u8 *PortTestBattle_GetResultText(bool32 won)
+{
+    return won ? sTextFirstBattleWon : sTextFirstBattleLost;
 }
