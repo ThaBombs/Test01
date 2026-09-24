@@ -149,7 +149,17 @@ jobs:
             build/emerald/src/trainer_slide.o \
             build/emerald/src/trainer.o \
             build/emerald/src/trainer_pools.o \
-            build/emerald/src/battle_partner.o
+            build/emerald/src/battle_partner.o \
+            build/emerald/src/event_data.o \
+            build/emerald/src/difficulty.o \
+            build/emerald/src/data.o \
+            build/emerald/src/ow_abilities.o \
+            build/emerald/src/safari_zone.o \
+            build/emerald/src/pokeblock.o \
+            build/emerald/src/battle_pyramid.o \
+            build/emerald/src/battle_pyramid_bag.o \
+            build/emerald/src/item_use.o \
+            build/emerald/src/item_menu.o
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
