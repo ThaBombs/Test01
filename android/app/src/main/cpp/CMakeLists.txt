@@ -385,6 +385,8 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     move
     item
     script_pokemon_util
+    starter_choose
+    wild_encounter
 )
 
 set(REAL_BATTLE_ANDROID_SOURCES)
