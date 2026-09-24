@@ -6,5 +6,6 @@
 void PortTestBattle_RequestFirstBattle(void);
 bool32 PortTestBattle_TryStartPending(void);
 bool32 PortTestBattle_IsPending(void);
+const u8 *PortTestBattle_GetResultText(bool32 won);
 
 #endif
