@@ -24,6 +24,7 @@
 #include "item_menu.h"
 #include "item_use.h"
 #include "mail.h"
+#include "menu_helpers.h"
 #include "pokeblock.h"
 #include "battle_dynamax.h"
 #include "battle_z_move.h"
@@ -40,6 +41,7 @@
 #include "string_util.h"
 #include "trainer_hill.h"
 #include "trainer_tower.h"
+#include "tv.h"
 #include "constants/moves.h"
 #include "constants/battle_pyramid.h"
 #include "constants/map_types.h"
@@ -647,6 +649,127 @@ void GetEreaderTrainerName(u8 *dst)
 {
     if (dst != NULL)
         dst[0] = EOS;
+}
+
+
+/*
+ * Peripheral menu/link adapters still referenced by the full battle source
+ * graph. Ordinary Android single-player battles do not enter these modes yet.
+ */
+EWRAM_DATA u8 gLastViewedMonIndex = 0;
+
+const u8 gText_PkmnTransferredSomeonesPC[] = {EOS};
+const u8 gText_PkmnTransferredLanettesPC[] = {EOS};
+const u8 gText_PkmnTransferredSomeonesPCBoxFull[] = {EOS};
+const u8 gText_PkmnTransferredLanettesPCBoxFull[] = {EOS};
+const u8 gText_PkmnSentToPCAfterCatch[] = {EOS};
+
+u8 GetFrontierTrainerFrontSpriteId(u16 trainerId)
+{
+    (void)trainerId;
+    return TRAINER_PIC_BRENDAN;
+}
+
+u8 GetLRKeysPressedAndHeld(void)
+{
+    return 0;
+}
+
+bool8 MenuHelpers_IsLinkActive(void)
+{
+    return FALSE;
+}
+
+bool8 MenuHelpers_ShouldWaitForLinkRecv(void)
+{
+    return FALSE;
+}
+
+bool16 RunTextPrintersRetIsActive(u8 textPrinterId)
+{
+    (void)textPrinterId;
+    return FALSE;
+}
+
+void ReshowBattleScreenDummy(void)
+{
+}
+
+void CB2_BagMenuFromBattle(void)
+{
+    SetMainCallback2(BattleMainCB2);
+}
+
+void GoToBagMenu(u8 location, u8 pocket, MainCallback exitCallback)
+{
+    (void)location;
+    (void)pocket;
+    SetMainCallback2(exitCallback != NULL ? exitCallback : BattleMainCB2);
+}
+
+void DoWallyTutorialBagMenu(void)
+{
+    SetMainCallback2(BattleMainCB2);
+}
+
+void InitOldManBag(void)
+{
+}
+
+void GoToBattlePyramidBagMenu(u8 location, MainCallback exitCallback)
+{
+    (void)location;
+    SetMainCallback2(exitCallback != NULL ? exitCallback : BattleMainCB2);
+}
+
+void OpenPokeblockCaseInBattle(void)
+{
+    SetMainCallback2(BattleMainCB2);
+}
+
+void Task_TryUseSoftboiledOnPartyMon(u8 taskId)
+{
+    (void)taskId;
+}
+
+void PutBattleUpdateOnTheAir(u8 opponentLinkPlayerId, enum Move move, enum Species speciesPlayer, enum Species speciesOpponent)
+{
+    (void)opponentLinkPlayerId;
+    (void)move;
+    (void)speciesPlayer;
+    (void)speciesOpponent;
+}
+
+void TryPutBattleSeminarOnAir(enum Species foeSpecies, enum Species species, u8 moveIndex, const u16 *movePtr, enum Move betterMove)
+{
+    (void)foeSpecies;
+    (void)species;
+    (void)moveIndex;
+    (void)movePtr;
+    (void)betterMove;
+}
+
+void CB2_ReturnToField(void)
+{
+}
+
+void MoveCoords(enum Direction direction, s16 *x, s16 *y)
+{
+    switch (direction)
+    {
+    case DIR_SOUTH:
+        (*y)++;
+        break;
+    case DIR_NORTH:
+        (*y)--;
+        break;
+    case DIR_WEST:
+        (*x)--;
+        break;
+    case DIR_EAST:
+        (*x)++;
+        break;
+    }
 }
 
 /*
