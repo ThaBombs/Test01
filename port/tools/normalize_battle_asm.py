@@ -131,7 +131,15 @@ def main() -> None:
 
     lines = expand_file(source, repo_root, ())
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    # Both battle-script and battle-animation bytecode contain absolute
+    # pointers. The Android runtime is 64-bit, so expose an assembler symbol
+    # consumed by bscript_ptr/animscript_ptr before LLVM expands the macros.
+    prefix = [
+        ".set PLATFORM_ANDROID_PTR64, 1",
+        "",
+    ]
+    output.write_text("\n".join(prefix + lines) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
