@@ -70,7 +70,12 @@ def strip_arm_comment(line: str) -> str:
     return line.rstrip("\n")
 
 
-def expand_file(\n    path: Path,\n    repo_root: Path,\n    stack: tuple[Path, ...],\n    normalize_safari_reactions: bool,\n) -> list[str]:
+def expand_file(
+    path: Path,
+    repo_root: Path,
+    stack: tuple[Path, ...],
+    normalize_safari_reactions: bool,
+) -> list[str]:
     path = path.resolve()
     if path in stack:
         chain = " -> ".join(str(p) for p in (*stack, path))
@@ -87,7 +92,14 @@ def expand_file(\n    path: Path,\n    repo_root: Path,\n    stack: tuple[Path, 
                 raise FileNotFoundError(
                     f"{path}: assembler include not found: {include_match.group(1)}"
                 )
-            out.extend(\n                expand_file(\n                    include_path,\n                    repo_root,\n                    (*stack, path),\n                    normalize_safari_reactions,\n                )\n            )
+            out.extend(
+                expand_file(
+                    include_path,
+                    repo_root,
+                    (*stack, path),
+                    normalize_safari_reactions,
+                )
+            )
             continue
 
         line = strip_arm_comment(raw)
@@ -101,9 +113,7 @@ def expand_file(\n    path: Path,\n    repo_root: Path,\n    stack: tuple[Path, 
 
         # battle_anim_scripts.s uses Safari-reaction enum names as animation
         # bytecode operands without importing their C enum definitions. Resolve
-        # those operands only for the animation-script translation unit. Doing
-        # this to the regular battle scripts would also rewrite the enum
-        # definitions themselves (for example ".global NAME" -> ".global 0").
+        # those operands only for that translation unit.
         if normalize_safari_reactions:
             for symbol, value in SAFARI_REACTION_IDS.items():
                 line = re.sub(rf'\b{symbol}\b', value, line)
