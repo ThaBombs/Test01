@@ -1,6 +1,7 @@
 #include "port_test_field_menu.h"
 #include "port_test_overworld.h"
 #include "port_test_dialogue.h"
+#include "port_test_battle.h"
 
 #include "global.h"
 #include "bg.h"
@@ -204,7 +205,10 @@ bool32 PortTestFieldMenu_OpenStarterChoice(void)
 
     const u8 chosenStarter = PortGame_GetChosenStarter();
     if (chosenStarter < PORT_STARTER_MENU_COUNT)
+    {
+        PortTestBattle_RequestFirstBattle();
         return PortTestDialogue_Open(sStarterReadyText[chosenStarter]);
+    }
 
     sStarterSelection = PORT_STARTER_MENU_TREECKO;
     sStarterOpen = TRUE;
@@ -297,6 +301,7 @@ bool32 PortTestFieldMenu_Update(void)
             const u8 chosenStarter = sStarterSelection;
             CloseStarterChoice();
             PortGame_SetChosenStarter(chosenStarter);
+            PortTestBattle_RequestFirstBattle();
             PortTestDialogue_Open(sStarterChosenText[chosenStarter]);
             return TRUE;
         }
