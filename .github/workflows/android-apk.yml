@@ -90,7 +90,7 @@ jobs:
           set -euo pipefail
           make -j2 generated
 
-      - name: Prepare Android shared-engine assets
+      - name: Prepare Android menu compatibility assets
         shell: bash
         run: |
           set -euo pipefail
@@ -100,25 +100,7 @@ jobs:
             build/emerald/src/text.o \
             build/emerald/src/menu.o \
             build/emerald/src/fonts.o \
-            build/emerald/src/text_window.o \
-            build/emerald/src/battle_main.o \
-            build/emerald/src/battle_setup.o \
-            build/emerald/src/battle_controllers.o \
-            build/emerald/src/battle_controller_player.o \
-            build/emerald/src/battle_controller_opponent.o \
-            build/emerald/src/battle_message.o \
-            build/emerald/src/battle_util.o \
-            build/emerald/src/battle_util2.o \
-            build/emerald/src/battle_end_turn.o \
-            build/emerald/src/battle_move_resolution.o \
-            build/emerald/src/battle_stat_change.o \
-            build/emerald/src/battle_switch_in.o \
-            build/emerald/src/battle_gimmick.o \
-            build/emerald/src/battle_hold_effects.o \
-            build/emerald/src/pokemon.o \
-            build/emerald/src/move.o \
-            build/emerald/src/item.o \
-            build/emerald/src/script_pokemon_util.o
+            build/emerald/src/text_window.o
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
