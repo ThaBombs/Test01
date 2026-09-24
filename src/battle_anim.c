@@ -96,6 +96,22 @@ static void Task_LoopAndPlaySE(u8 taskId);
 static void Task_WaitAndPlaySE(u8 taskId);
 static void LoadDefaultBg(void);
 
+#ifdef PLATFORM_ANDROID
+#define ANIM_SCRIPT_PTR_SIZE sizeof(uintptr_t)
+static uintptr_t ReadAnimScriptPtr(const u8 *ptr)
+{
+    uintptr_t value;
+    memcpy(&value, ptr, sizeof(value));
+    return value;
+}
+#else
+#define ANIM_SCRIPT_PTR_SIZE 4
+static uintptr_t ReadAnimScriptPtr(const u8 *ptr)
+{
+    return T2_READ_32(ptr);
+}
+#endif
+
 EWRAM_DATA static const u8 *sBattleAnimScriptPtr = NULL;
 EWRAM_DATA static const u8 *sBattleAnimScriptRetAddr[MAX_ANIM_CALL_DEPTH] = {0};
 EWRAM_DATA static u8 sBattleAnimScriptCallDepth = 0;
@@ -781,8 +797,8 @@ static void Cmd_createsprite(void)
     s16 subpriority;
 
     sBattleAnimScriptPtr++;
-    template = (const struct SpriteTemplate *)(T2_READ_32(sBattleAnimScriptPtr));
-    sBattleAnimScriptPtr += 4;
+    template = (const struct SpriteTemplate *)ReadAnimScriptPtr(sBattleAnimScriptPtr);
+    sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
 
     argVar = sBattleAnimScriptPtr[0];
     sBattleAnimScriptPtr++;
@@ -858,8 +874,8 @@ static void Cmd_createspriteontargets_onpos(void)
     u8 battlerArgIndex;
 
     sBattleAnimScriptPtr++;
-    template = (const struct SpriteTemplate *)(T2_READ_32(sBattleAnimScriptPtr));
-    sBattleAnimScriptPtr += 4;
+    template = (const struct SpriteTemplate *)ReadAnimScriptPtr(sBattleAnimScriptPtr);
+    sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
 
     argVar = sBattleAnimScriptPtr[0];
     sBattleAnimScriptPtr++;
@@ -888,8 +904,8 @@ static void Cmd_createspriteontargets(void)
     u8 battlerArgIndex;
 
     sBattleAnimScriptPtr++;
-    template = (const struct SpriteTemplate *)(T2_READ_32(sBattleAnimScriptPtr));
-    sBattleAnimScriptPtr += 4;
+    template = (const struct SpriteTemplate *)ReadAnimScriptPtr(sBattleAnimScriptPtr);
+    sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
 
     argVar = sBattleAnimScriptPtr[0];
     sBattleAnimScriptPtr++;
@@ -919,8 +935,8 @@ static void Cmd_createvisualtask(void)
 
     sBattleAnimScriptPtr++;
 
-    taskFunc = (TaskFunc)T2_READ_32(sBattleAnimScriptPtr);
-    sBattleAnimScriptPtr += 4;
+    taskFunc = (TaskFunc)ReadAnimScriptPtr(sBattleAnimScriptPtr);
+    sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
 
     taskPriority = sBattleAnimScriptPtr[0];
     sBattleAnimScriptPtr++;
@@ -951,8 +967,8 @@ static void Cmd_createvisualtaskontargets(void)
 
     sBattleAnimScriptPtr++;
 
-    taskFunc = (TaskFunc)T2_READ_32(sBattleAnimScriptPtr);
-    sBattleAnimScriptPtr += 4;
+    taskFunc = (TaskFunc)ReadAnimScriptPtr(sBattleAnimScriptPtr);
+    sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
 
     taskPriority = sBattleAnimScriptPtr[0];
     sBattleAnimScriptPtr++;
@@ -1621,8 +1637,8 @@ static void Cmd_call(void)
 {
     assertf(sBattleAnimScriptCallDepth + 1 < MAX_ANIM_CALL_DEPTH, "Max animation call depth exceeded");
     sBattleAnimScriptPtr++;
-    sBattleAnimScriptRetAddr[sBattleAnimScriptCallDepth++] = sBattleAnimScriptPtr + 4;
-    sBattleAnimScriptPtr = T2_READ_PTR(sBattleAnimScriptPtr);
+    sBattleAnimScriptRetAddr[sBattleAnimScriptCallDepth++] = sBattleAnimScriptPtr + ANIM_SCRIPT_PTR_SIZE;
+    sBattleAnimScriptPtr = (const u8 *)ReadAnimScriptPtr(sBattleAnimScriptPtr);
 }
 
 static void Cmd_return(void)
@@ -1655,8 +1671,8 @@ static void Cmd_choosetwoturnanim(void)
 {
     sBattleAnimScriptPtr++;
     if (gAnimMoveTurn & 1)
-        sBattleAnimScriptPtr += 4;
-    sBattleAnimScriptPtr = T2_READ_PTR(sBattleAnimScriptPtr);
+        sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
+    sBattleAnimScriptPtr = (const u8 *)ReadAnimScriptPtr(sBattleAnimScriptPtr);
 }
 
 static void Cmd_jumpifmoveturn(void)
@@ -1667,15 +1683,15 @@ static void Cmd_jumpifmoveturn(void)
     sBattleAnimScriptPtr++;
 
     if (toCheck == gAnimMoveTurn)
-        sBattleAnimScriptPtr = T2_READ_PTR(sBattleAnimScriptPtr);
+        sBattleAnimScriptPtr = (const u8 *)ReadAnimScriptPtr(sBattleAnimScriptPtr);
     else
-        sBattleAnimScriptPtr += 4;
+        sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
 }
 
 static void Cmd_goto(void)
 {
     sBattleAnimScriptPtr++;
-    sBattleAnimScriptPtr = T2_READ_PTR(sBattleAnimScriptPtr);
+    sBattleAnimScriptPtr = (const u8 *)ReadAnimScriptPtr(sBattleAnimScriptPtr);
 }
 
 // Uses of this function that rely on a TRUE return are expecting inBattle to not be ticked as defined in contest behavior.
@@ -2172,7 +2188,7 @@ static void Cmd_waitplaysewithpan(void)
     gTasks[taskId].tFramesToWait = framesToWait;
 
     gAnimSoundTaskCount++;
-    sBattleAnimScriptPtr += 4;
+    sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
 }
 
 static void Task_WaitAndPlaySE(u8 taskId)
@@ -2196,8 +2212,8 @@ static void Cmd_createsoundtask(void)
     s32 i;
 
     sBattleAnimScriptPtr++;
-    func = (TaskFunc)T2_READ_32(sBattleAnimScriptPtr);
-    sBattleAnimScriptPtr += 4;
+    func = (TaskFunc)ReadAnimScriptPtr(sBattleAnimScriptPtr);
+    sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
     numArgs = sBattleAnimScriptPtr[0];
     sBattleAnimScriptPtr++;
     for (i = 0; i < numArgs; i++)
@@ -2248,18 +2264,18 @@ static void Cmd_jumpargeq(void)
     valueToCheck = T1_READ_16(sBattleAnimScriptPtr + 1);
 
     if (valueToCheck == gBattleAnimArgs[argId])
-        sBattleAnimScriptPtr = T2_READ_PTR(sBattleAnimScriptPtr + 3);
+        sBattleAnimScriptPtr = (const u8 *)ReadAnimScriptPtr(sBattleAnimScriptPtr + 3);
     else
-        sBattleAnimScriptPtr += 7;
+        sBattleAnimScriptPtr += 3 + ANIM_SCRIPT_PTR_SIZE;
 }
 
 static void Cmd_jumpifcontest(void)
 {
     sBattleAnimScriptPtr++;
     if (IsContest())
-        sBattleAnimScriptPtr = T2_READ_PTR(sBattleAnimScriptPtr);
+        sBattleAnimScriptPtr = (const u8 *)ReadAnimScriptPtr(sBattleAnimScriptPtr);
     else
-        sBattleAnimScriptPtr += 4;
+        sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
 }
 
 static void Cmd_splitbgprio(void)
@@ -2420,9 +2436,9 @@ static void Cmd_jumpifmovetypeequal(void)
     const enum Type *type = sBattleAnimScriptPtr + 1;
     sBattleAnimScriptPtr += 2;
     if (*type != GetBattleMoveType(gCurrentMove))
-        sBattleAnimScriptPtr += 4;
+        sBattleAnimScriptPtr += ANIM_SCRIPT_PTR_SIZE;
     else
-        sBattleAnimScriptPtr = T2_READ_PTR(sBattleAnimScriptPtr);
+        sBattleAnimScriptPtr = (const u8 *)ReadAnimScriptPtr(sBattleAnimScriptPtr);
 }
 
 static void Cmd_createdragondartsprite(void)
