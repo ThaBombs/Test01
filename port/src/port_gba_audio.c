@@ -15,18 +15,6 @@ struct PokemonCrySong gPokemonCrySongs[MAX_POKEMON_CRIES];
 
 static bool sVSyncEnabled;
 
-void InitMapMusic(void)
-{
-}
-
-void MapMusicMain(void)
-{
-}
-
-void ResetMapMusic(void)
-{
-}
-
 static void ResetAudioState(void)
 {
     memset(&gMPlayInfo_BGM, 0, sizeof(gMPlayInfo_BGM));
