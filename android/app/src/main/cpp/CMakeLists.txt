@@ -536,6 +536,10 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     fishing
     pokemon_animation
     battle_terastal
+    battle_set_effect
+    battle_ai_record
+    battle_z_move
+    battle_dynamax
     ow_abilities
     data
     difficulty
