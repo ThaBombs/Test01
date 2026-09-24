@@ -525,6 +525,17 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     wild_encounter
     malloc
     scanline_effect
+    battle_partner
+    trainer_pools
+    trainer
+    trainer_slide
+    dexnav
+    roamer
+    pokerus
+    field_weather_effect
+    fishing
+    pokemon_animation
+    battle_terastal
 )
 
 set(REAL_BATTLE_ANDROID_SOURCES)
