@@ -57,7 +57,9 @@ static const struct OamData sPortGrassOam =
 {
     .shape = SPRITE_SHAPE(16x16),
     .size = SPRITE_SIZE(16x16),
-    .priority = 1,
+    // Share the player's OBJ priority so the effect remains above the map,
+    // but sort it one subpriority behind Brendan when the sprites overlap.
+    .priority = 2,
 };
 
 static const union AnimCmd sFaceSouth[] =
@@ -232,7 +234,7 @@ static void SpawnTallGrassEffectAt(s16 mapX, s16 mapY)
         &sPortTallGrassTemplate,
         DISPLAY_WIDTH / 2 + (mapX - playerX) * 16,
         DISPLAY_HEIGHT / 2 + (mapY - playerY) * 16 + 16,
-        0);
+        1);
     if (spriteId < MAX_SPRITES)
     {
         gSprites[spriteId].data[0] = mapX;
