@@ -364,30 +364,52 @@ add_custom_command(
 )
 
 # Compile the real shared Emerald battle engine under the Android toolchain.
-# This is intentionally a compile/link-closure probe first: it keeps the
-# existing playable APK intact while we port subsystem dependencies instead
-# of reimplementing moves or abilities in port_test_battle.c.
+# All pokeemerald sources first pass through the repository's normal charmap
+# preprocessor. This preserves _() and COMPOUND_STRING semantics on Android
+# instead of patching battle text source-by-source.
+set(REAL_BATTLE_PROBE_SOURCE_NAMES
+    battle_main
+    battle_setup
+    battle_controllers
+    battle_controller_player
+    battle_controller_opponent
+    battle_message
+    battle_util
+    battle_util2
+    battle_end_turn
+    battle_move_resolution
+    battle_stat_change
+    battle_switch_in
+    battle_gimmick
+    battle_hold_effects
+    pokemon
+    move
+    item
+    script_pokemon_util
+)
+
+set(REAL_BATTLE_ANDROID_SOURCES)
+foreach(REAL_BATTLE_SOURCE_NAME IN LISTS REAL_BATTLE_PROBE_SOURCE_NAMES)
+    set(REAL_BATTLE_INPUT "${REPO_ROOT}/src/${REAL_BATTLE_SOURCE_NAME}.c")
+    set(REAL_BATTLE_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/generated/real_${REAL_BATTLE_SOURCE_NAME}_android.c")
+    add_custom_command(
+        OUTPUT "${REAL_BATTLE_OUTPUT}"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+        COMMAND /bin/bash -o pipefail -c
+            "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -std=gnu17 -iquote'${REPO_ROOT}/include' -iquote'${PORT_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DTESTING=0 '${REAL_BATTLE_INPUT}' | '${REPO_ROOT}/tools/preproc/preproc' -i -g '${REPO_ROOT}/build/assets' '${REAL_BATTLE_INPUT}' '${REPO_ROOT}/charmap.txt' > '${REAL_BATTLE_OUTPUT}'"
+        DEPENDS
+            "${REAL_BATTLE_INPUT}"
+            "${REPO_ROOT}/tools/preproc/preproc"
+            "${REPO_ROOT}/charmap.txt"
+        VERBATIM
+    )
+    list(APPEND REAL_BATTLE_ANDROID_SOURCES "${REAL_BATTLE_OUTPUT}")
+endforeach()
+
 add_library(
     pokeemerald_real_battle_probe
     STATIC
-    "${REPO_ROOT}/src/battle_main.c"
-    "${REPO_ROOT}/src/battle_setup.c"
-    "${REPO_ROOT}/src/battle_controllers.c"
-    "${REPO_ROOT}/src/battle_controller_player.c"
-    "${REPO_ROOT}/src/battle_controller_opponent.c"
-    "${REPO_ROOT}/src/battle_message.c"
-    "${REPO_ROOT}/src/battle_util.c"
-    "${REPO_ROOT}/src/battle_util2.c"
-    "${REPO_ROOT}/src/battle_end_turn.c"
-    "${REPO_ROOT}/src/battle_move_resolution.c"
-    "${REPO_ROOT}/src/battle_stat_change.c"
-    "${REPO_ROOT}/src/battle_switch_in.c"
-    "${REPO_ROOT}/src/battle_gimmick.c"
-    "${REPO_ROOT}/src/battle_hold_effects.c"
-    "${REPO_ROOT}/src/pokemon.c"
-    "${REPO_ROOT}/src/move.c"
-    "${REPO_ROOT}/src/item.c"
-    "${REPO_ROOT}/src/script_pokemon_util.c"
+    ${REAL_BATTLE_ANDROID_SOURCES}
 )
 target_include_directories(
     pokeemerald_real_battle_probe
