@@ -536,6 +536,16 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     fishing
     pokemon_animation
     battle_terastal
+    item_menu
+    item_use
+    battle_pyramid_bag
+    battle_pyramid
+    pokeblock
+    safari_zone
+    ow_abilities
+    data
+    difficulty
+    event_data
 )
 
 set(REAL_BATTLE_ANDROID_SOURCES)
