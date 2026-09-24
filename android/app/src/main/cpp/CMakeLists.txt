@@ -363,6 +363,57 @@ add_custom_command(
     VERBATIM
 )
 
+# Prepare graphics embedded directly by Emerald's real battle interface.
+# The normal GBA build discovers these through scaninc/make dependencies; the
+# Android CMake probe runs the preprocessor directly, so mirror those asset
+# conversions explicitly instead of replacing the interface graphics.
+set(REAL_BATTLE_INTERFACE_ASSET_STAMP "${CMAKE_CURRENT_BINARY_DIR}/generated/real_battle_interface_assets.stamp")
+add_custom_command(
+    OUTPUT "${REAL_BATTLE_INTERFACE_ASSET_STAMP}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${REPO_ROOT}/build/assets/graphics/battle_interface"
+    COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/ability_pop_up.png"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/ability_pop_up.png_mwidth_8__mheight_4.4bpp"
+        -mwidth 8 -mheight 4
+    COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/ability_pop_up.pal"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/ability_pop_up.pal.gbapal"
+    COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/last_used_ball_r_cycle.png"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/last_used_ball_r_cycle.png.4bpp"
+    COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/last_used_ball_l_cycle.png"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/last_used_ball_l_cycle.png.4bpp"
+    COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/last_used_ball_r.png"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/last_used_ball_r.png.4bpp"
+    COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/last_used_ball_l.png"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/last_used_ball_l.png.4bpp"
+    COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/move_info_window_r.png"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/move_info_window_r.png.4bpp"
+    COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/move_info_window_l.png"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/move_info_window_l.png.4bpp"
+    COMMAND "${CMAKE_COMMAND}" -E touch "${REAL_BATTLE_INTERFACE_ASSET_STAMP}"
+    DEPENDS
+        "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/ability_pop_up.png"
+        "${REPO_ROOT}/graphics/battle_interface/ability_pop_up.pal"
+        "${REPO_ROOT}/graphics/battle_interface/last_used_ball_r_cycle.png"
+        "${REPO_ROOT}/graphics/battle_interface/last_used_ball_l_cycle.png"
+        "${REPO_ROOT}/graphics/battle_interface/last_used_ball_r.png"
+        "${REPO_ROOT}/graphics/battle_interface/last_used_ball_l.png"
+        "${REPO_ROOT}/graphics/battle_interface/move_info_window_r.png"
+        "${REPO_ROOT}/graphics/battle_interface/move_info_window_l.png"
+    VERBATIM
+)
+add_custom_target(
+    pokeemerald_real_battle_interface_assets
+    DEPENDS "${REAL_BATTLE_INTERFACE_ASSET_STAMP}"
+)
+
 # Compile the real shared Emerald battle engine under the Android toolchain.
 # These sources use pokeemerald's encoded-string macros, so run them through
 # the repository preprocessor exactly like the sources that ship in the APK.
@@ -458,6 +509,7 @@ add_custom_command(
     COMMENT "Real Emerald battle-engine dependency closure"
     VERBATIM
 )
+add_dependencies(pokeemerald_real_battle_probe pokeemerald_real_battle_interface_assets)
 add_dependencies(pokeemerald_native pokeemerald_real_battle_probe)
 
 # Native-width battle-script data probe. The script command parser uses packed
