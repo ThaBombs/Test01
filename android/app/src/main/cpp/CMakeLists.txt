@@ -496,13 +496,16 @@ add_custom_command(
     # Collapse the archive to one relocatable object first. Running nm -u on
     # the archive directly reports references that are actually satisfied by
     # another battle object, which badly overstates the remaining closure.
-    COMMAND "${CMAKE_LINKER}"
+    COMMAND "${CMAKE_C_COMPILER}"
+        "--target=${CMAKE_C_COMPILER_TARGET}"
+        "--sysroot=${CMAKE_SYSROOT}"
+        -nostdlib
         -no-pie
-        -r
-        --whole-archive
+        "-Wl,-r"
+        "-Wl,--whole-archive"
         "$<TARGET_FILE:pokeemerald_real_battle_probe>"
-        --no-whole-archive
-        -o "${REAL_BATTLE_COMBINED_OBJECT>"
+        "-Wl,--no-whole-archive"
+        -o "${REAL_BATTLE_COMBINED_OBJECT}"
     COMMAND "${CMAKE_NM}" -u "${REAL_BATTLE_COMBINED_OBJECT}" > "${REPO_ROOT}/android/real-battle-unresolved.txt"
     COMMENT "Real Emerald battle-engine dependency closure"
     VERBATIM
