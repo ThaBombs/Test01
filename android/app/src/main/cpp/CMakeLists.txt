@@ -54,7 +54,6 @@ target_compile_definitions(
     TESTING=0
     PORT_BOOTSTRAP_NO_WEATHER=1
     PORT_BOOTSTRAP_NO_OVERWORLD=1
-    PORT_BOOTSTRAP_NO_POKEMON_PICS=1
     PORT_BOOTSTRAP_MENU_ONLY=1
 )
 target_compile_options(
@@ -446,6 +445,8 @@ add_custom_target(
 # the repository preprocessor exactly like the sources that ship in the APK.
 set(REAL_BATTLE_PROBE_SOURCE_NAMES
     data
+    item_icon
+    pokemon_spots
     battle_main
     battle_setup
     battle_controllers
