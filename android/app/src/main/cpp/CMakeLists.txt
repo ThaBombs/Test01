@@ -497,6 +497,7 @@ add_custom_command(
     # the archive directly reports references that are actually satisfied by
     # another battle object, which badly overstates the remaining closure.
     COMMAND "${CMAKE_LINKER}"
+        -no-pie
         -r
         --whole-archive
         "$<TARGET_FILE:pokeemerald_real_battle_probe>"
