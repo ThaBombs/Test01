@@ -461,6 +461,32 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     battle_ai_util
     battle_ai_field_statuses
     battle_anim
+    battle_anim_bug
+    battle_anim_dark
+    battle_anim_dragon
+    battle_anim_effects_1
+    battle_anim_effects_2
+    battle_anim_effects_3
+    battle_anim_electric
+    battle_anim_fight
+    battle_anim_fire
+    battle_anim_flying
+    battle_anim_ghost
+    battle_anim_ground
+    battle_anim_ice
+    battle_anim_mon_movement
+    battle_anim_mons
+    battle_anim_new
+    battle_anim_normal
+    battle_anim_poison
+    battle_anim_psychic
+    battle_anim_rock
+    battle_anim_smokescreen
+    battle_anim_sound_tasks
+    battle_anim_status_effects
+    battle_anim_throw
+    battle_anim_utility_funcs
+    battle_anim_water
     battle_intro
     recorded_battle
     graphics
@@ -655,6 +681,67 @@ target_sources(
 )
 add_dependencies(pokeemerald_native pokeemerald_real_battle_scripts_probe)
 
+# Native-width battle-animation script data. battle_anim.c references the
+# complete Emerald move-animation table, so link the original animation
+# bytecode rather than substituting per-move Android animations.
+set(REAL_BATTLE_ANIM_SCRIPT_INPUT "${REPO_ROOT}/data/battle_anim_scripts.s")
+set(REAL_BATTLE_ANIM_SCRIPT_PREPROCESSED "${CMAKE_CURRENT_BINARY_DIR}/generated/battle_anim_scripts_android.pre.s")
+set(REAL_BATTLE_ANIM_SCRIPT_NORMALIZED "${CMAKE_CURRENT_BINARY_DIR}/generated/battle_anim_scripts_android.S")
+set(REAL_BATTLE_ANIM_SCRIPT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/generated/battle_anim_scripts_android.o")
+set(REAL_BATTLE_ANIM_SCRIPT_ABSOLUTE_SYMBOLS "${CMAKE_CURRENT_BINARY_DIR}/generated/battle_anim_scripts_absolute_symbols.txt")
+add_custom_command(
+    OUTPUT "${REAL_BATTLE_ANIM_SCRIPT_OBJECT}"
+    BYPRODUCTS
+        "${REAL_BATTLE_ANIM_SCRIPT_PREPROCESSED}"
+        "${REAL_BATTLE_ANIM_SCRIPT_NORMALIZED}"
+        "${REAL_BATTLE_ANIM_SCRIPT_ABSOLUTE_SYMBOLS}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    COMMAND /bin/bash -o pipefail -c
+        "cd '${REPO_ROOT}' && tools/preproc/preproc -s 'data/battle_anim_scripts.s' charmap.txt | '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -E -x assembler-with-cpp -iquote'${REPO_ROOT}/include' -DPLATFORM_ANDROID=1 -DMODERN=1 -DTESTING=0 - | tools/preproc/preproc -ie 'data/battle_anim_scripts.s' charmap.txt > '${REAL_BATTLE_ANIM_SCRIPT_PREPROCESSED}'"
+    COMMAND python3
+        "${PORT_ROOT}/tools/normalize_battle_asm.py"
+        "${REAL_BATTLE_ANIM_SCRIPT_PREPROCESSED}"
+        "${REAL_BATTLE_ANIM_SCRIPT_NORMALIZED}"
+        --repo-root "${REPO_ROOT}"
+    COMMAND "${CMAKE_C_COMPILER}"
+        "--target=${CMAKE_C_COMPILER_TARGET}"
+        "--sysroot=${CMAKE_SYSROOT}"
+        -c
+        -x
+        assembler-with-cpp
+        -DPLATFORM_ANDROID=1
+        "${REAL_BATTLE_ANIM_SCRIPT_NORMALIZED}"
+        -o
+        "${REAL_BATTLE_ANIM_SCRIPT_OBJECT}"
+    COMMAND /bin/bash -o pipefail -c
+        "'${CMAKE_NM}' --defined-only '${REAL_BATTLE_ANIM_SCRIPT_OBJECT}' | awk '$2 ~ /^[Aa]$/ {print $3}' > '${REAL_BATTLE_ANIM_SCRIPT_ABSOLUTE_SYMBOLS}' && if [ -s '${REAL_BATTLE_ANIM_SCRIPT_ABSOLUTE_SYMBOLS}' ]; then '${CMAKE_OBJCOPY}' --localize-symbols='${REAL_BATTLE_ANIM_SCRIPT_ABSOLUTE_SYMBOLS}' '${REAL_BATTLE_ANIM_SCRIPT_OBJECT}'; fi"
+    DEPENDS
+        "${REAL_BATTLE_ANIM_SCRIPT_INPUT}"
+        "${PORT_ROOT}/tools/normalize_battle_asm.py"
+        "${REPO_ROOT}/tools/preproc/preproc"
+        "${REPO_ROOT}/charmap.txt"
+        "${REPO_ROOT}/asm/macros.inc"
+        "${REPO_ROOT}/asm/macros/battle_anim_script.inc"
+        "${REPO_ROOT}/constants/constants.inc"
+    VERBATIM
+)
+add_custom_target(
+    pokeemerald_real_battle_anim_scripts_probe
+    DEPENDS "${REAL_BATTLE_ANIM_SCRIPT_OBJECT}"
+)
+set_source_files_properties(
+    "${REAL_BATTLE_ANIM_SCRIPT_OBJECT}"
+    PROPERTIES
+    GENERATED TRUE
+    EXTERNAL_OBJECT TRUE
+)
+target_sources(
+    pokeemerald_native
+    PRIVATE
+    "${REAL_BATTLE_ANIM_SCRIPT_OBJECT}"
+)
+add_dependencies(pokeemerald_native pokeemerald_real_battle_anim_scripts_probe)
+
 # Compute dependency closure only after both the real Emerald C battle engine
 # and the complete native-width battle scripts exist. This prevents hundreds
 # of BattleScript_* references from being misreported as external deps.
@@ -668,12 +755,15 @@ add_custom_command(
         "$<TARGET_FILE:pokeemerald_real_battle_bridge_probe>"
         --no-whole-archive
         ${REAL_BATTLE_SCRIPT_OBJECTS}
+        "${REAL_BATTLE_ANIM_SCRIPT_OBJECT}"
         -o "${REAL_BATTLE_COMBINED_OBJECT}"
     COMMAND "${CMAKE_NM}" -u "${REAL_BATTLE_COMBINED_OBJECT}" > "${REPO_ROOT}/android/real-battle-unresolved.txt"
     DEPENDS
         pokeemerald_real_battle_probe
         pokeemerald_real_battle_bridge_probe
+        pokeemerald_real_battle_anim_scripts_probe
         ${REAL_BATTLE_SCRIPT_OBJECTS}
+        "${REAL_BATTLE_ANIM_SCRIPT_OBJECT}"
     COMMENT "Real Emerald battle engine + scripts dependency closure"
     VERBATIM
 )
@@ -681,7 +771,7 @@ add_custom_target(
     pokeemerald_real_battle_closure
     DEPENDS "${REAL_BATTLE_COMBINED_OBJECT}"
 )
-add_dependencies(pokeemerald_real_battle_closure pokeemerald_real_battle_probe pokeemerald_real_battle_bridge_probe pokeemerald_real_battle_scripts_probe)
+add_dependencies(pokeemerald_real_battle_closure pokeemerald_real_battle_probe pokeemerald_real_battle_bridge_probe pokeemerald_real_battle_scripts_probe pokeemerald_real_battle_anim_scripts_probe)
 add_dependencies(pokeemerald_native pokeemerald_real_battle_closure)
 
 
