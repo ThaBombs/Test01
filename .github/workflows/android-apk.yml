@@ -138,7 +138,18 @@ jobs:
             build/emerald/src/sound.o \
             build/emerald/src/berry.o \
             build/emerald/src/battle_arena.o \
-            build/emerald/src/battle_tv.o
+            build/emerald/src/battle_tv.o \
+            build/emerald/src/battle_terastal.o \
+            build/emerald/src/pokemon_animation.o \
+            build/emerald/src/fishing.o \
+            build/emerald/src/field_weather_effect.o \
+            build/emerald/src/pokerus.o \
+            build/emerald/src/roamer.o \
+            build/emerald/src/dexnav.o \
+            build/emerald/src/trainer_slide.o \
+            build/emerald/src/trainer.o \
+            build/emerald/src/trainer_pools.o \
+            build/emerald/src/battle_partner.o
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
