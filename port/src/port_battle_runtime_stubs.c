@@ -1,4 +1,5 @@
 #include "global.h"
+#include "constants/characters.h"
 
 #include "battle.h"
 #include "data.h"
