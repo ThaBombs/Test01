@@ -1,4 +1,5 @@
 #include "port_test_battle.h"
+#include "port_real_battle_bridge.h"
 #include "port_test_overworld.h"
 
 #include "global.h"
@@ -833,8 +834,12 @@ bool32 PortTestBattle_TryStartPending(void)
     if (!sBattlePending)
         return FALSE;
 
-    StartFirstBattle();
-    return TRUE;
+    // From this point on the first encounter belongs to Emerald's real battle
+    // engine. Do not silently fall back to the temporary Android battle: a
+    // failed handoff must stay visible while the runtime dependency closure is
+    // being brought online.
+    sBattlePending = FALSE;
+    return PortRealBattle_StartFirstBattle(PortGame_GetChosenStarter());
 }
 
 bool32 PortTestBattle_IsPending(void)
