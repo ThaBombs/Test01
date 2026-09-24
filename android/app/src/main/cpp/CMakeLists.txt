@@ -600,6 +600,21 @@ add_custom_target(
     DEPENDS ${REAL_BATTLE_SCRIPT_OBJECTS}
 )
 
+# The battle bridge now enters CB2_InitBattle in the APK, so the interpreter's
+# native-width Emerald script data must be present at runtime as well.
+set_source_files_properties(
+    ${REAL_BATTLE_SCRIPT_OBJECTS}
+    PROPERTIES
+    GENERATED TRUE
+    EXTERNAL_OBJECT TRUE
+)
+target_sources(
+    pokeemerald_native
+    PRIVATE
+    ${REAL_BATTLE_SCRIPT_OBJECTS}
+)
+add_dependencies(pokeemerald_native pokeemerald_real_battle_scripts_probe)
+
 # Compute dependency closure only after both the real Emerald C battle engine
 # and the complete native-width battle scripts exist. This prevents hundreds
 # of BattleScript_* references from being misreported as external deps.
