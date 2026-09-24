@@ -396,6 +396,16 @@ add_custom_command(
     COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
         "${REPO_ROOT}/graphics/battle_interface/move_info_window_l.png"
         "${REPO_ROOT}/build/assets/graphics/battle_interface/move_info_window_l.png.4bpp"
+    COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/level_up_banner.png"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/level_up_banner.png.gbapal"
+    COMMAND "${REPO_ROOT}/tools/gbagfx/gbagfx"
+        "${REPO_ROOT}/graphics/battle_interface/level_up_banner.png"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/level_up_banner.png.4bpp"
+    COMMAND "${REPO_ROOT}/tools/compresSmol/compresSmol"
+        -w
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/level_up_banner.png.4bpp"
+        "${REPO_ROOT}/build/assets/graphics/battle_interface/level_up_banner.png.4bpp.smol"
     COMMAND "${CMAKE_COMMAND}" -E touch "${REAL_BATTLE_INTERFACE_ASSET_STAMP}"
     DEPENDS
         "${REPO_ROOT}/tools/gbagfx/gbagfx"
@@ -407,6 +417,8 @@ add_custom_command(
         "${REPO_ROOT}/graphics/battle_interface/last_used_ball_l.png"
         "${REPO_ROOT}/graphics/battle_interface/move_info_window_r.png"
         "${REPO_ROOT}/graphics/battle_interface/move_info_window_l.png"
+        "${REPO_ROOT}/graphics/battle_interface/level_up_banner.png"
+        "${REPO_ROOT}/tools/compresSmol/compresSmol"
     VERBATIM
 )
 add_custom_target(
@@ -426,6 +438,15 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     battle_message
     battle_bg
     battle_interface
+    battle_script_commands
+    battle_gfx_sfx_util
+    battle_ai_main
+    battle_ai_switch
+    battle_ai_items
+    battle_ai_util
+    battle_ai_field_statuses
+    battle_anim
+    battle_intro
     battle_util
     battle_util2
     battle_end_turn
@@ -440,6 +461,8 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     script_pokemon_util
     starter_choose
     wild_encounter
+    malloc
+    scanline_effect
 )
 
 set(REAL_BATTLE_ANDROID_SOURCES)
