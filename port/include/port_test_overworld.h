@@ -8,6 +8,14 @@
 // the tile under the player's feet instead of shifting individual event types.
 #define PORT_PLAYER_MAP_Y_BIAS 1
 
+enum PortStarterChoice
+{
+    PORT_STARTER_TREECKO,
+    PORT_STARTER_TORCHIC,
+    PORT_STARTER_MUDKIP,
+    PORT_STARTER_NONE = 0xFF,
+};
+
 void PortGame_StartTestOverworld(void);
 void PortGame_LoadTestMap(u16 mapGroup, u16 mapNum, s16 focusX, s16 focusY);
 void PortGame_LoadTestConnectionMap(u16 mapGroup, u16 mapNum);
@@ -15,5 +23,7 @@ bool32 PortGame_TryTestWarpAt(s16 x, s16 y);
 bool32 PortGame_TryTestCoordEventAt(s16 x, s16 y);
 void PortGame_OpenTestOptions(void);
 void PortGame_ReturnToTestOverworld(void);
+void PortGame_SetChosenStarter(u8 starter);
+u8 PortGame_GetChosenStarter(void);
 
 #endif
