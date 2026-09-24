@@ -7,7 +7,6 @@ accept:
   * @ comments
   * symbol:: global-label shorthand
   * .include files containing the same syntax
-  * a trailing comma on one-argument macro invocations
 
 This tool expands assembler .include directives recursively and normalizes
 those syntax differences. C-preprocessor directives are deliberately kept so
@@ -79,16 +78,17 @@ def expand_file(path: Path, repo_root: Path, stack: tuple[Path, ...]) -> list[st
         line = strip_arm_comment(raw)
 
         # GNU as accepts a trailing comma on a one-argument macro invocation
-        # (the upstream scripts contain `clearstatus BS_SCRIPTING,`). LLVM's
-        # integrated assembler rejects it as an empty second argument.
+        # such as clearstatus BS_SCRIPTING,. LLVM's integrated assembler
+        # rejects it as an empty second argument.
         trailing_macro_comma = TRAILING_MACRO_COMMA_RE.match(line)
         if trailing_macro_comma:
             line = trailing_macro_comma.group("body")
 
-        # The C-to-assembler preprocessing emits enum/constants as .set symbols
-        # into both battle-script translation units. They are assembly-time
-        # constants only, so make their ELF binding local to avoid duplicate
-        # global absolute symbols when lld combines both full script objects.
+        # The C-to-assembler preprocessing emits enum/constants as .set
+        # symbols into every battle-script translation unit. GNU ld tolerates
+        # duplicate absolute constants, while Android lld treats them as
+        # duplicate global definitions. They are assembly-time constants only,
+        # so make their ELF binding local without changing values or uses.
         set_match = SET_SYMBOL_RE.match(line)
         if set_match and not set_match.group("symbol").startswith(".L"):
             out.append(
