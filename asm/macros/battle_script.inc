@@ -704,7 +704,7 @@
 
 	.macro twoturnmoveschargestringandanimation
 	.byte B_SCR_OP_TWOTURNMOVESCHARGESTRINGANDANIMATION
-	.4byte 1f @animation then attack string
+	bscript_ptr 1f @animation then attack string
 	@default - attack string then animation
 	printsavedstring
 	waitmessage B_WAIT_TIME_LONG
