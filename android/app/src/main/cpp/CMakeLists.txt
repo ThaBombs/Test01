@@ -487,6 +487,7 @@ target_compile_options(
     -w
     -ffunction-sections
     -fdata-sections
+    -fvisibility=hidden
     "-iquote${REPO_ROOT}/include"
 )
 add_dependencies(pokeemerald_real_battle_probe pokeemerald_real_battle_interface_assets)
@@ -518,9 +519,21 @@ target_compile_options(
     -w
     -ffunction-sections
     -fdata-sections
+    -fvisibility=hidden
     "-iquote${REPO_ROOT}/include"
 )
 add_dependencies(pokeemerald_native pokeemerald_real_battle_probe pokeemerald_real_battle_bridge_probe)
+
+# Runtime milestone: the playable Birch encounter now calls the bridge above.
+# Link the real Emerald battle archive into the APK. Keeping the archive hidden
+# and sectioned lets lld pull only the runtime-reachable battle code instead of
+# treating the entire compile probe as exported shared-library API.
+target_link_libraries(
+    pokeemerald_native
+    PRIVATE
+    pokeemerald_real_battle_bridge_probe
+    pokeemerald_real_battle_probe
+)
 
 # Native-width battle-script data probe. The script command parser uses packed
 # structs containing native pointers, so Android script data must emit 64-bit
