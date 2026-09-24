@@ -19,6 +19,9 @@
 #include "constants/config_changes.h"
 #ifdef PLATFORM_ANDROID
 	.set PLATFORM_ANDROID_ASM, 1
+#ifdef __LP64__
+	.set PLATFORM_ANDROID_PTR64, 1
+#endif
 #endif
 	.include "asm/macros.inc"
 	.include "asm/macros/battle_script.inc"
