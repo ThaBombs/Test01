@@ -33,12 +33,6 @@ static u16 sPortEventVars[8];
 static u8 sPortChosenStarter = PORT_STARTER_NONE;
 static bool32 sPortFirstBattleComplete;
 
-static const u8 sPortText_FirstBattleWon[] =
-    _("PROF. BIRCH: Whew...\nYou saved me. Thanks a lot!\p"
-      "Come by my POKéMON LAB later, okay?");
-static const u8 sPortText_FirstBattleLost[] =
-    _("PROF. BIRCH: Try again!\nUse the POKéMON in my BAG!");
-
 static const struct BgTemplate sPortOverworldBgTemplates[] =
 {
     { .bg = 0, .charBaseIndex = 2, .mapBaseIndex = 31, .screenSize = 0, .paletteMode = 0, .priority = 0, .baseTile = 0 },
@@ -418,9 +412,7 @@ void PortGame_ReturnFromFirstBattle(bool32 won)
         focusY);
 
     PortTestDialogue_Open(
-        won
-            ? sPortText_FirstBattleWon
-            : sPortText_FirstBattleLost);
+        PortTestBattle_GetResultText(won));
 }
 
 void PortGame_OpenTestOptions(void)
