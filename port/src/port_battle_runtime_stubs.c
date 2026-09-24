@@ -124,32 +124,6 @@ bool32 FollowerNPCIsBattlePartner(void)
     return FALSE;
 }
 
-enum Move GetMaxMove(enum BattlerId battler, enum Move baseMove)
-{
-    (void)battler;
-    return baseMove;
-}
-
-bool32 TryChangeZTrigger(enum BattlerId battler, u32 moveIndex)
-{
-    (void)battler;
-    (void)moveIndex;
-    return FALSE;
-}
-
-enum Move GetUsableZMove(enum BattlerId battler, enum Move move)
-{
-    (void)battler;
-    (void)move;
-    return MOVE_NONE;
-}
-
-bool32 MoveSelectionDisplayZMove(enum Move zmove, enum BattlerId battler)
-{
-    (void)zmove;
-    (void)battler;
-    return FALSE;
-}
 
 bool32 GetSafariZoneFlag(void)
 {
