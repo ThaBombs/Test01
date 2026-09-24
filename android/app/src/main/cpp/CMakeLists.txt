@@ -363,6 +363,64 @@ add_custom_command(
     VERBATIM
 )
 
+# Compile the real shared Emerald battle engine under the Android toolchain.
+# This is intentionally a compile/link-closure probe first: it keeps the
+# existing playable APK intact while we port subsystem dependencies instead
+# of reimplementing moves or abilities in port_test_battle.c.
+add_library(
+    pokeemerald_real_battle_probe
+    STATIC
+    "${REPO_ROOT}/src/battle_main.c"
+    "${REPO_ROOT}/src/battle_setup.c"
+    "${REPO_ROOT}/src/battle_controllers.c"
+    "${REPO_ROOT}/src/battle_controller_player.c"
+    "${REPO_ROOT}/src/battle_controller_opponent.c"
+    "${REPO_ROOT}/src/battle_message.c"
+    "${REPO_ROOT}/src/battle_util.c"
+    "${REPO_ROOT}/src/battle_util2.c"
+    "${REPO_ROOT}/src/battle_end_turn.c"
+    "${REPO_ROOT}/src/battle_move_resolution.c"
+    "${REPO_ROOT}/src/battle_stat_change.c"
+    "${REPO_ROOT}/src/battle_switch_in.c"
+    "${REPO_ROOT}/src/battle_gimmick.c"
+    "${REPO_ROOT}/src/battle_hold_effects.c"
+    "${REPO_ROOT}/src/pokemon.c"
+    "${REPO_ROOT}/src/move.c"
+    "${REPO_ROOT}/src/item.c"
+    "${REPO_ROOT}/src/script_pokemon_util.c"
+)
+target_include_directories(
+    pokeemerald_real_battle_probe
+    PRIVATE
+    "${PORT_ROOT}/include"
+)
+target_compile_features(pokeemerald_real_battle_probe PRIVATE c_std_17)
+target_compile_definitions(
+    pokeemerald_real_battle_probe
+    PRIVATE
+    PLATFORM_ANDROID=1
+    MODERN=1
+    TESTING=0
+)
+target_compile_options(
+    pokeemerald_real_battle_probe
+    PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+    -ffunction-sections
+    -fdata-sections
+    "-iquote${REPO_ROOT}/include"
+)
+add_custom_command(
+    TARGET pokeemerald_real_battle_probe
+    POST_BUILD
+    COMMAND "${CMAKE_NM}" -u "$<TARGET_FILE:pokeemerald_real_battle_probe>" > "${REPO_ROOT}/android/real-battle-unresolved.txt"
+    COMMENT "Real Emerald battle-engine dependency closure"
+    VERBATIM
+)
+add_dependencies(pokeemerald_native pokeemerald_real_battle_probe)
+
 # Compile-only probe for the Android boot handoff that replaces the skipped
 # copyright/intro/title presentation flow. Once its dependencies are linked,
 # this source becomes part of pokeemerald_native and PortGame_InitialCallback
