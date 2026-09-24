@@ -364,9 +364,8 @@ add_custom_command(
 )
 
 # Compile the real shared Emerald battle engine under the Android toolchain.
-# All pokeemerald sources first pass through the repository's normal charmap
-# preprocessor. This preserves _() and COMPOUND_STRING semantics on Android
-# instead of patching battle text source-by-source.
+# These sources use pokeemerald's encoded-string macros, so run them through
+# the repository preprocessor exactly like the sources that ship in the APK.
 set(REAL_BATTLE_PROBE_SOURCE_NAMES
     battle_main
     battle_setup
@@ -389,9 +388,9 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
 )
 
 set(REAL_BATTLE_ANDROID_SOURCES)
-foreach(REAL_BATTLE_SOURCE_NAME IN LISTS REAL_BATTLE_PROBE_SOURCE_NAMES)
-    set(REAL_BATTLE_INPUT "${REPO_ROOT}/src/${REAL_BATTLE_SOURCE_NAME}.c")
-    set(REAL_BATTLE_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/generated/real_${REAL_BATTLE_SOURCE_NAME}_android.c")
+foreach(REAL_BATTLE_NAME IN LISTS REAL_BATTLE_PROBE_SOURCE_NAMES)
+    set(REAL_BATTLE_INPUT "${REPO_ROOT}/src/${REAL_BATTLE_NAME}.c")
+    set(REAL_BATTLE_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/generated/real_battle_${REAL_BATTLE_NAME}.c")
     add_custom_command(
         OUTPUT "${REAL_BATTLE_OUTPUT}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
@@ -410,7 +409,6 @@ add_library(
     pokeemerald_real_battle_probe
     STATIC
     ${REAL_BATTLE_ANDROID_SOURCES}
-    "${PORT_ROOT}/src/port_real_battle_bridge.c"
 )
 target_include_directories(
     pokeemerald_real_battle_probe
@@ -425,12 +423,13 @@ target_compile_definitions(
     MODERN=1
     TESTING=0
 )
+# The upstream project intentionally relies on a large number of GNU C
+# extensions. Keep this probe focused on actual portability errors rather than
+# flooding CI with non-actionable warning output.
 target_compile_options(
     pokeemerald_real_battle_probe
     PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
+    -w
     -ffunction-sections
     -fdata-sections
     "-iquote${REPO_ROOT}/include"
