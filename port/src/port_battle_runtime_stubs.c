@@ -12,10 +12,13 @@
 #include "trainer.h"
 #include "constants/pokedex.h"
 #include "battle_setup.h"
+#include "battle_pyramid.h"
 #include "battle_pyramid_bag.h"
 #include "contest.h"
+#include "item.h"
 #include "item_menu.h"
 #include "item_use.h"
+#include "mail.h"
 #include "pokeblock.h"
 #include "battle_dynamax.h"
 #include "battle_z_move.h"
@@ -26,7 +29,10 @@
 #include "link_rfu.h"
 #include "party_menu.h"
 #include "safari_zone.h"
+#include "save.h"
 #include "sound.h"
+#include "trainer_hill.h"
+#include "trainer_tower.h"
 #include "constants/moves.h"
 #include "constants/battle_pyramid.h"
 
@@ -318,6 +324,115 @@ void BeginEvolutionScene(struct Pokemon *mon, enum Species postEvoSpecies, bool3
     (void)partyId;
 }
 
+
+
+/*
+ * Link-only support adapters for peripheral Emerald subsystems that are not
+ * entered by the Android single-player overworld/battle milestone.
+ *
+ * These do not replace battle rules. They satisfy data-table/function-pointer
+ * edges for field items, multiplayer, Frontier side modes, recorded battles,
+ * and contests until those surrounding UIs/modes are ported.
+ */
+
+u8 gTimeOfDay = TIME_DAY;
+struct ContestResources *gContestResources = NULL;
+
+void UpdateTimeOfDay(bool32 updateBlend)
+{
+    (void)updateBlend;
+    gTimeOfDay = TIME_DAY;
+}
+
+#define ANDROID_FIELD_ITEM_STUB(func) \
+    void func(u8 taskId)              \
+    {                                 \
+        ItemUseOutOfBattle_CannotUse(taskId); \
+    }
+
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_PPUp)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_AbilityCapsule)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_AbilityPatch)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Mint)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_RareCandy)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_DynamaxCandy)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_BlackWhiteFlute)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Repel)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Lure)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_EscapeRope)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Honey)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Mail)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_EvolutionStone)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_FormChange_ConsumedOnUse)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_ExpShare)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_ReduceEV)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_EnigmaBerry)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_TMHM)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_RotomCatalog)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_FormChange)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Fusion)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_ZygardeCube)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Bike)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Rod)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_Itemfinder)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_TownMap)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_PokemonBoxLink)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_CoinCase)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_PowderJar)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_WailmerPail)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_PokeblockCase)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_PokeFlute)
+ANDROID_FIELD_ITEM_STUB(ItemUseOutOfBattle_ResetEVs)
+
+#undef ANDROID_FIELD_ITEM_STUB
+
+void InitTrainerTowerBattleStruct(void)
+{
+}
+
+void FreeTrainerTowerBattleStruct(void)
+{
+}
+
+void InitTrainerHillBattleStruct(void)
+{
+}
+
+void FreeTrainerHillBattleStruct(void)
+{
+}
+
+u8 GetPyramidRunMultiplier(void)
+{
+    return 1;
+}
+
+u8 GetLinkPlayerCount(void)
+{
+    return 1;
+}
+
+s32 GetFronterBrainSymbol(void)
+{
+    return 0;
+}
+
+u32 TryWriteSpecialSaveSector(u8 sector, u8 *src)
+{
+    (void)sector;
+    (void)src;
+    return SAVE_STATUS_OK;
+}
+
+bool8 ItemIsMail(enum Item itemId)
+{
+    return GetItemType(itemId) == ITEM_TYPE_MAIL;
+}
+
+bool8 IsSpeciesNotUnown(enum Species species)
+{
+    return species != SPECIES_UNOWN;
+}
 
 /*
  * Battle Palace nature-description text lives in map script data. The first
