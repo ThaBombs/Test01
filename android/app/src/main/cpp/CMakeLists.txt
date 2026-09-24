@@ -451,14 +451,30 @@ add_dependencies(pokeemerald_native pokeemerald_real_battle_probe)
 set(REAL_BATTLE_SCRIPT_OBJECTS)
 foreach(REAL_BATTLE_SCRIPT_NAME IN ITEMS battle_scripts_1 battle_scripts_2)
     set(REAL_BATTLE_SCRIPT_INPUT "${REPO_ROOT}/data/${REAL_BATTLE_SCRIPT_NAME}.s")
+    set(REAL_BATTLE_SCRIPT_NORMALIZED "${CMAKE_CURRENT_BINARY_DIR}/generated/${REAL_BATTLE_SCRIPT_NAME}_android.S")
     set(REAL_BATTLE_SCRIPT_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/generated/${REAL_BATTLE_SCRIPT_NAME}_android.o")
     add_custom_command(
         OUTPUT "${REAL_BATTLE_SCRIPT_OBJECT}"
+        BYPRODUCTS "${REAL_BATTLE_SCRIPT_NORMALIZED}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/generated"
-        COMMAND /bin/bash -o pipefail -c
-            "cd '${REPO_ROOT}' && '${CMAKE_C_COMPILER}' --target=${CMAKE_C_COMPILER_TARGET} --sysroot='${CMAKE_SYSROOT}' -c -x assembler-with-cpp -DPLATFORM_ANDROID=1 -I'${REPO_ROOT}' -I'${REPO_ROOT}/include' '${REAL_BATTLE_SCRIPT_INPUT}' -o '${REAL_BATTLE_SCRIPT_OBJECT}'"
+        COMMAND python3
+            "${PORT_ROOT}/tools/normalize_battle_asm.py"
+            "${REAL_BATTLE_SCRIPT_INPUT}"
+            "${REAL_BATTLE_SCRIPT_NORMALIZED}"
+            --repo-root "${REPO_ROOT}"
+        COMMAND "${CMAKE_C_COMPILER}"
+            --target=${CMAKE_C_COMPILER_TARGET}
+            --sysroot="${CMAKE_SYSROOT}"
+            -c
+            -x assembler-with-cpp
+            -DPLATFORM_ANDROID=1
+            -I"${REPO_ROOT}"
+            -I"${REPO_ROOT}/include"
+            "${REAL_BATTLE_SCRIPT_NORMALIZED}"
+            -o "${REAL_BATTLE_SCRIPT_OBJECT}"
         DEPENDS
             "${REAL_BATTLE_SCRIPT_INPUT}"
+            "${PORT_ROOT}/tools/normalize_battle_asm.py"
             "${REPO_ROOT}/asm/macros.inc"
             "${REPO_ROOT}/asm/macros/battle_script.inc"
             "${REPO_ROOT}/constants/constants.inc"
