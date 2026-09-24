@@ -8,35 +8,46 @@
 #include "constants/moves.h"
 #include "constants/songs.h"
 #include "constants/game_stat.h"
+#ifdef PLATFORM_ANDROID
+	.set PLATFORM_ANDROID_ASM, 1
+#endif
 	.include "asm/macros.inc"
 	.include "asm/macros/battle_script.inc"
 	.include "constants/constants.inc"
 
 	.section script_data, "aw", %progbits
 
-	.align 2
+	.ifdef PLATFORM_ANDROID_ASM
+		.balign 8
+	.else
+		.align 2
+	.endif
 gBattlescriptsForUsingItem::
-	.4byte BattleScript_ItemRestoreHP                @ EFFECT_ITEM_RESTORE_HP
-	.4byte BattleScript_ItemCureStatus               @ EFFECT_ITEM_CURE_STATUS
-	.4byte BattleScript_ItemHealAndCureStatus        @ EFFECT_ITEM_HEAL_AND_CURE_STATUS
-	.4byte BattleScript_ItemIncreaseStat             @ EFFECT_ITEM_INCREASE_STAT
-	.4byte BattleScript_ItemSetMist                  @ EFFECT_ITEM_SET_MIST
-	.4byte BattleScript_ItemSetFocusEnergy           @ EFFECT_ITEM_SET_FOCUS_ENERGY
-	.4byte BattleScript_RunByUsingItem               @ EFFECT_ITEM_ESCAPE
-	.4byte BattleScript_BallThrow                    @ EFFECT_ITEM_THROW_BALL
-	.4byte BattleScript_ItemRestoreHP                @ EFFECT_ITEM_REVIVE
-	.4byte BattleScript_ItemRestorePP                @ EFFECT_ITEM_RESTORE_PP
-	.4byte BattleScript_ItemIncreaseStat             @ EFFECT_ITEM_INCREASE_ALL_STATS
-	.4byte BattleScript_UsePokeFlute                 @ EFFECT_ITEM_USE_POKE_FLUTE
+	bscript_ptr BattleScript_ItemRestoreHP                @ EFFECT_ITEM_RESTORE_HP
+	bscript_ptr BattleScript_ItemCureStatus               @ EFFECT_ITEM_CURE_STATUS
+	bscript_ptr BattleScript_ItemHealAndCureStatus        @ EFFECT_ITEM_HEAL_AND_CURE_STATUS
+	bscript_ptr BattleScript_ItemIncreaseStat             @ EFFECT_ITEM_INCREASE_STAT
+	bscript_ptr BattleScript_ItemSetMist                  @ EFFECT_ITEM_SET_MIST
+	bscript_ptr BattleScript_ItemSetFocusEnergy           @ EFFECT_ITEM_SET_FOCUS_ENERGY
+	bscript_ptr BattleScript_RunByUsingItem               @ EFFECT_ITEM_ESCAPE
+	bscript_ptr BattleScript_BallThrow                    @ EFFECT_ITEM_THROW_BALL
+	bscript_ptr BattleScript_ItemRestoreHP                @ EFFECT_ITEM_REVIVE
+	bscript_ptr BattleScript_ItemRestorePP                @ EFFECT_ITEM_RESTORE_PP
+	bscript_ptr BattleScript_ItemIncreaseStat             @ EFFECT_ITEM_INCREASE_ALL_STATS
+	bscript_ptr BattleScript_UsePokeFlute                 @ EFFECT_ITEM_USE_POKE_FLUTE
 
-	.align 2
+	.ifdef PLATFORM_ANDROID_ASM
+		.balign 8
+	.else
+		.align 2
+	.endif
 gBattlescriptsForSafariActions::
-	.4byte BattleScript_ActionWatchesCarefully
-	.4byte BattleScript_ActionGetNear
-	.4byte BattleScript_ActionThrowPokeblock
-	.4byte BattleScript_ActionWallyThrow
-	.4byte BattleScript_ActionThrowRock
-	.4byte BattleScript_ActionThrowBait
+	bscript_ptr BattleScript_ActionWatchesCarefully
+	bscript_ptr BattleScript_ActionGetNear
+	bscript_ptr BattleScript_ActionThrowPokeblock
+	bscript_ptr BattleScript_ActionWallyThrow
+	bscript_ptr BattleScript_ActionThrowRock
+	bscript_ptr BattleScript_ActionThrowBait
 
 BattleScript_ItemEnd:
 	end
