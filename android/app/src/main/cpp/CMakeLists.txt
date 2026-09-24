@@ -490,7 +490,37 @@ target_compile_options(
     "-iquote${REPO_ROOT}/include"
 )
 add_dependencies(pokeemerald_real_battle_probe pokeemerald_real_battle_interface_assets)
-add_dependencies(pokeemerald_native pokeemerald_real_battle_probe)
+
+# Compile the Android-to-Emerald first-battle handoff separately. This keeps
+# the adapter tiny and verifies that it only depends on the real battle engine
+# plus the existing Android overworld return boundary.
+add_library(
+    pokeemerald_real_battle_bridge_probe
+    STATIC
+    "${PORT_ROOT}/src/port_real_battle_bridge.c"
+)
+target_include_directories(
+    pokeemerald_real_battle_bridge_probe
+    PRIVATE
+    "${PORT_ROOT}/include"
+)
+target_compile_features(pokeemerald_real_battle_bridge_probe PRIVATE c_std_17)
+target_compile_definitions(
+    pokeemerald_real_battle_bridge_probe
+    PRIVATE
+    PLATFORM_ANDROID=1
+    MODERN=1
+    TESTING=0
+)
+target_compile_options(
+    pokeemerald_real_battle_bridge_probe
+    PRIVATE
+    -w
+    -ffunction-sections
+    -fdata-sections
+    "-iquote${REPO_ROOT}/include"
+)
+add_dependencies(pokeemerald_native pokeemerald_real_battle_probe pokeemerald_real_battle_bridge_probe)
 
 # Native-width battle-script data probe. The script command parser uses packed
 # structs containing native pointers, so Android script data must emit 64-bit
@@ -559,12 +589,14 @@ add_custom_command(
         -r
         --whole-archive
         "$<TARGET_FILE:pokeemerald_real_battle_probe>"
+        "$<TARGET_FILE:pokeemerald_real_battle_bridge_probe>"
         --no-whole-archive
         ${REAL_BATTLE_SCRIPT_OBJECTS}
         -o "${REAL_BATTLE_COMBINED_OBJECT}"
     COMMAND "${CMAKE_NM}" -u "${REAL_BATTLE_COMBINED_OBJECT}" > "${REPO_ROOT}/android/real-battle-unresolved.txt"
     DEPENDS
         pokeemerald_real_battle_probe
+        pokeemerald_real_battle_bridge_probe
         ${REAL_BATTLE_SCRIPT_OBJECTS}
     COMMENT "Real Emerald battle engine + scripts dependency closure"
     VERBATIM
@@ -573,7 +605,7 @@ add_custom_target(
     pokeemerald_real_battle_closure
     DEPENDS "${REAL_BATTLE_COMBINED_OBJECT}"
 )
-add_dependencies(pokeemerald_real_battle_closure pokeemerald_real_battle_probe pokeemerald_real_battle_scripts_probe)
+add_dependencies(pokeemerald_real_battle_closure pokeemerald_real_battle_probe pokeemerald_real_battle_bridge_probe pokeemerald_real_battle_scripts_probe)
 add_dependencies(pokeemerald_native pokeemerald_real_battle_closure)
 
 
