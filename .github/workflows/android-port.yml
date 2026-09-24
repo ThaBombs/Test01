@@ -64,7 +64,7 @@ jobs:
       - name: Prepare generated assets
         run: |
           make -j2 generated
-          make -j2 build/emerald/src/main_menu.o build/emerald/src/option_menu.o build/emerald/src/text.o build/emerald/src/menu.o build/emerald/src/fonts.o build/emerald/src/text_window.o build/emerald/src/pokemon.o build/emerald/src/battle_gimmick.o
+          make -j2 build/emerald/src/main_menu.o build/emerald/src/option_menu.o build/emerald/src/text.o build/emerald/src/menu.o build/emerald/src/fonts.o build/emerald/src/text_window.o build/emerald/src/pokemon.o build/emerald/src/battle_gimmick.o build/emerald/src/starter_choose.o
 
       - name: Build Android debug APK
         run: |
