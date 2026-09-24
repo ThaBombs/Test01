@@ -22,7 +22,6 @@
 // single-player battles can run through the real engine. Replace each shim
 // with its source subsystem as that subsystem is ported.
 
-u8 gNumSafariBalls;
 EWRAM_DATA bool8 gIsDebugBattle = FALSE;
 
 bool8 gReceivedRemoteLinkPlayers = FALSE;
@@ -30,7 +29,6 @@ u16 gBlockRecvBuffer[MAX_RFU_PLAYERS][BLOCK_BUFFER_SIZE / 2];
 struct LinkPlayer gLinkPlayers[MAX_RFU_PLAYERS];
 u8 gWirelessCommType;
 
-u16 gSpecialVar_Result;
 
 u8 GetMultiplayerId(void)
 {
