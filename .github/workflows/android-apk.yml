@@ -104,7 +104,34 @@ jobs:
             build/emerald/src/pokemon.o \
             build/emerald/src/graphics.o \
             build/emerald/src/battle_gimmick.o \
-            build/emerald/src/starter_choose.o
+            build/emerald/src/starter_choose.o \
+            build/emerald/src/battle_anim.o \
+            build/emerald/src/battle_anim_bug.o \
+            build/emerald/src/battle_anim_dark.o \
+            build/emerald/src/battle_anim_dragon.o \
+            build/emerald/src/battle_anim_effects_1.o \
+            build/emerald/src/battle_anim_effects_2.o \
+            build/emerald/src/battle_anim_effects_3.o \
+            build/emerald/src/battle_anim_electric.o \
+            build/emerald/src/battle_anim_fight.o \
+            build/emerald/src/battle_anim_fire.o \
+            build/emerald/src/battle_anim_flying.o \
+            build/emerald/src/battle_anim_ghost.o \
+            build/emerald/src/battle_anim_ground.o \
+            build/emerald/src/battle_anim_ice.o \
+            build/emerald/src/battle_anim_mon_movement.o \
+            build/emerald/src/battle_anim_mons.o \
+            build/emerald/src/battle_anim_new.o \
+            build/emerald/src/battle_anim_normal.o \
+            build/emerald/src/battle_anim_poison.o \
+            build/emerald/src/battle_anim_psychic.o \
+            build/emerald/src/battle_anim_rock.o \
+            build/emerald/src/battle_anim_smokescreen.o \
+            build/emerald/src/battle_anim_sound_tasks.o \
+            build/emerald/src/battle_anim_status_effects.o \
+            build/emerald/src/battle_anim_throw.o \
+            build/emerald/src/battle_anim_utility_funcs.o \
+            build/emerald/src/battle_anim_water.o
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
