@@ -31,7 +31,6 @@ struct LinkPlayer gLinkPlayers[MAX_RFU_PLAYERS];
 u8 gWirelessCommType;
 
 u16 gSpecialVar_Result;
-u8 gSelectedMonPartyId;
 
 u8 GetMultiplayerId(void)
 {
@@ -78,10 +77,6 @@ bool8 IsLinkRfuTaskFinished(void)
     return TRUE;
 }
 
-void ShowPartyMenuToShowcaseMultiBattleParty(void)
-{
-}
-
 bool32 PlayerHasFollowerNPC(void)
 {
     return FALSE;
@@ -90,11 +85,6 @@ bool32 PlayerHasFollowerNPC(void)
 bool32 FollowerNPCIsBattlePartner(void)
 {
     return FALSE;
-}
-
-void Task_DuckBGMForPokemonCry(u8 taskId)
-{
-    (void)taskId;
 }
 
 enum Move GetMaxMove(enum BattlerId battler, enum Move baseMove)
