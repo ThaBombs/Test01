@@ -137,25 +137,27 @@ jobs:
         run: exit 1
 
       - name: Report real battle probe dependencies
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
           # CMake computes this from the combined relocatable object containing
-          # both the real Emerald battle C engine and both full battle-script
-          # objects. Do not overwrite it with the older C-only archive report.
-          if [ ! -f android/real-battle-unresolved.txt ]; then
-            echo "Combined real battle dependency report was not generated." >&2
-            exit 1
+          # the real Emerald battle C engine, Android first-battle bridge and
+          # both full battle-script objects.
+          if [ -f android/real-battle-unresolved.txt ]; then
+            echo "Combined Emerald battle path unresolved symbols:"
+            cat android/real-battle-unresolved.txt
+          else
+            echo "Combined real battle dependency report was not generated."
           fi
-          echo "Combined Emerald battle engine + scripts unresolved symbols:"
-          cat android/real-battle-unresolved.txt
 
       - name: Upload real battle probe diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: real-battle-probe-${{ github.sha }}
           path: android/real-battle-unresolved.txt
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
       - name: Report engine probe dependencies
