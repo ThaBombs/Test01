@@ -536,6 +536,7 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     fishing
     pokemon_animation
     battle_terastal
+    rtc
     caps
     battle_set_effect
     battle_ai_record
