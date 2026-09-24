@@ -453,6 +453,7 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     pokemon_icon
     type_icons
     move_relearner
+    menu_specialized
     item_use
     mail_data
     evolution_scene
