@@ -131,7 +131,14 @@ jobs:
             build/emerald/src/battle_anim_status_effects.o \
             build/emerald/src/battle_anim_throw.o \
             build/emerald/src/battle_anim_utility_funcs.o \
-            build/emerald/src/battle_anim_water.o
+            build/emerald/src/battle_anim_water.o \
+            build/emerald/src/field_weather.o \
+            build/emerald/src/party_menu.o \
+            build/emerald/src/pokeball.o \
+            build/emerald/src/sound.o \
+            build/emerald/src/berry.o \
+            build/emerald/src/battle_arena.o \
+            build/emerald/src/battle_tv.o
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
