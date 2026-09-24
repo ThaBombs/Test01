@@ -100,7 +100,9 @@ jobs:
             build/emerald/src/text.o \
             build/emerald/src/menu.o \
             build/emerald/src/fonts.o \
-            build/emerald/src/text_window.o
+            build/emerald/src/text_window.o \
+            build/emerald/src/pokemon.o \
+            build/emerald/src/battle_gimmick.o
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
