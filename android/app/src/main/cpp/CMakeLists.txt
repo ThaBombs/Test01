@@ -448,6 +448,14 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     math_util
     money
     line_break
+    config_changes
+    menu_helpers
+    pokemon_icon
+    type_icons
+    move_relearner
+    item_use
+    mail_data
+    evolution_scene
     item_icon
     pokemon_spots
     battle_main
