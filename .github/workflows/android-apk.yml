@@ -104,6 +104,15 @@ jobs:
             build/emerald/src/pokemon.o \
             build/emerald/src/pokemon_spots.o \
             build/emerald/src/item_icon.o \
+            build/emerald/src/config_changes.o \
+            build/emerald/src/menu_helpers.o \
+            build/emerald/src/pokemon_icon.o \
+            build/emerald/src/type_icons.o \
+            build/emerald/src/move_relearner.o \
+            build/emerald/src/menu_specialized.o \
+            build/emerald/src/item_use.o \
+            build/emerald/src/mail_data.o \
+            build/emerald/src/evolution_scene.o \
             build/emerald/src/data.o \
             build/emerald/src/graphics.o \
             build/emerald/src/battle_gimmick.o \
