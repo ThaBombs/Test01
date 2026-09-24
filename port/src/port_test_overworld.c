@@ -29,6 +29,7 @@ static u16 sPortBg2[BG_SCREEN_SIZE / sizeof(u16)];
 static u16 sPortBg3[BG_SCREEN_SIZE / sizeof(u16)];
 static bool32 sPortWarpArrivalLocked;
 static u16 sPortEventVars[8];
+static u8 sPortChosenStarter = PORT_STARTER_NONE;
 
 static const struct BgTemplate sPortOverworldBgTemplates[] =
 {
@@ -372,6 +373,17 @@ static void PortTestOverworld_SetupScene(u16 mapGroup, u16 mapNum, s16 focusX, s
     SetMainCallback2(PortTestOverworld_Main);
 }
 
+void PortGame_SetChosenStarter(u8 starter)
+{
+    if (starter <= PORT_STARTER_MUDKIP)
+        sPortChosenStarter = starter;
+}
+
+u8 PortGame_GetChosenStarter(void)
+{
+    return sPortChosenStarter;
+}
+
 void PortGame_OpenTestOptions(void)
 {
     PortTestNpc_SaveSceneState();
@@ -393,6 +405,7 @@ void PortGame_ReturnToTestOverworld(void)
 void PortGame_StartTestOverworld(void)
 {
     sPortWarpArrivalLocked = FALSE;
+    sPortChosenStarter = PORT_STARTER_NONE;
     memset(sPortEventVars, 0, sizeof(sPortEventVars));
     PortTestNpc_ClearSavedSceneState();
     PortTestOverworld_SetupScene(
