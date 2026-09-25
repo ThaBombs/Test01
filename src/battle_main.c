@@ -595,6 +595,9 @@ static void CB2_InitBattleInternal(void)
     PortRuntime_SetBattleDiagnosticStage("BATTLE F");
 #endif
     SetUpBattleVarsAndBirchZigzagoon();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-A");
+#endif
 
     if (gBattleTypeFlags & BATTLE_TYPE_MULTI
      && (TESTING || gBattleTypeFlags & (BATTLE_TYPE_BATTLE_TOWER | BATTLE_TYPE_INGAME_PARTNER)))
@@ -603,9 +606,15 @@ static void CB2_InitBattleInternal(void)
         SetMainCallback2(CB2_HandleStartMultiBattle);
     else
         SetMainCallback2(CB2_HandleStartBattle);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-B");
+#endif
 
     gMain.inBattle = TRUE;
     gSaveBlock2Ptr->frontier.disableRecordBattle = FALSE;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-C");
+#endif
 
     for (i = 0; i < PARTY_SIZE; i++)
     {
@@ -615,6 +624,9 @@ static void CB2_InitBattleInternal(void)
         for (enum BattleTrainer trainer = B_TRAINER_PLAYER; trainer < MAX_BATTLE_TRAINERS; trainer++)
             TryFormChange(&gParties[trainer][i], FORM_CHANGE_BEGIN_BATTLE, trainer);
     }
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-E");
+#endif
 
     if (!(gBattleTypeFlags & BATTLE_TYPE_TRAINER))
     {
@@ -624,11 +636,20 @@ static void CB2_InitBattleInternal(void)
         if (IsDoubleBattle())
             TryFormChange(&gParties[B_TRAINER_OPPONENT_A][1], FORM_CHANGE_BEGIN_WILD_ENCOUNTER, B_TRAINER_OPPONENT_A);
     }
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-F");
+#endif
 
     for (enum BattleTrainer trainer = B_TRAINER_PLAYER; trainer < MAX_BATTLE_TRAINERS; trainer++)
         gPartiesCount[trainer] = CalculatePartyCount(trainer);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-X");
+#endif
 
     gBattleCommunication[MULTIUSE_STATE] = 0;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-Z");
+#endif
 }
 
 #define BUFFER_PARTY_VS_SCREEN_STATUS(party, flags, i)                      \
