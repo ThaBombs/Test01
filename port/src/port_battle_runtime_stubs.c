@@ -30,6 +30,13 @@
 #include "battle_z_move.h"
 #include "debug.h"
 #include "battle_debug.h"
+#include "berry_powder.h"
+#include "bike.h"
+#include "coins.h"
+#include "event_scripts.h"
+#include "field_effect.h"
+#include "field_screen_effect.h"
+#include "fishing.h"
 #include "easy_chat.h"
 #include "event_data.h"
 #include "event_object_movement.h"
@@ -41,6 +48,7 @@
 #include "pokemon_jump.h"
 #include "safari_zone.h"
 #include "save.h"
+#include "script.h"
 #include "sound.h"
 #include "string_util.h"
 #include "trainer_hill.h"
@@ -761,6 +769,219 @@ void DoEasyChatScreen(u8 type, u16 *words, MainCallback exitCallback, u8 display
     (void)displayedPersonType;
     if (exitCallback != NULL)
         SetMainCallback2(exitCallback);
+}
+
+
+/*
+ * Android field/bag boundary.
+ *
+ * Keep Emerald's real item-use and battle-item rules linked, but do not drag
+ * the full GBA field UI, fishing minigame, event-script runner, bike UI, or
+ * Battle Pyramid bag into the first Android battle milestone.
+ */
+
+static struct BagMenu sAndroidBagMenu;
+struct BagMenu *gBagMenu = &sAndroidBagMenu;
+
+static struct PyramidBagMenu sAndroidPyramidBagMenu;
+struct PyramidBagMenu *gPyramidBagMenu = &sAndroidPyramidBagMenu;
+
+void (*gFieldCallback)(void) = NULL;
+
+const u8 EventScript_AccessPokemonBoxLink[] = {EOS};
+const u8 BattleFrontier_OutsideEast_EventScript_WaterSudowoodo[] = {EOS};
+const u8 BerryTree_EventScript_ItemUseWailmerPail[] = {EOS};
+
+const u8 MoveRelearner_Text_LevelUpMoveLWR[] = {EOS};
+const u8 MoveRelearner_Text_EggMoveLWR[] = {EOS};
+const u8 MoveRelearner_Text_TMMoveLWR[] = {EOS};
+const u8 MoveRelearner_Text_TutorMoveLWR[] = {EOS};
+
+void LockPlayerFieldControls(void)
+{
+}
+
+void UnlockPlayerFieldControls(void)
+{
+}
+
+void ScriptUnfreezeObjectEvents(void)
+{
+}
+
+void FieldCB_ReturnToFieldNoScript(void)
+{
+}
+
+void FadeInFromBlack(void)
+{
+    FadeScreen(FADE_FROM_BLACK, 0);
+}
+
+void CleanupOverworldWindowsAndTilemaps(void)
+{
+    /*
+     * Android's overworld renderer owns its tilemap/window lifetime. The GBA
+     * implementation frees GBA-side overworld buffers here; there are no
+     * equivalent owned buffers to release in this bootstrap path.
+     */
+}
+
+void ScriptContext_SetupScript(const u8 *ptr)
+{
+    (void)ptr;
+}
+
+void ObjectEventSetGraphicsId(struct ObjectEvent *objectEvent, u16 graphicsId)
+{
+    if (objectEvent != NULL)
+        objectEvent->graphicsId = graphicsId;
+}
+
+u8 GetObjectEventIdByPosition(u16 x, u16 y, u8 elevation)
+{
+    (void)x;
+    (void)y;
+    (void)elevation;
+    return OBJECT_EVENTS_COUNT;
+}
+
+bool32 Overworld_IsBikingAllowed(void)
+{
+    return FALSE;
+}
+
+bool8 IsBikingDisallowedByPlayer(void)
+{
+    return TRUE;
+}
+
+void GetOnOffBike(u8 transitionFlags)
+{
+    (void)transitionFlags;
+}
+
+bool32 FollowerNPCCanBike(void)
+{
+    return FALSE;
+}
+
+void FollowerNPC_HandleBike(void)
+{
+}
+
+bool32 CheckFollowerNPCFlag(u32 flag)
+{
+    (void)flag;
+    return FALSE;
+}
+
+void ResetInitialPlayerAvatarState(void)
+{
+}
+
+void Overworld_ResetStateAfterDigEscRope(void)
+{
+}
+
+void StartEscapeRopeFieldEffect(void)
+{
+}
+
+u16 GetCoins(void)
+{
+    return 0;
+}
+
+u32 GetBerryPowder(void)
+{
+    return 0;
+}
+
+void ReadMail(struct Mail *mail, MainCallback exitCallback, bool8 hasText)
+{
+    (void)mail;
+    (void)hasText;
+    if (exitCallback != NULL)
+        SetMainCallback2(exitCallback);
+}
+
+void CB2_ReturnToBagMenuPocket(void)
+{
+    SetMainCallback2(BattleMainCB2);
+}
+
+void DisplayItemMessage(u8 taskId, u8 fontId, const u8 *str, TaskFunc callback)
+{
+    (void)fontId;
+    (void)str;
+    if (callback != NULL)
+        callback(taskId);
+}
+
+void CloseItemMessage(u8 taskId)
+{
+    (void)taskId;
+}
+
+void Task_FadeAndCloseBagMenu(u8 taskId)
+{
+    MainCallback next = gBagMenu != NULL ? gBagMenu->newScreenCallback : NULL;
+    if (next != NULL)
+        SetMainCallback2(next);
+    DestroyTask(taskId);
+}
+
+void DisplayItemMessageInBattlePyramid(u8 taskId, const u8 *str, TaskFunc callback)
+{
+    (void)str;
+    if (callback != NULL)
+        callback(taskId);
+}
+
+void Task_CloseBattlePyramidBagMessage(u8 taskId)
+{
+    (void)taskId;
+}
+
+void CloseBattlePyramidBag(u8 taskId)
+{
+    MainCallback next = gPyramidBagMenu != NULL ? gPyramidBagMenu->newScreenCallback : NULL;
+    if (next != NULL)
+        SetMainCallback2(next);
+    DestroyTask(taskId);
+}
+
+void OpenPokeblockCase(u8 caseId, void (*callback)(void))
+{
+    (void)caseId;
+    if (callback != NULL)
+        SetMainCallback2(callback);
+}
+
+void SetPokemonAnglerSpecies(enum Species species)
+{
+    (void)species;
+}
+
+/* Fishing minigame stays outside the battle archive for now. */
+void StartFishing(u8 rod)
+{
+    (void)rod;
+}
+
+void UpdateChainFishingStreak(void)
+{
+}
+
+u32 CalculateChainFishingShinyRolls(void)
+{
+    return 0;
+}
+
+bool32 ShouldUseFishingEnvironmentInBattle(void)
+{
+    return FALSE;
 }
 
 /*
