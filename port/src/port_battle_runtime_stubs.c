@@ -5,6 +5,7 @@
 #include "battle_factory.h"
 #include "battle_main.h"
 #include "data.h"
+#include "graphics.h"
 #include "evolution_scene.h"
 #include "frontier_util.h"
 #include "overworld.h"
@@ -406,8 +407,20 @@ const struct SubspriteTable sOamTables_64x64[] = {{0}};
 const union AnimCmd *const sAnimTable_Following[] = {NULL};
 const union AnimCmd *const sAnimTable_Following_Asym[] = {NULL};
 
-const struct CompressedSpriteSheet gSpriteSheet_CategoryIcons = {0};
-const struct SpritePalette gSpritePal_CategoryIcons = {0};
+#define PORT_TAG_CATEGORY_ICONS 30004
+
+const struct CompressedSpriteSheet gSpriteSheet_CategoryIcons =
+{
+    .data = gCategoryIcons_Gfx,
+    .size = 16 * 16 * 3 / 2,
+    .tag = PORT_TAG_CATEGORY_ICONS,
+};
+
+const struct SpritePalette gSpritePal_CategoryIcons =
+{
+    .data = gCategoryIcons_Pal,
+    .tag = PORT_TAG_CATEGORY_ICONS,
+};
 
 enum MapBattleScene GetCurrentMapBattleScene(void)
 {
@@ -1392,34 +1405,41 @@ bool32 Overworld_IsRecvQueueAtMax(void)
 
 static const struct OamData sAndroidCategoryIconOam =
 {
-    .affineMode = ST_OAM_AFFINE_OFF,
-    .objMode = ST_OAM_OBJ_NORMAL,
-    .mosaic = FALSE,
-    .bpp = ST_OAM_4BPP,
-    .shape = SPRITE_SHAPE(32x16),
-    .size = SPRITE_SIZE(32x16),
-    .priority = 1,
+    .size = SPRITE_SIZE(16x16),
+    .shape = SPRITE_SHAPE(16x16),
+    .priority = 0,
 };
 
-static const union AnimCmd sAndroidCategoryIconAnim[] =
+static const union AnimCmd sAndroidCategoryIconAnim0[] =
 {
     ANIMCMD_FRAME(0, 0),
     ANIMCMD_END,
 };
 
+static const union AnimCmd sAndroidCategoryIconAnim1[] =
+{
+    ANIMCMD_FRAME(4, 0),
+    ANIMCMD_END,
+};
+
+static const union AnimCmd sAndroidCategoryIconAnim2[] =
+{
+    ANIMCMD_FRAME(8, 0),
+    ANIMCMD_END,
+};
+
 static const union AnimCmd *const sAndroidCategoryIconAnims[] =
 {
-    sAndroidCategoryIconAnim,
-    sAndroidCategoryIconAnim,
-    sAndroidCategoryIconAnim,
-    sAndroidCategoryIconAnim,
+    NULL,
+    sAndroidCategoryIconAnim0,
+    sAndroidCategoryIconAnim1,
+    sAndroidCategoryIconAnim2,
 };
 
 const struct SpriteTemplate gSpriteTemplate_CategoryIcons =
 {
-    .tileTag = TAG_NONE,
-    .paletteTag = TAG_NONE,
+    .tileTag = PORT_TAG_CATEGORY_ICONS,
+    .paletteTag = PORT_TAG_CATEGORY_ICONS,
     .oam = &sAndroidCategoryIconOam,
     .anims = sAndroidCategoryIconAnims,
-    .callback = SpriteCallbackDummy,
 };
