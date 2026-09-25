@@ -484,16 +484,16 @@ enum BackAnim GetSpeciesBackAnimSet(enum Species species)
 #define tBattlerId data[4]
 #define tSpeciesId data[5]
 
-// BUG: In vanilla, tPtrLo is read as an s16, so if bit 15 of the
-// address were to be set it would cause the pointer to be read
-// as 0xFFFFXXXX instead of the desired 0x02YYXXXX.
-// By dumb luck, this is not an issue in vanilla. However,
-// changing the link order revealed this bug.
-#if MODERN || defined(BUGFIX)
+// GBA stores the sprite pointer in two 16-bit task fields. That is not
+// sufficient on 64-bit native Android, so use the task pointer helper there.
+// Other builds retain the original packed representation.
+#ifdef PLATFORM_ANDROID
+#define ANIM_SPRITE(taskId)   ((struct Sprite *)GetPointerTaskArg((taskId), 1))
+#elif MODERN || defined(BUGFIX)
 #define ANIM_SPRITE(taskId)   ((struct Sprite *)((gTasks[taskId].tPtrHi << 16) | ((u16)gTasks[taskId].tPtrLo)))
 #else
 #define ANIM_SPRITE(taskId)   ((struct Sprite *)((gTasks[taskId].tPtrHi << 16) | (gTasks[taskId].tPtrLo)))
-#endif //MODERN || BUGFIX
+#endif
 
 static void Task_HandleMonAnimation(u8 taskId)
 {
@@ -536,8 +536,12 @@ static void Task_HandleMonAnimation(u8 taskId)
 void LaunchAnimationTaskForFrontSprite(struct Sprite *sprite, enum AnimFunctionIDs frontAnimId)
 {
     u8 taskId = CreateTask(Task_HandleMonAnimation, 128);
+#ifdef PLATFORM_ANDROID
+    SetPointerTaskArg(taskId, 1, sprite);
+#else
     gTasks[taskId].tPtrHi = (u32)(sprite) >> 16;
     gTasks[taskId].tPtrLo = (u32)(sprite);
+#endif
     gTasks[taskId].tAnimId = frontAnimId;
 }
 
@@ -554,8 +558,12 @@ void LaunchAnimationTaskForBackSprite(struct Sprite *sprite, enum BackAnim backA
     enum AnimFunctionIDs animId;
 
     taskId = CreateTask(Task_HandleMonAnimation, 128);
+#ifdef PLATFORM_ANDROID
+    SetPointerTaskArg(taskId, 1, sprite);
+#else
     gTasks[taskId].tPtrHi = (u32)(sprite) >> 16;
     gTasks[taskId].tPtrLo = (u32)(sprite);
+#endif
 
     battler = sprite->data[0];
     nature = GetNature(GetBattlerMon(battler));
