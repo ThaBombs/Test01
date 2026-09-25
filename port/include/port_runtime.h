@@ -46,5 +46,7 @@ void PortRuntime_SetFastForwardToggleMode(bool enabled);
 int PortRuntime_GetFastForwardMultiplier(void);
 void PortRuntime_SetFastForwardMultiplier(int multiplier);
 void PortRuntime_CycleFastForwardMultiplier(void);
+void PortRuntime_SetBattleDiagnosticStage(const char *stage);
+void PortRuntime_ClearBattleDiagnosticStage(void);
 
 #endif // POKEEMERALD_PORT_RUNTIME_H
