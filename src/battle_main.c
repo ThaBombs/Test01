@@ -252,6 +252,7 @@ COMMON_DATA u8 gNumberOfMovesToChoose = 0;
 #ifdef PLATFORM_ANDROID
 static bool32 sAndroidBattleVBlankDiagnosticDone;
 static bool32 sAndroidBattleStartDiagnosticDone;
+static bool32 sAndroidBattleSpriteInitDiagnosticStarted;
 #endif
 
 static const struct ScanlineEffectParams sIntroScanlineParams16Bit =
@@ -481,6 +482,7 @@ void CB2_InitBattle(void)
 #ifdef PLATFORM_ANDROID
     sAndroidBattleVBlankDiagnosticDone = FALSE;
     sAndroidBattleStartDiagnosticDone = FALSE;
+    sAndroidBattleSpriteInitDiagnosticStarted = FALSE;
     PortRuntime_SetBattleDiagnosticStage("BATTLE A");
 #endif
     if (!gTestRunnerEnabled)
@@ -964,6 +966,9 @@ static void CB2_HandleStartBattle(void)
 #endif
         break;
     case 1:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("S-2");
+#endif
         if (gBattleTypeFlags & BATTLE_TYPE_LINK)
         {
             if (gReceivedRemoteLinkPlayers)
@@ -1070,6 +1075,9 @@ static void CB2_HandleStartBattle(void)
         }
         break;
     case 15:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("S-3");
+#endif
         InitBattleControllers();
         RecordedBattle_SetTrainerInfo();
         gBattleCommunication[SPRITES_INIT_STATE1] = 0;
@@ -1112,6 +1120,13 @@ static void CB2_HandleStartBattle(void)
         break;
     case 18:
         // Finish, start battle
+#ifdef PLATFORM_ANDROID
+        if (!sAndroidBattleSpriteInitDiagnosticStarted)
+        {
+            PortRuntime_SetBattleDiagnosticStage("S-4");
+            sAndroidBattleSpriteInitDiagnosticStarted = TRUE;
+        }
+#endif
         if (BattleInitAllSprites(&gBattleCommunication[SPRITES_INIT_STATE1], &gBattleCommunication[SPRITES_INIT_STATE2]))
         {
             gPreBattleCallback1 = gMain.callback1;
