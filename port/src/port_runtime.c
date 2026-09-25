@@ -95,7 +95,6 @@ static char sTouchLayoutPath[512];
 static char sBattleDiagnosticPath[512];
 static char sPreviousBattleDiagnostic[32];
 static char sCurrentBattleDiagnostic[32];
-static uint64_t sBattleDiagnosticVisibleUntil;
 
 static int ClampInt(int value, int low, int high)
 {
@@ -398,14 +397,10 @@ void PortRuntime_SetStoragePath(const char *path)
     if (diagnostic != NULL)
     {
         if (fgets(sPreviousBattleDiagnostic, sizeof(sPreviousBattleDiagnostic), diagnostic) != NULL)
-        {
             sPreviousBattleDiagnostic[strcspn(sPreviousBattleDiagnostic, "\r\n")] = '\0';
-            sBattleDiagnosticVisibleUntil = sPortState.frameCount + 300;
-        }
         fclose(diagnostic);
-        // Consume the previous crash breadcrumb. A new battle attempt will
-        // write a fresh stage if it crashes again.
-        remove(sBattleDiagnosticPath);
+        // Keep crash reports until the tester explicitly dismisses them.
+        // The native crash handler will overwrite this file on the next crash.
     }
 
     LoadTouchLayout();
@@ -921,6 +916,18 @@ void PortRuntime_Step(const struct PortInputState *input, double deltaSeconds)
     if (input != NULL)
         sPortState.input = *input;
 
+    // Keep a recovered native crash report on screen until the tester
+    // deliberately dismisses it with B. Give startup a short grace period so
+    // a carried-over touch cannot immediately hide it.
+    if (sPreviousBattleDiagnostic[0] != '\0'
+     && sPortState.frameCount > 30
+     && (sPortState.input.buttons & PORT_BUTTON_B) != 0)
+    {
+        sPreviousBattleDiagnostic[0] = '\0';
+        if (sBattleDiagnosticPath[0] != '\0')
+            remove(sBattleDiagnosticPath);
+    }
+
     const bool fastForwardDown =
         (sPortState.input.buttons & PORT_BUTTON_FAST_FORWARD) != 0;
     if (sFastForwardToggleMode
@@ -971,22 +978,26 @@ void PortRuntime_Render(uint32_t *pixels, int width, int height, int stridePixel
 
     DrawTouchControls(pixels, width, height, stridePixels);
 
-    if (sPreviousBattleDiagnostic[0] != '\0'
-     && sPortState.frameCount < sBattleDiagnosticVisibleUntil)
+    if (sPreviousBattleDiagnostic[0] != '\0')
     {
-        const int bannerY = height * 5 / 100;
+        const int bannerY = height * 7 / 100;
         const int bannerHalfW = MinInt(width * 48 / 100, 520);
-        const int bannerHalfH = 14;
+        const int bannerHalfH = 22;
         BlendFillRect(
             pixels, width, height, stridePixels,
             width / 2 - bannerHalfW, bannerY - bannerHalfH,
             width / 2 + bannerHalfW, bannerY + bannerHalfH,
-            Rgb(120, 20, 20), 220);
+            Rgb(120, 20, 20), 235);
         DrawCenteredText(
             pixels, width, height, stridePixels,
-            width / 2, bannerY,
+            width / 2, bannerY - 5,
             sPreviousBattleDiagnostic, 1,
             Rgb(255, 255, 255), 255);
+        DrawCenteredText(
+            pixels, width, height, stridePixels,
+            width / 2, bannerY + 9,
+            "PRESS B TO DISMISS", 1,
+            Rgb(255, 255, 255), 230);
     }
 }
 
