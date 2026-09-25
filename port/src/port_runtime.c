@@ -94,6 +94,7 @@ static int sEditorSelected = TOUCH_CONTROL_DPAD;
 static char sTouchLayoutPath[512];
 static char sBattleDiagnosticPath[512];
 static char sPreviousBattleDiagnostic[32];
+static char sCurrentBattleDiagnostic[32];
 static uint64_t sBattleDiagnosticVisibleUntil;
 
 static int ClampInt(int value, int low, int high)
@@ -415,6 +416,15 @@ void PortRuntime_SetBattleDiagnosticStage(const char *stage)
     if (stage == NULL || sBattleDiagnosticPath[0] == '\0')
         return;
 
+    // Battle initialization can remain in one diagnostic state for several
+    // frames (and sometimes once per battler). Avoid reopening/writing the
+    // breadcrumb file when the stage has not changed; synchronous Android
+    // file I/O here otherwise causes visible battle-start stutter.
+    if (strcmp(sCurrentBattleDiagnostic, stage) == 0)
+        return;
+
+    snprintf(sCurrentBattleDiagnostic, sizeof(sCurrentBattleDiagnostic), "%s", stage);
+
     FILE *diagnostic = fopen(sBattleDiagnosticPath, "w");
     if (diagnostic == NULL)
         return;
@@ -425,6 +435,7 @@ void PortRuntime_SetBattleDiagnosticStage(const char *stage)
 
 void PortRuntime_ClearBattleDiagnosticStage(void)
 {
+    sCurrentBattleDiagnostic[0] = '\0';
     if (sBattleDiagnosticPath[0] != '\0')
         remove(sBattleDiagnosticPath);
 }
