@@ -33,5 +33,7 @@ bool8 FuncIsActiveTask(TaskFunc func);
 u8 FindTaskIdByFunc(TaskFunc func);
 void SetWordTaskArg(u8 taskId, u8 dataElem, u32 value);
 u32 GetWordTaskArg(u8 taskId, u8 dataElem);
+void SetPointerTaskArg(u8 taskId, u8 dataElem, const void *value);
+void *GetPointerTaskArg(u8 taskId, u8 dataElem);
 
 #endif // GUARD_TASK_H
