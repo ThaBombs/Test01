@@ -122,7 +122,7 @@ static void InstallNativeCrashHandler(const char *storagePath)
 
     Dl_info info;
     memset(&info, 0, sizeof(info));
-    if (dladdr((const void *)&android_main, &info) != 0 && info.dli_fbase != NULL)
+    if (dladdr((const void *)&InstallNativeCrashHandler, &info) != 0 && info.dli_fbase != NULL)
         sNativeLibraryBase = (uintptr_t)info.dli_fbase;
 
     struct sigaction action;
