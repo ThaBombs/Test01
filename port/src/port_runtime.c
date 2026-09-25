@@ -92,6 +92,8 @@ static bool sEditorPointerDown;
 static bool sEditorDragging;
 static int sEditorSelected = TOUCH_CONTROL_DPAD;
 static char sTouchLayoutPath[512];
+static char sBattleDiagnosticPath[512];
+static char sPreviousBattleDiagnostic[32];
 
 static int ClampInt(int value, int low, int high)
 {
@@ -387,7 +389,37 @@ void PortRuntime_SetStoragePath(const char *path)
 
     snprintf(sTouchLayoutPath, sizeof(sTouchLayoutPath),
              "%s/touch_layout.cfg", path);
+    snprintf(sBattleDiagnosticPath, sizeof(sBattleDiagnosticPath),
+             "%s/battle_init_stage.txt", path);
+
+    FILE *diagnostic = fopen(sBattleDiagnosticPath, "r");
+    if (diagnostic != NULL)
+    {
+        if (fgets(sPreviousBattleDiagnostic, sizeof(sPreviousBattleDiagnostic), diagnostic) != NULL)
+            sPreviousBattleDiagnostic[strcspn(sPreviousBattleDiagnostic, "\r\n")] = '\0';
+        fclose(diagnostic);
+    }
+
     LoadTouchLayout();
+}
+
+void PortRuntime_SetBattleDiagnosticStage(const char *stage)
+{
+    if (stage == NULL || sBattleDiagnosticPath[0] == '\0')
+        return;
+
+    FILE *diagnostic = fopen(sBattleDiagnosticPath, "w");
+    if (diagnostic == NULL)
+        return;
+    fputs(stage, diagnostic);
+    fputc('\n', diagnostic);
+    fclose(diagnostic);
+}
+
+void PortRuntime_ClearBattleDiagnosticStage(void)
+{
+    if (sBattleDiagnosticPath[0] != '\0')
+        remove(sBattleDiagnosticPath);
 }
 
 void PortRuntime_SetTouchScalePercent(int percent)
@@ -878,6 +910,23 @@ void PortRuntime_Render(uint32_t *pixels, int width, int height, int stridePixel
     }
 
     DrawTouchControls(pixels, width, height, stridePixels);
+
+    if (sPreviousBattleDiagnostic[0] != '\0')
+    {
+        const int bannerY = height * 5 / 100;
+        const int bannerHalfW = MinInt(width * 3 / 10, 180);
+        const int bannerHalfH = 18;
+        BlendFillRect(
+            pixels, width, height, stridePixels,
+            width / 2 - bannerHalfW, bannerY - bannerHalfH,
+            width / 2 + bannerHalfW, bannerY + bannerHalfH,
+            Rgb(120, 20, 20), 220);
+        DrawCenteredText(
+            pixels, width, height, stridePixels,
+            width / 2, bannerY,
+            sPreviousBattleDiagnostic, 2,
+            Rgb(255, 255, 255), 255);
+    }
 }
 
 uint64_t PortRuntime_GetFrameCount(void)
