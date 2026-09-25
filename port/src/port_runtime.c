@@ -613,6 +613,7 @@ static uint8_t GlyphRow(char ch, int row)
     static const uint8_t glyphMinus[7] = {0, 0, 0, 31, 0, 0, 0};
     static const uint8_t glyphS[7] = {15, 16, 16, 14, 1, 1, 30};
     static const uint8_t glyphT[7] = {31, 4, 4, 4, 4, 4, 4};
+    static const uint8_t glyphV[7] = {17, 17, 17, 17, 17, 10, 4};
     static const uint8_t glyphW[7] = {17, 17, 17, 21, 21, 21, 10};
     static const uint8_t glyphX[7] = {17, 17, 10, 4, 10, 17, 17};
     static const uint8_t glyphZ[7] = {31, 1, 2, 4, 8, 16, 31};
@@ -636,6 +637,7 @@ static uint8_t GlyphRow(char ch, int row)
     case '-': glyph = glyphMinus; break;
     case 'S': glyph = glyphS; break;
     case 'T': glyph = glyphT; break;
+    case 'V': glyph = glyphV; break;
     case 'W': glyph = glyphW; break;
     case 'X': glyph = glyphX; break;
     case 'Z': glyph = glyphZ; break;
