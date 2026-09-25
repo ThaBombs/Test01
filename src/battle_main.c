@@ -2988,6 +2988,18 @@ static void BattleMainCB1(void)
         PortRuntime_SetBattleDiagnosticStage("U6");
         sAndroidR8ControllerTraceDone = TRUE;
     }
+
+    // Native Android safety: nothing in the normal battle-intro wait path
+    // should replace callback2. If adjacent native state is corrupted during
+    // the controller pass, restore the battle render callback before returning
+    // to the main dispatcher. This is intentionally limited to the intro text
+    // wait state so battle menus can still replace callback2 normally later.
+    if (sAndroidBattleIntroDiagnosticState == BATTLE_INTRO_STATE_WAIT_FOR_INTRO_TEXT
+     && gMain.callback2 != BattleMainCB2)
+    {
+        gMain.callback2 = BattleMainCB2;
+        PortRuntime_SetBattleDiagnosticStage("F2");
+    }
 #endif
 }
 
