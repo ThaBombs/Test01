@@ -15,15 +15,26 @@ void BlitBitmapRect4Bit(const struct Bitmap *src, struct Bitmap *dst, u16 srcX, 
     s32 toAnd;
     s32 toShift;
 
-    if (dst->width - dstX < width)
-        xEnd = (dst->width - dstX) + srcX;
-    else
-        xEnd = srcX + width;
+    // Clip against both bitmaps. The original GBA routine only clipped
+    // against the destination, which can read past small source bitmaps when
+    // callers animate by supplying a non-zero srcX/srcY (for example the
+    // battle text prompt arrow). Native hosts cannot safely rely on adjacent
+    // ROM data being readable.
+    xEnd = srcX + width;
+    if (xEnd > src->width)
+        xEnd = src->width;
+    if ((s32)dst->width - dstX < xEnd - srcX)
+        xEnd = ((s32)dst->width - dstX) + srcX;
+    if (xEnd < srcX)
+        xEnd = srcX;
 
-    if (dst->height - dstY < height)
-        yEnd = (dst->height - dstY) + srcY;
-    else
-        yEnd = height + srcY;
+    yEnd = srcY + height;
+    if (yEnd > src->height)
+        yEnd = src->height;
+    if ((s32)dst->height - dstY < yEnd - srcY)
+        yEnd = ((s32)dst->height - dstY) + srcY;
+    if (yEnd < srcY)
+        yEnd = srcY;
 
     multiplierSrcY = (src->width + (src->width & 7)) >> 3;
     multiplierDstY = (dst->width + (dst->width & 7)) >> 3;
