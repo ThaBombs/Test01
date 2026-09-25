@@ -255,8 +255,6 @@ static bool32 sAndroidBattleStartDiagnosticDone;
 static bool32 sAndroidBattleSpriteInitDiagnosticStarted;
 static bool32 sAndroidBattleMainCb1DiagnosticDone;
 static bool32 sAndroidBattleMainCb2DiagnosticDone;
-static bool32 sAndroidR8ControllerTraceDone;
-static bool32 sAndroidR8Cb2TraceDone;
 static u8 sAndroidBattleIntroDiagnosticState;
 static u8 sAndroidBeforeFirstTurnDiagnosticState;
 #endif
@@ -491,8 +489,6 @@ void CB2_InitBattle(void)
     sAndroidBattleSpriteInitDiagnosticStarted = FALSE;
     sAndroidBattleMainCb1DiagnosticDone = FALSE;
     sAndroidBattleMainCb2DiagnosticDone = FALSE;
-    sAndroidR8ControllerTraceDone = FALSE;
-    sAndroidR8Cb2TraceDone = FALSE;
     sAndroidBattleIntroDiagnosticState = 0xFF;
     sAndroidBeforeFirstTurnDiagnosticState = 0xFF;
     PortRuntime_SetBattleDiagnosticStage("BATTLE A");
@@ -1844,40 +1840,28 @@ void BattleMainCB2(void)
 {
 #ifdef PLATFORM_ANDROID
     bool32 trace = !sAndroidBattleMainCb2DiagnosticDone;
-    bool32 traceR8 = !sAndroidR8Cb2TraceDone
-                  && sAndroidBattleIntroDiagnosticState == BATTLE_INTRO_STATE_WAIT_FOR_INTRO_TEXT;
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C2-A");
-    if (traceR8)
-        PortRuntime_SetBattleDiagnosticStage("Y0");
 #endif
     AnimateSprites();
 #ifdef PLATFORM_ANDROID
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C2-B");
-    if (traceR8)
-        PortRuntime_SetBattleDiagnosticStage("Y1");
 #endif
     BuildOamBuffer();
 #ifdef PLATFORM_ANDROID
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C2-C");
-    if (traceR8)
-        PortRuntime_SetBattleDiagnosticStage("Y2");
 #endif
     RunTextPrinters();
 #ifdef PLATFORM_ANDROID
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C2-D");
-    if (traceR8)
-        PortRuntime_SetBattleDiagnosticStage("Y3");
 #endif
     UpdatePaletteFade();
 #ifdef PLATFORM_ANDROID
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C2-E");
-    if (traceR8)
-        PortRuntime_SetBattleDiagnosticStage("Y4");
 #endif
     RunTasks();
 #ifdef PLATFORM_ANDROID
@@ -1885,11 +1869,6 @@ void BattleMainCB2(void)
     {
         PortRuntime_SetBattleDiagnosticStage("C2-Z");
         sAndroidBattleMainCb2DiagnosticDone = TRUE;
-    }
-    if (traceR8)
-    {
-        PortRuntime_SetBattleDiagnosticStage("Y5");
-        sAndroidR8Cb2TraceDone = TRUE;
     }
 #endif
 
@@ -2947,34 +2926,24 @@ static void BattleMainCB1(void)
 {
 #ifdef PLATFORM_ANDROID
     bool32 trace = !sAndroidBattleMainCb1DiagnosticDone;
-    bool32 traceR8 = !sAndroidR8ControllerTraceDone
-                  && sAndroidBattleIntroDiagnosticState == BATTLE_INTRO_STATE_WAIT_FOR_INTRO_TEXT;
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C1-A");
-    if (traceR8)
-        PortRuntime_SetBattleDiagnosticStage("U0");
 #endif
     gBattleMainFunc();
 #ifdef PLATFORM_ANDROID
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C1-B");
-    if (traceR8)
-        PortRuntime_SetBattleDiagnosticStage("U1");
 #endif
     for (enum BattlerId battler = 0; battler < gBattlersCount; battler++)
     {
 #ifdef PLATFORM_ANDROID
         if (trace)
             PortRuntime_SetBattleDiagnosticStage(battler == 0 ? "C1-C" : "C1-E");
-        if (traceR8)
-            PortRuntime_SetBattleDiagnosticStage(battler == 0 ? "U2" : "U4");
 #endif
         gBattlerControllerFuncs[battler](battler);
 #ifdef PLATFORM_ANDROID
         if (trace)
             PortRuntime_SetBattleDiagnosticStage(battler == 0 ? "C1-D" : "C1-F");
-        if (traceR8)
-            PortRuntime_SetBattleDiagnosticStage(battler == 0 ? "U3" : "U5");
 #endif
     }
 #ifdef PLATFORM_ANDROID
@@ -2982,23 +2951,6 @@ static void BattleMainCB1(void)
     {
         PortRuntime_SetBattleDiagnosticStage("C1-Z");
         sAndroidBattleMainCb1DiagnosticDone = TRUE;
-    }
-    if (traceR8)
-    {
-        PortRuntime_SetBattleDiagnosticStage("U6");
-        sAndroidR8ControllerTraceDone = TRUE;
-    }
-
-    // Native Android safety: nothing in the normal battle-intro wait path
-    // should replace callback2. If adjacent native state is corrupted during
-    // the controller pass, restore the battle render callback before returning
-    // to the main dispatcher. This is intentionally limited to the intro text
-    // wait state so battle menus can still replace callback2 normally later.
-    if (sAndroidBattleIntroDiagnosticState == BATTLE_INTRO_STATE_WAIT_FOR_INTRO_TEXT
-     && gMain.callback2 != BattleMainCB2)
-    {
-        gMain.callback2 = BattleMainCB2;
-        PortRuntime_SetBattleDiagnosticStage("F2");
     }
 #endif
 }
