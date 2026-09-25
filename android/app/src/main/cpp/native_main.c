@@ -2,7 +2,15 @@
 #include <android/log.h>
 #include <android/native_window.h>
 #include <android_native_app_glue.h>
+#include <dlfcn.h>
+#include <fcntl.h>
+#include <signal.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <ucontext.h>
+#include <unistd.h>
 #include <time.h>
 
 #include "port_runtime.h"
@@ -13,6 +21,122 @@
 #define LOG_TAG "PokeemeraldNative"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+
+static char sNativeCrashPath[512];
+static uintptr_t sNativeLibraryBase;
+
+static size_t AppendLiteral(char *dst, size_t pos, size_t cap, const char *src)
+{
+    while (*src != '\0' && pos + 1 < cap)
+        dst[pos++] = *src++;
+    return pos;
+}
+
+static size_t AppendHex32(char *dst, size_t pos, size_t cap, uintptr_t value)
+{
+    static const char hex[] = "0123456789ABCDEF";
+    const uint32_t v = (uint32_t)value;
+    for (int shift = 28; shift >= 0 && pos + 1 < cap; shift -= 4)
+        dst[pos++] = hex[(v >> shift) & 0xFu];
+    return pos;
+}
+
+static size_t AppendUnsigned(char *dst, size_t pos, size_t cap, unsigned value)
+{
+    char reverse[12];
+    size_t count = 0;
+    do
+    {
+        reverse[count++] = (char)('0' + value % 10u);
+        value /= 10u;
+    } while (value != 0 && count < sizeof(reverse));
+
+    while (count != 0 && pos + 1 < cap)
+        dst[pos++] = reverse[--count];
+    return pos;
+}
+
+static void NativeCrashHandler(int signalNumber, siginfo_t *info, void *context)
+{
+    uintptr_t pc = 0;
+    uintptr_t lr = 0;
+
+#if defined(__aarch64__)
+    ucontext_t *uc = (ucontext_t *)context;
+    if (uc != NULL)
+    {
+        pc = (uintptr_t)uc->uc_mcontext.pc;
+        lr = (uintptr_t)uc->uc_mcontext.regs[30];
+    }
+#elif defined(__arm__)
+    ucontext_t *uc = (ucontext_t *)context;
+    if (uc != NULL)
+    {
+        pc = (uintptr_t)uc->uc_mcontext.arm_pc;
+        lr = (uintptr_t)uc->uc_mcontext.arm_lr;
+    }
+#elif defined(__x86_64__)
+    ucontext_t *uc = (ucontext_t *)context;
+    if (uc != NULL)
+    {
+        pc = (uintptr_t)uc->uc_mcontext.gregs[REG_RIP];
+    }
+#endif
+
+    char message[96];
+    size_t pos = 0;
+    pos = AppendLiteral(message, pos, sizeof(message), "X");
+    pos = AppendUnsigned(message, pos, sizeof(message), (unsigned)signalNumber);
+    pos = AppendLiteral(message, pos, sizeof(message), " P");
+    pos = AppendHex32(message, pos, sizeof(message),
+                      pc >= sNativeLibraryBase ? pc - sNativeLibraryBase : pc);
+    pos = AppendLiteral(message, pos, sizeof(message), " L");
+    pos = AppendHex32(message, pos, sizeof(message),
+                      lr >= sNativeLibraryBase ? lr - sNativeLibraryBase : lr);
+    pos = AppendLiteral(message, pos, sizeof(message), " F");
+    pos = AppendHex32(message, pos, sizeof(message),
+                      info != NULL ? (uintptr_t)info->si_addr : 0u);
+    if (pos + 1 < sizeof(message))
+        message[pos++] = '\n';
+    message[pos] = '\0';
+
+    if (sNativeCrashPath[0] != '\0')
+    {
+        const int fd = open(sNativeCrashPath, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+        if (fd >= 0)
+        {
+            (void)write(fd, message, pos);
+            close(fd);
+        }
+    }
+
+    signal(signalNumber, SIG_DFL);
+    raise(signalNumber);
+}
+
+static void InstallNativeCrashHandler(const char *storagePath)
+{
+    if (storagePath != NULL && storagePath[0] != '\0')
+        snprintf(sNativeCrashPath, sizeof(sNativeCrashPath),
+                 "%s/battle_init_stage.txt", storagePath);
+
+    Dl_info info;
+    memset(&info, 0, sizeof(info));
+    if (dladdr((const void *)&android_main, &info) != 0 && info.dli_fbase != NULL)
+        sNativeLibraryBase = (uintptr_t)info.dli_fbase;
+
+    struct sigaction action;
+    memset(&action, 0, sizeof(action));
+    action.sa_sigaction = NativeCrashHandler;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_SIGINFO | SA_RESETHAND;
+
+    sigaction(SIGSEGV, &action, NULL);
+    sigaction(SIGBUS, &action, NULL);
+    sigaction(SIGABRT, &action, NULL);
+    sigaction(SIGILL, &action, NULL);
+    sigaction(SIGFPE, &action, NULL);
+}
 
 struct AndroidEngine
 {
@@ -286,6 +410,7 @@ void android_main(struct android_app *app)
 
     PortRuntime_Init();
     PortRuntime_SetStoragePath(app->activity->internalDataPath);
+    InstallNativeCrashHandler(app->activity->internalDataPath);
     PortGbaFlash_Init(app->activity->internalDataPath);
     LOGI("Native runtime started; no GBA ROM or emulator core is embedded.");
     const bool engineReady = PortRuntime_IsGbaHostReady();
