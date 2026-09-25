@@ -34,6 +34,56 @@ static void CreateBattlerTrace(struct Task *task, u8 taskId);
 
 EWRAM_DATA static union AffineAnimCmd *sAnimTaskAffineAnim = NULL;
 
+#ifdef PLATFORM_ANDROID
+struct AndroidStoredSpriteCallback
+{
+    struct Sprite *sprite;
+    SpriteCallback callback;
+};
+
+// GBA animation helpers commonly pack a callback pointer into data[6]/data[7].
+// Preserve those callbacks out-of-band on 64-bit Android instead.
+static struct AndroidStoredSpriteCallback sAndroidStoredSpriteCallbacks[MAX_SPRITES + 1];
+
+static void AndroidStoreSpriteCallback(struct Sprite *sprite, SpriteCallback callback)
+{
+    s32 freeSlot = -1;
+
+    for (s32 i = 0; i < ARRAY_COUNT(sAndroidStoredSpriteCallbacks); i++)
+    {
+        if (sAndroidStoredSpriteCallbacks[i].sprite == sprite)
+        {
+            sAndroidStoredSpriteCallbacks[i].callback = callback;
+            return;
+        }
+        if (freeSlot < 0 && sAndroidStoredSpriteCallbacks[i].sprite == NULL)
+            freeSlot = i;
+    }
+
+    if (freeSlot >= 0)
+    {
+        sAndroidStoredSpriteCallbacks[freeSlot].sprite = sprite;
+        sAndroidStoredSpriteCallbacks[freeSlot].callback = callback;
+    }
+}
+
+static SpriteCallback AndroidTakeSpriteCallback(struct Sprite *sprite)
+{
+    for (s32 i = 0; i < ARRAY_COUNT(sAndroidStoredSpriteCallbacks); i++)
+    {
+        if (sAndroidStoredSpriteCallbacks[i].sprite == sprite)
+        {
+            SpriteCallback callback = sAndroidStoredSpriteCallbacks[i].callback;
+            sAndroidStoredSpriteCallbacks[i].sprite = NULL;
+            sAndroidStoredSpriteCallbacks[i].callback = NULL;
+            return callback;
+        }
+    }
+
+    return NULL;
+}
+#endif
+
 const struct UCoords8 sBattlerCoords[BATTLE_COORDS_COUNT][MAX_BATTLERS_COUNT] =
 {
     [BATTLE_COORDS_SINGLES] =
@@ -329,14 +379,26 @@ u8 GetAnimBattlerSpriteId(enum AnimBattler animBattler)
 
 void StoreSpriteCallbackInData6(struct Sprite *sprite, void (*callback)(struct Sprite *))
 {
+#ifdef PLATFORM_ANDROID
+    AndroidStoreSpriteCallback(sprite, callback);
+#else
     sprite->data[6] = (u32)(callback) & 0xffff;
     sprite->data[7] = (u32)(callback) >> 16;
+#endif
 }
 
 void SetCallbackToStoredInData6(struct Sprite *sprite)
 {
+#ifdef PLATFORM_ANDROID
+    SpriteCallback callback = AndroidTakeSpriteCallback(sprite);
+
+    // A missing stored callback means the sprite's continuation state is
+    // inconsistent. Do not manufacture a truncated native pointer.
+    sprite->callback = callback != NULL ? callback : SpriteCallbackDummy;
+#else
     u32 callback = (u16)sprite->data[6] | (sprite->data[7] << 16);
     sprite->callback = (void (*)(struct Sprite *))callback;
+#endif
 }
 
 // Sprite data for TranslateSpriteInCircle/Ellipse and related
