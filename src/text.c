@@ -60,10 +60,6 @@ static void FreeFinishedTextPrinters(void);
 static void SpriteCB_TextCursor(struct Sprite *sprite);
 
 static EWRAM_DATA struct TextPrinter *sFirstTextPrinter = NULL;
-#ifdef PLATFORM_ANDROID
-static u8 sAndroidLastBattleTextRenderState = 0xFF;
-static u8 sAndroidBattleMessageGlyphCount;
-#endif
 
 static EWRAM_DATA u16 sFontHalfRowLookupTable[0x100];
 static EWRAM_DATA union TextColor sLastTextColor;
@@ -478,12 +474,6 @@ bool32 AddTextPrinter(struct TextPrinterTemplate *printerTemplate, u8 speed, voi
     if (!gFonts)
         return FALSE;
 
-#ifdef PLATFORM_ANDROID
-    if (gMain.inBattle
-     && printerTemplate->type == WINDOW_TEXT_PRINTER
-     && printerTemplate->windowId == B_WIN_MSG)
-        sAndroidBattleMessageGlyphCount = 0;
-#endif
 
     struct TextPrinter sTempTextPrinter = {0};
 
@@ -571,19 +561,7 @@ void RunTextPrinters(void)
                         switch (currentPrinter->printerTemplate.type)
                         {
                         case WINDOW_TEXT_PRINTER:
-#ifdef PLATFORM_ANDROID
-                            if (gMain.inBattle
-                             && currentPrinter->printerTemplate.windowId == B_WIN_MSG
-                             && sAndroidBattleMessageGlyphCount == 3)
-                                PortRuntime_SetBattleDiagnosticStage("G5");
-#endif
                             CopyWindowToVram(currentPrinter->printerTemplate.windowId, COPYWIN_GFX);
-#ifdef PLATFORM_ANDROID
-                            if (gMain.inBattle
-                             && currentPrinter->printerTemplate.windowId == B_WIN_MSG
-                             && sAndroidBattleMessageGlyphCount == 3)
-                                PortRuntime_SetBattleDiagnosticStage("G6");
-#endif
                             break;
                         case SPRITE_TEXT_PRINTER:
                             break;
@@ -807,43 +785,13 @@ static u32 OffsetCurrGlyph(u32 shiftWidth)
 
 inline static void GLYPH_COPY(u8 *windowTiles, u32 widthOffset, u32 x0, u32 y0, u32 *glyphPixels, s32 width, s32 height)
 {
-    if (width <= 0 || height <= 0)
+    if (width <= 0)
         return;
 
-#ifdef PLATFORM_ANDROID
-    // The GBA implementation below packs an entire glyph row into a u32 and
-    // spills across tile boundaries with alignedWindowTiles[8]. On native
-    // hosts that relies on very specific VRAM/tile packing and pointer
-    // assumptions. Battle text exposes the spill path as soon as a glyph
-    // begins near the right edge of an 8 px tile. Use the equivalent explicit
-    // 4bpp addressing on Android so crossing a tile boundary cannot address
-    // outside the intended tile row.
-    for (s32 row = 0; row < height; row++)
-    {
-        const u32 pixels = glyphPixels[row];
-        const u32 y = y0 + row;
-
-        for (s32 col = 0; col < width; col++)
-        {
-            const u8 pixel = (pixels >> (col * 4)) & 0xF;
-            if (pixel == 0)
-                continue;
-
-            const u32 x = x0 + col;
-            u8 *dst = windowTiles
-                    + (y / 8) * widthOffset
-                    + (x / 8) * TILE_SIZE_4BPP
-                    + (y % 8) * 4
-                    + (x % 8) / 2;
-
-            if (x & 1)
-                *dst = (*dst & 0x0F) | (pixel << 4);
-            else
-                *dst = (*dst & 0xF0) | pixel;
-        }
-    }
-    return;
-#else
+    // Avoid undefined 32-bit shifts on native hosts. The original GBA
+    // implementation relies on ARM behavior here: an 8-pixel glyph needs a
+    // full 32-bit mask, and a glyph aligned to an 8-pixel tile boundary must
+    // not spill into the tile to its right.
     const u32 widthMask = width >= 8
         ? 0xFFFFFFFFu
         : ((1u << (width * 4)) - 1u);
@@ -874,7 +822,6 @@ inline static void GLYPH_COPY(u8 *windowTiles, u32 widthOffset, u32 x0, u32 y0, 
         if (mask8 != 0)
             alignedWindowTiles[8] = (alignedWindowTiles[8] & ~mask8) | pixels8;
     }
-#endif
 }
 
 u32 CopyGlyphToVRAM(struct TextPrinter *textPrinter)
@@ -1398,22 +1345,6 @@ static u16 RenderText(struct TextPrinter *textPrinter)
     s32 width;
     s32 widthHelper;
 
-#ifdef PLATFORM_ANDROID
-    if (gMain.inBattle && sAndroidLastBattleTextRenderState != textPrinter->state)
-    {
-        sAndroidLastBattleTextRenderState = textPrinter->state;
-        switch (textPrinter->state)
-        {
-        case RENDER_STATE_HANDLE_CHAR:   PortRuntime_SetBattleDiagnosticStage("T0"); break;
-        case RENDER_STATE_WAIT:          PortRuntime_SetBattleDiagnosticStage("T1"); break;
-        case RENDER_STATE_CLEAR:         PortRuntime_SetBattleDiagnosticStage("T2"); break;
-        case RENDER_STATE_SCROLL_START:  PortRuntime_SetBattleDiagnosticStage("T3"); break;
-        case RENDER_STATE_SCROLL:        PortRuntime_SetBattleDiagnosticStage("T4"); break;
-        case RENDER_STATE_WAIT_SE:       PortRuntime_SetBattleDiagnosticStage("T5"); break;
-        case RENDER_STATE_PAUSE:         PortRuntime_SetBattleDiagnosticStage("T6"); break;
-        }
-    }
-#endif
 
     switch (textPrinter->state)
     {
@@ -1437,24 +1368,10 @@ static u16 RenderText(struct TextPrinter *textPrinter)
         else
             textPrinter->delayCounter = textPrinter->textSpeed;
 
-#ifdef PLATFORM_ANDROID
-        bool32 traceBattleGlyph = gMain.inBattle
-                              && textPrinter->printerTemplate.type == WINDOW_TEXT_PRINTER
-                              && textPrinter->printerTemplate.windowId == B_WIN_MSG
-                              && sAndroidBattleMessageGlyphCount == 2;
-        if (traceBattleGlyph)
-            PortRuntime_SetBattleDiagnosticStage("G0");
-#endif
-
         do {
             currChar = *textPrinter->printerTemplate.currentChar;
             textPrinter->printerTemplate.currentChar++;
         } while (currChar == CHAR_ZWS);
-
-#ifdef PLATFORM_ANDROID
-        if (traceBattleGlyph)
-            PortRuntime_SetBattleDiagnosticStage("G1");
-#endif
 
         switch (currChar)
         {
@@ -1678,10 +1595,6 @@ static u16 RenderText(struct TextPrinter *textPrinter)
             return RENDER_FINISH;
         }
 
-#ifdef PLATFORM_ANDROID
-        if (traceBattleGlyph)
-            PortRuntime_SetBattleDiagnosticStage("G2");
-#endif
         switch (textPrinter->fontId)
         {
         case FONT_SMALL:
@@ -1718,20 +1631,7 @@ static u16 RenderText(struct TextPrinter *textPrinter)
             break;
         }
 
-#ifdef PLATFORM_ANDROID
-        if (traceBattleGlyph)
-            PortRuntime_SetBattleDiagnosticStage("G3");
-#endif
         PrintGlyph(textPrinter);
-#ifdef PLATFORM_ANDROID
-        if (traceBattleGlyph)
-            PortRuntime_SetBattleDiagnosticStage("G4");
-        if (gMain.inBattle
-         && textPrinter->printerTemplate.type == WINDOW_TEXT_PRINTER
-         && textPrinter->printerTemplate.windowId == B_WIN_MSG
-         && sAndroidBattleMessageGlyphCount < 0xFF)
-            sAndroidBattleMessageGlyphCount++;
-#endif
 
         return RENDER_PRINT;
     case RENDER_STATE_WAIT:
