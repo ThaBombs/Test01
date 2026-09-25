@@ -46,6 +46,9 @@ COMMON_DATA void (*gBattlerControllerFuncs[MAX_BATTLERS_COUNT])(enum BattlerId b
 COMMON_DATA u8 gBattleControllerData[MAX_BATTLERS_COUNT] = {0}; // Used by the battle controllers to store misc sprite/task IDs for each battler
 COMMON_DATA void (*gBattlerControllerEndFuncs[MAX_BATTLERS_COUNT])(enum BattlerId battler) = {0}; // Controller's buffer complete function for each battler
 u8 gBattlerBattleController[MAX_BATTLERS_COUNT] = {0}; // Battle controller for each battler
+#ifdef PLATFORM_ANDROID
+static bool8 sAndroidStringWaitDiagnosticStarted[MAX_BATTLERS_COUNT];
+#endif
 
 static void CreateTasksForSendRecvLinkBuffers(void);
 static void InitBtlControllersInternal(void);
@@ -2256,7 +2259,11 @@ static void Controller_WaitForTrainerPic(enum BattlerId battler)
 void Controller_WaitForString(enum BattlerId battler)
 {
 #ifdef PLATFORM_ANDROID
-    PortRuntime_SetBattleDiagnosticStage("W0");
+    if (!sAndroidStringWaitDiagnosticStarted[battler])
+    {
+        sAndroidStringWaitDiagnosticStarted[battler] = TRUE;
+        PortRuntime_SetBattleDiagnosticStage("W0");
+    }
 #endif
     if (!IsTextPrinterActiveOnWindow(B_WIN_MSG))
     {
@@ -2266,6 +2273,7 @@ void Controller_WaitForString(enum BattlerId battler)
         BtlController_Complete(battler);
 #ifdef PLATFORM_ANDROID
         PortRuntime_SetBattleDiagnosticStage("W2");
+        sAndroidStringWaitDiagnosticStarted[battler] = FALSE;
 #endif
     }
 }
@@ -2738,6 +2746,7 @@ void BtlController_HandlePrintString(enum BattlerId battler)
 
     gBattlerControllerFuncs[battler] = Controller_WaitForString;
 #ifdef PLATFORM_ANDROID
+    sAndroidStringWaitDiagnosticStarted[battler] = FALSE;
     PortRuntime_SetBattleDiagnosticStage("P5");
 #endif
     if (ShouldUpdateTvData(battler))
