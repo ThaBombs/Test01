@@ -918,10 +918,16 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
         break;
     case 6:
 #ifdef PLATFORM_ANDROID
-        PortRuntime_SetBattleDiagnosticStage("B-Z");
+        PortRuntime_SetBattleDiagnosticStage("Z-A");
 #endif
         LoadAndCreateEnemyShadowSprites();
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("Z-B");
+#endif
         BufferBattlePartyCurrentOrder();
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("Z-C");
+#endif
         retVal = TRUE;
         break;
     }
@@ -1199,15 +1205,27 @@ void SetBattlerSpriteAffineMode(u8 affineMode)
 
 void CreateEnemyShadowSprite(enum BattlerId battler)
 {
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("H-A");
+#endif
     if (B_ENEMY_MON_SHADOW_STYLE >= GEN_4 && P_GBA_STYLE_SPECIES_GFX == FALSE)
     {
         enum Species species = GetBattlerVisualSpecies(battler);
-        u8 size = gSpeciesInfo[species].enemyShadowSize;
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("H-B");
+#endif
+        u8 size = gSpeciesInfo[SanitizeSpeciesId(species)].enemyShadowSize;
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("H-C");
+#endif
 
         gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteIdPrimary = CreateSpriteUnchecked(&gSpriteTemplate_EnemyShadow,
                                                                                              GetBattlerSpriteCoord(battler, BATTLER_COORD_X),
                                                                                              GetBattlerSpriteCoord(battler, BATTLER_COORD_Y),
                                                                                              0xC8);
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("H-D");
+#endif
         if (gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteIdPrimary < MAX_SPRITES)
         {
             struct Sprite *sprite = &gSprites[gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteIdPrimary];
@@ -1222,6 +1240,9 @@ void CreateEnemyShadowSprite(enum BattlerId battler)
                                                                                                GetBattlerSpriteCoord(battler, BATTLER_COORD_X),
                                                                                                GetBattlerSpriteCoord(battler, BATTLER_COORD_Y),
                                                                                                0xC8);
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("H-E");
+#endif
         if (gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteIdSecondary < MAX_SPRITES)
         {
             struct Sprite *sprite = &gSprites[gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteIdSecondary];
@@ -1253,9 +1274,15 @@ void LoadAndCreateEnemyShadowSprites(void)
     enum BattlerId battler;
     enum BattlerId i;
 
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("Z-D");
+#endif
     if (B_ENEMY_MON_SHADOW_STYLE >= GEN_4 && P_GBA_STYLE_SPECIES_GFX == FALSE)
     {
         LoadCompressedSpriteSheet(&gSpriteSheet_EnemyShadowsSized);
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("Z-E");
+#endif
 
         // initialize shadow sprite ids
         for (i = 0; i < gBattlersCount; i++)
@@ -1267,6 +1294,9 @@ void LoadAndCreateEnemyShadowSprites(void)
     else
     {
         LoadCompressedSpriteSheet(&gSpriteSheet_EnemyShadow);
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("Z-E");
+#endif
 
         // initialize shadow sprite ids
         for (i = 0; i < gBattlersCount; i++)
@@ -1275,8 +1305,17 @@ void LoadAndCreateEnemyShadowSprites(void)
         }
     }
 
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("Z-F");
+#endif
     battler = GetBattlerAtPosition(B_POSITION_OPPONENT_LEFT);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("Z-X");
+#endif
     CreateEnemyShadowSprite(battler);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("Z-Y");
+#endif
 
     if (IsDoubleBattle())
     {
