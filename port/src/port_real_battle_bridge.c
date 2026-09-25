@@ -6,7 +6,6 @@
 #include "battle_main.h"
 #include "main.h"
 #include "pokemon.h"
-#include "script_pokemon_util.h"
 #include "starter_choose.h"
 #include "window.h"
 #include "constants/battle.h"
@@ -25,11 +24,17 @@ bool32 PortRealBattle_StartFirstBattle(u8 starterChoice)
         return FALSE;
 
     // The Android layer only supplies the choice and callback boundary.
-    // Party creation, moves, stats and the Birch Zigzagoon are owned by the
-    // original Emerald systems.
+    // Create the known first-battle party directly with Emerald's real
+    // Pokemon routines. ScriptGiveMon() also performs PC/Pokedex bookkeeping,
+    // which is unnecessary here and crosses Android subsystems that are not
+    // part of the first-battle runtime yet.
     ZeroPlayerPartyMons();
-    if (ScriptGiveMon(GetStarterPokemon(starterChoice), 5, ITEM_NONE) == MON_CANT_GIVE)
-        return FALSE;
+    ZeroEnemyPartyMons();
+    CreateRandomMon(
+        &gParties[B_TRAINER_PLAYER][0],
+        GetStarterPokemon(starterChoice),
+        5);
+    gPartiesCount[B_TRAINER_PLAYER] = 1;
 
     gBattleTypeFlags = BATTLE_TYPE_FIRST_BATTLE;
     gMain.savedCallback = PortRealBattle_ReturnFromEngine;
