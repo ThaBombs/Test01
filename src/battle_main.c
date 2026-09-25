@@ -255,6 +255,7 @@ static bool32 sAndroidBattleStartDiagnosticDone;
 static bool32 sAndroidBattleSpriteInitDiagnosticStarted;
 static bool32 sAndroidBattleMainCb1DiagnosticDone;
 static bool32 sAndroidBattleMainCb2DiagnosticDone;
+static bool32 sAndroidR8ControllerTraceDone;
 static u8 sAndroidBattleIntroDiagnosticState;
 static u8 sAndroidBeforeFirstTurnDiagnosticState;
 #endif
@@ -489,6 +490,7 @@ void CB2_InitBattle(void)
     sAndroidBattleSpriteInitDiagnosticStarted = FALSE;
     sAndroidBattleMainCb1DiagnosticDone = FALSE;
     sAndroidBattleMainCb2DiagnosticDone = FALSE;
+    sAndroidR8ControllerTraceDone = FALSE;
     sAndroidBattleIntroDiagnosticState = 0xFF;
     sAndroidBeforeFirstTurnDiagnosticState = 0xFF;
     PortRuntime_SetBattleDiagnosticStage("BATTLE A");
@@ -2926,24 +2928,34 @@ static void BattleMainCB1(void)
 {
 #ifdef PLATFORM_ANDROID
     bool32 trace = !sAndroidBattleMainCb1DiagnosticDone;
+    bool32 traceR8 = !sAndroidR8ControllerTraceDone
+                  && sAndroidBattleIntroDiagnosticState == BATTLE_INTRO_STATE_WAIT_FOR_INTRO_TEXT;
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C1-A");
+    if (traceR8)
+        PortRuntime_SetBattleDiagnosticStage("U0");
 #endif
     gBattleMainFunc();
 #ifdef PLATFORM_ANDROID
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C1-B");
+    if (traceR8)
+        PortRuntime_SetBattleDiagnosticStage("U1");
 #endif
     for (enum BattlerId battler = 0; battler < gBattlersCount; battler++)
     {
 #ifdef PLATFORM_ANDROID
         if (trace)
             PortRuntime_SetBattleDiagnosticStage(battler == 0 ? "C1-C" : "C1-E");
+        if (traceR8)
+            PortRuntime_SetBattleDiagnosticStage(battler == 0 ? "U2" : "U4");
 #endif
         gBattlerControllerFuncs[battler](battler);
 #ifdef PLATFORM_ANDROID
         if (trace)
             PortRuntime_SetBattleDiagnosticStage(battler == 0 ? "C1-D" : "C1-F");
+        if (traceR8)
+            PortRuntime_SetBattleDiagnosticStage(battler == 0 ? "U3" : "U5");
 #endif
     }
 #ifdef PLATFORM_ANDROID
@@ -2951,6 +2963,11 @@ static void BattleMainCB1(void)
     {
         PortRuntime_SetBattleDiagnosticStage("C1-Z");
         sAndroidBattleMainCb1DiagnosticDone = TRUE;
+    }
+    if (traceR8)
+    {
+        PortRuntime_SetBattleDiagnosticStage("U6");
+        sAndroidR8ControllerTraceDone = TRUE;
     }
 #endif
 }
