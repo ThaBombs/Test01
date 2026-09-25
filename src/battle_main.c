@@ -64,6 +64,9 @@
 #include "util.h"
 #include "wild_encounter.h"
 #include "window.h"
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
 #include "constants/abilities.h"
 #include "constants/battle_ai.h"
 #include "constants/battle_move_effects.h"
@@ -471,12 +474,18 @@ const u8 *const gStatusConditionStringsTable[][2] =
 
 void CB2_InitBattle(void)
 {
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("BATTLE A");
+#endif
     if (!gTestRunnerEnabled)
         MoveSaveBlocks_ResetHeap();
     AllocateBattleResources();
     AllocateBattleSpritesData();
     AllocateMonSpritesGfx();
     RecordedBattle_ClearFrontierPassFlag();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("BATTLE B");
+#endif
 
 #if TESTING
     gLoadFail = FALSE;
@@ -521,6 +530,9 @@ static void CB2_InitBattleInternal(void)
     SetGpuReg(REG_OFFSET_WINOUT, 0);
 
     gBattle_WIN0H = DISPLAY_WIDTH;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("BATTLE C");
+#endif
 
     if (gBattleTypeFlags & BATTLE_TYPE_INGAME_PARTNER && gPartnerTrainerId < TRAINER_PARTNER(PARTNER_NONE))
     {
@@ -566,6 +578,9 @@ static void CB2_InitBattleInternal(void)
         gBattleEnvironment = BATTLE_ENVIRONMENT_BUILDING;
     if (TestRunner_Battle_GetForcedEnvironment())
         gBattleEnvironment = TestRunner_Battle_GetForcedEnvironment() - 1;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("BATTLE E");
+#endif
 
     InitBattleBgsVideo();
     LoadBattleTextboxAndBackground();
@@ -576,6 +591,9 @@ static void CB2_InitBattleInternal(void)
     FreeAllSpritePalettes();
     gReservedSpritePaletteCount = MAX_BATTLERS_COUNT;
     SetVBlankCallback(VBlankCB_Battle);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("BATTLE F");
+#endif
     SetUpBattleVarsAndBirchZigzagoon();
 
     if (gBattleTypeFlags & BATTLE_TYPE_MULTI
