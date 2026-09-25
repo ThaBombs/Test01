@@ -30,6 +30,19 @@
 #include "battle_z_move.h"
 #include "debug.h"
 #include "battle_debug.h"
+#include "battle_tower.h"
+#include "cable_club.h"
+#include "evolution_graphics.h"
+#include "field_control_avatar.h"
+#include "field_move.h"
+#include "field_specials.h"
+#include "field_weather.h"
+#include "fldeff.h"
+#include "region_map.h"
+#include "start_menu.h"
+#include "strings.h"
+#include "trade.h"
+#include "union_room.h"
 #include "berry_powder.h"
 #include "bike.h"
 #include "coins.h"
@@ -999,3 +1012,408 @@ const u8 BattleFrontier_Lounge5_Text_NatureGirlDefenseHighSupportLow[] = {EOS};
 const u8 BattleFrontier_Lounge5_Text_NatureGirlSupportHighAttackLow[] = {EOS};
 const u8 BattleFrontier_Lounge5_Text_NatureGirlSupportHighDefenseLow[] = {EOS};
 const u8 BattleFrontier_Lounge5_Text_NatureGirlSupportHighSupportLow[] = {EOS};
+
+
+/* Android battle-closure boundary adapters (link/RFU/field-only side paths). */
+
+/*
+ * These symbols are referenced from real Emerald battle objects, but belong to
+ * surrounding GBA-only field/link/trading UIs that are not reachable from the
+ * first Android single-player battle. Keep the real battle modules linked and
+ * close only those peripheral edges here.
+ */
+
+s16 CompactPartySlots(void)
+{
+    s16 firstEmpty = -1;
+    u16 i, last;
+
+    for (i = 0, last = 0; i < PARTY_SIZE; i++)
+    {
+        enum Species species = GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_SPECIES);
+        if (species != SPECIES_NONE)
+        {
+            if (i != last)
+                gParties[B_TRAINER_PLAYER][last] = gParties[B_TRAINER_PLAYER][i];
+            last++;
+        }
+        else if (firstEmpty == -1)
+        {
+            firstEmpty = i;
+        }
+    }
+
+    for (; last < PARTY_SIZE; last++)
+        ZeroMonData(&gParties[B_TRAINER_PLAYER][last]);
+
+    return firstEmpty;
+}
+
+void AppendToList(u8 *list, u8 *pos, u8 newEntry)
+{
+    list[*pos] = newEntry;
+    (*pos)++;
+}
+
+bool8 InMultiPartnerRoom(void)
+{
+    return FALSE;
+}
+
+static bool32 AndroidFieldMoveUnavailable(enum FieldMove fieldMove)
+{
+    (void)fieldMove;
+    return FALSE;
+}
+
+const struct FieldMoveUnlock gFieldMoveUnlocks[FIELD_MOVE_UNLOCK_COUNT] =
+{
+    [0 ... FIELD_MOVE_UNLOCK_COUNT - 1] = {AndroidFieldMoveUnavailable, NULL},
+};
+
+const struct FieldMoveInfo gFieldMoveInfo[FIELD_MOVES_COUNT] =
+{
+    [0 ... FIELD_MOVES_COUNT - 1] = {
+        .unlockType = CANT_UNLOCK,
+        .moveID = MOVE_NONE,
+        .hideIfLocked = TRUE,
+    },
+};
+
+static struct RfuGameData sAndroidHostRfuGameData;
+struct RfuGameCompatibilityData gRfuPartnerCompatibilityData = {0};
+enum Species gUnionRoomOfferedSpecies = SPECIES_NONE;
+enum Type gUnionRoomRequestedMonType = TYPE_NONE;
+
+struct RfuGameData *GetHostRfuGameData(void)
+{
+    return &sAndroidHostRfuGameData;
+}
+
+int CanRegisterMonForTradingBoard(struct RfuGameCompatibilityData player, enum Species species2, enum Species species, bool8 isModernFatefulEncounter)
+{
+    (void)player;
+    (void)species2;
+    (void)species;
+    (void)isModernFatefulEncounter;
+    return 0;
+}
+
+int GetUnionRoomTradeMessageId(struct RfuGameCompatibilityData player, struct RfuGameCompatibilityData partner, enum Species playerSpecies2, enum Species partnerSpecies, enum Type requestedType, enum Species playerSpecies, bool8 isModernFatefulEncounter)
+{
+    (void)player;
+    (void)partner;
+    (void)playerSpecies2;
+    (void)partnerSpecies;
+    (void)requestedType;
+    (void)playerSpecies;
+    (void)isModernFatefulEncounter;
+    return 0;
+}
+
+enum CanTradeMon CanSpinTradeMon(struct Pokemon *mon, u16 monIdx)
+{
+    (void)mon;
+    (void)monIdx;
+    return (enum CanTradeMon)0;
+}
+
+void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, void (*callback)(void))
+{
+    (void)mode;
+    (void)mons;
+    (void)monIndex;
+    (void)maxMonIndex;
+    if (callback != NULL)
+        SetMainCallback2(callback);
+}
+
+void ChooseMonForSoftboiled(u8 taskId)
+{
+    DestroyTask(taskId);
+}
+
+u8 *GetMapNameGeneric(u8 *dest, mapsec_u16_t mapSecId)
+{
+    (void)mapSecId;
+    if (dest != NULL)
+        dest[0] = EOS;
+    return dest;
+}
+
+void CB2_OpenFlyMap(void)
+{
+}
+
+bool8 (*gFieldCallback2)(void) = NULL;
+
+void UpdatePocketItemList(enum Pocket pocketId)
+{
+    (void)pocketId;
+}
+
+void UpdatePocketListPosition(u8 pocketId)
+{
+    (void)pocketId;
+}
+
+void UpdatePyramidBagList(void)
+{
+}
+
+void UpdatePyramidBagCursorPos(void)
+{
+}
+
+void StartSweetScentFieldEffect(void)
+{
+}
+
+const u8 EventScript_RegionMap[] = {EOS};
+
+u8 GetObjectEventIdByLocalIdAndMap(u8 localId, u8 mapNum, u8 mapGroupId)
+{
+    (void)localId;
+    (void)mapNum;
+    (void)mapGroupId;
+    return OBJECT_EVENTS_COUNT;
+}
+
+void ObjectEventClearHeldMovementIfFinished(struct ObjectEvent *objectEvent)
+{
+    (void)objectEvent;
+}
+
+void ObjectEventClearHeldMovement(struct ObjectEvent *objectEvent)
+{
+    (void)objectEvent;
+}
+
+void UnfreezeObjectEvent(struct ObjectEvent *objectEvent)
+{
+    (void)objectEvent;
+}
+
+u8 ObjectEventCheckHeldMovementStatus(struct ObjectEvent *objectEvent)
+{
+    (void)objectEvent;
+    return 0;
+}
+
+void BagMenu_YesNo(u8 taskId, u8 windowType, const struct YesNoFuncTable *funcTable)
+{
+    (void)taskId;
+    (void)windowType;
+    (void)funcTable;
+}
+
+void LoadWirelessStatusIndicatorSpriteGfx(void)
+{
+}
+
+void GetBattleTowerTrainerLanguage(u8 *dst, u16 trainerId)
+{
+    (void)trainerId;
+    if (dst != NULL)
+        *dst = 0;
+}
+
+void CreateWirelessStatusIndicatorSprite(u8 x, u8 y)
+{
+    (void)x;
+    (void)y;
+}
+
+void TrySetLinkBattleTowerEnemyPartyLevel(void)
+{
+}
+
+void TryPutPokemonTodayOnAir(void)
+{
+}
+
+void TryPutBreakingNewsOnAir(void)
+{
+}
+
+void Task_ReconnectWithLinkPlayers(u8 taskId)
+{
+    DestroyTask(taskId);
+}
+
+const u8 gText_LinkStandby3[] = {EOS};
+const u8 BattleFrontier_BattleTowerBattleRoom_Text_RecordCouldntBeSaved[] = {EOS};
+
+void SetWirelessCommType1(void)
+{
+}
+
+void OpenLink(void)
+{
+}
+
+void Task_WaitForLinkPlayerConnection(u8 taskId)
+{
+    DestroyTask(taskId);
+}
+
+struct ObjectEvent *GetFollowerObject(void)
+{
+    return NULL;
+}
+
+u8 GetLinkPlayerCount_2(void)
+{
+    return 1;
+}
+
+bool8 IsLinkMaster(void)
+{
+    return TRUE;
+}
+
+void CheckShouldAdvanceLinkState(void)
+{
+}
+
+void LoadEvoSparkleSpriteAndPal(void)
+{
+}
+
+u8 EvolutionSparkles_SpiralUpward(u16 palNum)
+{
+    (void)palNum;
+    return 0;
+}
+
+u8 EvolutionSparkles_ArcDown(void)
+{
+    return 0;
+}
+
+u8 CycleEvolutionMonSprite(u8 preEvoSpriteId, u8 postEvoSpriteId)
+{
+    (void)preEvoSpriteId;
+    (void)postEvoSpriteId;
+    return 0;
+}
+
+u8 EvolutionSparkles_CircleInward(void)
+{
+    return 0;
+}
+
+u8 EvolutionSparkles_SprayAndFlash(enum Species species)
+{
+    (void)species;
+    return 0;
+}
+
+void Overworld_PlaySpecialMapMusic(void)
+{
+}
+
+bool8 ObjectEventIsMovementOverridden(struct ObjectEvent *objectEvent)
+{
+    (void)objectEvent;
+    return FALSE;
+}
+
+bool8 ObjectEventSetHeldMovement(struct ObjectEvent *objectEvent, u8 specialAnimId)
+{
+    (void)objectEvent;
+    (void)specialAnimId;
+    return FALSE;
+}
+
+u8 GetWalkInPlaceFastMovementAction(u32 direction)
+{
+    (void)direction;
+    return 0;
+}
+
+enum Collision GetCollisionAtCoords(struct ObjectEvent *objectEvent, s16 x, s16 y, enum Direction dir)
+{
+    (void)objectEvent;
+    (void)x;
+    (void)y;
+    (void)dir;
+    return (enum Collision)0;
+}
+
+u8 gSelectedObjectEvent = 0;
+
+u8 GetObjectEventBerryTreeId(u8 objectEventId)
+{
+    (void)objectEventId;
+    return 0;
+}
+
+const u8 *GetObjectEventScriptPointerPlayerFacing(void)
+{
+    return NULL;
+}
+
+const u8 BerryTreeScript[] = {EOS};
+
+bool32 MapHasNaturalLight(enum MapType mapType)
+{
+    (void)mapType;
+    return FALSE;
+}
+
+void UpdateAltBgPalettes(u16 palettes)
+{
+    (void)palettes;
+}
+
+struct TimeBlendSettings gTimeBlend = {0};
+
+bool32 IsOverworldLinkActive(void)
+{
+    return FALSE;
+}
+
+bool32 IsLinkRecvQueueAtOverworldMax(void)
+{
+    return FALSE;
+}
+
+bool32 Overworld_IsRecvQueueAtMax(void)
+{
+    return FALSE;
+}
+
+static const struct OamData sAndroidCategoryIconOam =
+{
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
+    .mosaic = FALSE,
+    .bpp = ST_OAM_4BPP,
+    .shape = SPRITE_SHAPE(32x16),
+    .size = SPRITE_SIZE(32x16),
+    .priority = 1,
+};
+
+static const union AnimCmd sAndroidCategoryIconAnim[] =
+{
+    ANIMCMD_FRAME(0, 0),
+    ANIMCMD_END,
+};
+
+static const union AnimCmd *const sAndroidCategoryIconAnims[] =
+{
+    sAndroidCategoryIconAnim,
+    sAndroidCategoryIconAnim,
+    sAndroidCategoryIconAnim,
+    sAndroidCategoryIconAnim,
+};
+
+const struct SpriteTemplate gSpriteTemplate_CategoryIcons =
+{
+    .tileTag = TAG_NONE,
+    .paletteTag = TAG_NONE,
+    .oam = &sAndroidCategoryIconOam,
+    .anims = sAndroidCategoryIconAnims,
+    .callback = SpriteCallbackDummy,
+};
