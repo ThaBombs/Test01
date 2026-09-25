@@ -22,6 +22,9 @@
 #include "script.h"
 #include "tv.h"
 #include "wild_encounter.h"
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
 #include "battle_debug.h"
 #include "battle_pike.h"
 #include "battle_pyramid.h"
@@ -512,10 +515,33 @@ static u8 PickWildMonNature(enum Species species)
 
 void CreateWildMon(enum Species species, u8 level)
 {
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("W-A");
+#endif
     ZeroEnemyPartyMons();
-    u32 personality = GetMonPersonality(species, GetSynchronizedGender(WILDMON_ORIGIN, species), PickWildMonNature(species), RANDOM_UNOWN_LETTER);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("W-B");
+#endif
+    u8 gender = GetSynchronizedGender(WILDMON_ORIGIN, species);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("W-C");
+#endif
+    u8 nature = PickWildMonNature(species);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("W-E");
+#endif
+    u32 personality = GetMonPersonality(species, gender, nature, RANDOM_UNOWN_LETTER);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("W-F");
+#endif
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], species, level, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("W-X");
+#endif
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][0]);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("W-Z");
+#endif
 }
 
 #ifdef BUGFIX
