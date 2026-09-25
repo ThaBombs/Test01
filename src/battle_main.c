@@ -255,6 +255,8 @@ static bool32 sAndroidBattleStartDiagnosticDone;
 static bool32 sAndroidBattleSpriteInitDiagnosticStarted;
 static bool32 sAndroidBattleMainCb1DiagnosticDone;
 static bool32 sAndroidBattleMainCb2DiagnosticDone;
+static u8 sAndroidBattleIntroDiagnosticState;
+static u8 sAndroidBeforeFirstTurnDiagnosticState;
 #endif
 
 static const struct ScanlineEffectParams sIntroScanlineParams16Bit =
@@ -487,6 +489,8 @@ void CB2_InitBattle(void)
     sAndroidBattleSpriteInitDiagnosticStarted = FALSE;
     sAndroidBattleMainCb1DiagnosticDone = FALSE;
     sAndroidBattleMainCb2DiagnosticDone = FALSE;
+    sAndroidBattleIntroDiagnosticState = 0xFF;
+    sAndroidBeforeFirstTurnDiagnosticState = 0xFF;
     PortRuntime_SetBattleDiagnosticStage("BATTLE A");
 #endif
     if (!gTestRunnerEnabled)
@@ -3337,6 +3341,36 @@ static void DoBattleIntro(void)
     s32 i;
     enum BattlerId battler;
 
+#ifdef PLATFORM_ANDROID
+    if (sAndroidBattleIntroDiagnosticState != gBattleStruct->eventState.battleIntro)
+    {
+        sAndroidBattleIntroDiagnosticState = gBattleStruct->eventState.battleIntro;
+        switch ((enum BattleIntroStates)gBattleStruct->eventState.battleIntro)
+        {
+        case BATTLE_INTRO_STATE_GET_MON_DATA:                    PortRuntime_SetBattleDiagnosticStage("R0"); break;
+        case BATTLE_INTRO_STATE_LOOP_BATTLER_DATA:               PortRuntime_SetBattleDiagnosticStage("R1"); break;
+        case BATTLE_INTRO_STATE_PREPARE_BG_SLIDE:                 PortRuntime_SetBattleDiagnosticStage("R2"); break;
+        case BATTLE_INTRO_STATE_WAIT_FOR_BG_SLIDE:                PortRuntime_SetBattleDiagnosticStage("R3"); break;
+        case BATTLE_INTRO_STATE_DRAW_SPRITES:                     PortRuntime_SetBattleDiagnosticStage("R4"); break;
+        case BATTLE_INTRO_STATE_DRAW_PARTY_SUMMARY:               PortRuntime_SetBattleDiagnosticStage("R5"); break;
+        case BATTLE_INTRO_STATE_WAIT_FOR_PARTY_SUMMARY:           PortRuntime_SetBattleDiagnosticStage("R6"); break;
+        case BATTLE_INTRO_STATE_INTRO_TEXT:                       PortRuntime_SetBattleDiagnosticStage("R7"); break;
+        case BATTLE_INTRO_STATE_WAIT_FOR_INTRO_TEXT:              PortRuntime_SetBattleDiagnosticStage("R8"); break;
+        case BATTLE_INTRO_STATE_TRAINER_SEND_OUT_TEXT:            PortRuntime_SetBattleDiagnosticStage("R9"); break;
+        case BATTLE_INTRO_STATE_WAIT_FOR_TRAINER_SEND_OUT_TEXT:   PortRuntime_SetBattleDiagnosticStage("RA"); break;
+        case BATTLE_INTRO_STATE_TRAINER_1_SEND_OUT_ANIM:          PortRuntime_SetBattleDiagnosticStage("RB"); break;
+        case BATTLE_INTRO_STATE_TRAINER_2_SEND_OUT_ANIM:          PortRuntime_SetBattleDiagnosticStage("RC"); break;
+        case BATTLE_INTRO_STATE_WAIT_FOR_TRAINER_2_SEND_OUT_ANIM: PortRuntime_SetBattleDiagnosticStage("RD"); break;
+        case BATTLE_INTRO_STATE_WAIT_FOR_WILD_BATTLE_TEXT:        PortRuntime_SetBattleDiagnosticStage("RE"); break;
+        case BATTLE_INTRO_STATE_PRINT_PLAYER_SEND_OUT_TEXT:       PortRuntime_SetBattleDiagnosticStage("RF"); break;
+        case BATTLE_INTRO_STATE_WAIT_FOR_PLAYER_SEND_OUT_TEXT:    PortRuntime_SetBattleDiagnosticStage("RG"); break;
+        case BATTLE_INTRO_STATE_PRINT_PLAYER_1_SEND_OUT_TEXT:     PortRuntime_SetBattleDiagnosticStage("RH"); break;
+        case BATTLE_INTRO_STATE_PRINT_PLAYER_2_SEND_OUT_TEXT:     PortRuntime_SetBattleDiagnosticStage("RI"); break;
+        case BATTLE_INTRO_STATE_SET_DEX_AND_BATTLE_VARS:          PortRuntime_SetBattleDiagnosticStage("RJ"); break;
+        }
+    }
+#endif
+
     switch ((enum BattleIntroStates)gBattleStruct->eventState.battleIntro)
     {
     case BATTLE_INTRO_STATE_GET_MON_DATA:
@@ -3379,6 +3413,7 @@ static void DoBattleIntro(void)
             else
             {
                 memcpy(&gBattleMons[battler], &gBattleResources->bufferB[battler][4], sizeof(struct BattlePokemon));
+                gBattleMons[battler].species = SanitizeSpeciesId(gBattleMons[battler].species);
                 gBattleMons[battler].types[0] = GetSpeciesType(gBattleMons[battler].species, 0);
                 gBattleMons[battler].types[1] = GetSpeciesType(gBattleMons[battler].species, 1);
                 gBattleMons[battler].types[2] = TYPE_MYSTERY;
@@ -3666,6 +3701,27 @@ static void TryDoEventsBeforeFirstTurn(void)
 
     if (gBattleControllerExecFlags)
         return;
+
+#ifdef PLATFORM_ANDROID
+    if (sAndroidBeforeFirstTurnDiagnosticState != gBattleStruct->eventState.beforeFirstTurn)
+    {
+        sAndroidBeforeFirstTurnDiagnosticState = gBattleStruct->eventState.beforeFirstTurn;
+        switch (gBattleStruct->eventState.beforeFirstTurn)
+        {
+        case FIRST_TURN_EVENTS_START:                 PortRuntime_SetBattleDiagnosticStage("Q0"); break;
+        case FIRST_TURN_EVENTS_OVERWORLD_WEATHER:     PortRuntime_SetBattleDiagnosticStage("Q1"); break;
+        case FIRST_TURN_EVENTS_TERRAIN:               PortRuntime_SetBattleDiagnosticStage("Q2"); break;
+        case FIRST_TURN_EVENTS_STARTING_STATUS:       PortRuntime_SetBattleDiagnosticStage("Q3"); break;
+        case FIRST_TURN_EVENTS_TOTEM_BOOST:           PortRuntime_SetBattleDiagnosticStage("Q4"); break;
+        case FIRST_TURN_SWITCH_IN_EVENTS:              PortRuntime_SetBattleDiagnosticStage("Q5"); break;
+        case FIRST_TURN_FAINTED_BATTLERS:              PortRuntime_SetBattleDiagnosticStage("Q6"); break;
+        case FIRST_TURN_EVENTS_TRAINER_SLIDE_A:        PortRuntime_SetBattleDiagnosticStage("Q7"); break;
+        case FIRST_TURN_EVENTS_TRAINER_SLIDE_B:        PortRuntime_SetBattleDiagnosticStage("Q8"); break;
+        case FIRST_TURN_EVENTS_TRAINER_SLIDE_PARTNER:  PortRuntime_SetBattleDiagnosticStage("Q9"); break;
+        case FIRST_TURN_EVENTS_END:                    PortRuntime_SetBattleDiagnosticStage("QA"); break;
+        }
+    }
+#endif
 
     switch (gBattleStruct->eventState.beforeFirstTurn)
     {
