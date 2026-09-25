@@ -547,7 +547,6 @@ set(REAL_BATTLE_PROBE_SOURCE_NAMES
     roamer
     pokerus
     field_weather_effect
-    fishing
     pokemon_animation
     battle_terastal
     rtc
