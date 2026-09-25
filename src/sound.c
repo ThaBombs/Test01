@@ -478,8 +478,18 @@ void PlayCryInternal(enum Species species, s8 pan, s8 volume, u8 priority, u8 mo
     enum PokemonCry cryId = GetCryIdBySpecies(species);
     if (cryId != CRY_NONE)
     {
+#ifdef PLATFORM_ANDROID
+        /*
+         * Android uses the host audio bridge instead of the GBA M4A cry tone
+         * tables. Keep the battle-facing cry state machine in sound.c while
+         * the host backend owns sample playback.
+         */
+        (void)reverse;
+        gMPlay_PokemonCry = &gMPlayInfo_BGM;
+#else
         cryId--;
         gMPlay_PokemonCry = SetPokemonCryTone(reverse ? &gCryTable_Reverse[cryId] : &gCryTable[cryId]);
+#endif
     }
 }
 

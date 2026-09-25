@@ -12,6 +12,13 @@
 
 void PortGame_StartMainMenu(void)
 {
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+    // First Android UI milestone: prove that the real Emerald main menu,
+    // window/text stack, input, and renderer run natively before pulling the
+    // save system and new-game flow into the same link.
+    InitHeap(gHeap, HEAP_SIZE);
+    SetMainCallback2(CB2_InitMainMenu);
+#else
     // The legacy copyright-screen boot callback used to perform this work
     // after its presentation finished. Android skips that presentation, but
     // still needs the game-state/save initialization before showing the menu.
@@ -26,6 +33,6 @@ void PortGame_StartMainMenu(void)
 
     SetPokemonCryStereo(gSaveBlock2Ptr->optionsSound);
     InitHeap(gHeap, HEAP_SIZE);
-
     SetMainCallback2(CB2_InitMainMenu);
+#endif
 }

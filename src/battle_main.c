@@ -64,6 +64,9 @@
 #include "util.h"
 #include "wild_encounter.h"
 #include "window.h"
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
 #include "constants/abilities.h"
 #include "constants/battle_ai.h"
 #include "constants/battle_move_effects.h"
@@ -246,6 +249,14 @@ COMMON_DATA u8 gLeveledUpInBattle = 0;
 COMMON_DATA u8 gHealthboxSpriteIds[MAX_BATTLERS_COUNT] = {0};
 COMMON_DATA u8 gMultiUsePlayerCursor = 0;
 COMMON_DATA u8 gNumberOfMovesToChoose = 0;
+#ifdef PLATFORM_ANDROID
+static bool32 sAndroidBattleVBlankDiagnosticDone;
+static bool32 sAndroidBattleStartDiagnosticDone;
+static bool32 sAndroidBattleSpriteInitDiagnosticStarted;
+static bool32 sAndroidBattleMainCb1DiagnosticDone;
+static bool32 sAndroidBattleMainCb2DiagnosticDone;
+static u8 sAndroidBeforeFirstTurnDiagnosticState;
+#endif
 
 static const struct ScanlineEffectParams sIntroScanlineParams16Bit =
 {
@@ -471,12 +482,24 @@ const u8 *const gStatusConditionStringsTable[][2] =
 
 void CB2_InitBattle(void)
 {
+#ifdef PLATFORM_ANDROID
+    sAndroidBattleVBlankDiagnosticDone = FALSE;
+    sAndroidBattleStartDiagnosticDone = FALSE;
+    sAndroidBattleSpriteInitDiagnosticStarted = FALSE;
+    sAndroidBattleMainCb1DiagnosticDone = FALSE;
+    sAndroidBattleMainCb2DiagnosticDone = FALSE;
+    sAndroidBeforeFirstTurnDiagnosticState = 0xFF;
+    PortRuntime_SetBattleDiagnosticStage("BATTLE A");
+#endif
     if (!gTestRunnerEnabled)
         MoveSaveBlocks_ResetHeap();
     AllocateBattleResources();
     AllocateBattleSpritesData();
     AllocateMonSpritesGfx();
     RecordedBattle_ClearFrontierPassFlag();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("BATTLE B");
+#endif
 
 #if TESTING
     gLoadFail = FALSE;
@@ -521,6 +544,9 @@ static void CB2_InitBattleInternal(void)
     SetGpuReg(REG_OFFSET_WINOUT, 0);
 
     gBattle_WIN0H = DISPLAY_WIDTH;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("BATTLE C");
+#endif
 
     if (gBattleTypeFlags & BATTLE_TYPE_INGAME_PARTNER && gPartnerTrainerId < TRAINER_PARTNER(PARTNER_NONE))
     {
@@ -566,6 +592,9 @@ static void CB2_InitBattleInternal(void)
         gBattleEnvironment = BATTLE_ENVIRONMENT_BUILDING;
     if (TestRunner_Battle_GetForcedEnvironment())
         gBattleEnvironment = TestRunner_Battle_GetForcedEnvironment() - 1;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("BATTLE E");
+#endif
 
     InitBattleBgsVideo();
     LoadBattleTextboxAndBackground();
@@ -576,7 +605,13 @@ static void CB2_InitBattleInternal(void)
     FreeAllSpritePalettes();
     gReservedSpritePaletteCount = MAX_BATTLERS_COUNT;
     SetVBlankCallback(VBlankCB_Battle);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("BATTLE F");
+#endif
     SetUpBattleVarsAndBirchZigzagoon();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-A");
+#endif
 
     if (gBattleTypeFlags & BATTLE_TYPE_MULTI
      && (TESTING || gBattleTypeFlags & (BATTLE_TYPE_BATTLE_TOWER | BATTLE_TYPE_INGAME_PARTNER)))
@@ -585,9 +620,15 @@ static void CB2_InitBattleInternal(void)
         SetMainCallback2(CB2_HandleStartMultiBattle);
     else
         SetMainCallback2(CB2_HandleStartBattle);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-B");
+#endif
 
     gMain.inBattle = TRUE;
     gSaveBlock2Ptr->frontier.disableRecordBattle = FALSE;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-C");
+#endif
 
     for (i = 0; i < PARTY_SIZE; i++)
     {
@@ -597,6 +638,9 @@ static void CB2_InitBattleInternal(void)
         for (enum BattleTrainer trainer = B_TRAINER_PLAYER; trainer < MAX_BATTLE_TRAINERS; trainer++)
             TryFormChange(&gParties[trainer][i], FORM_CHANGE_BEGIN_BATTLE, trainer);
     }
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-E");
+#endif
 
     if (!(gBattleTypeFlags & BATTLE_TYPE_TRAINER))
     {
@@ -606,11 +650,20 @@ static void CB2_InitBattleInternal(void)
         if (IsDoubleBattle())
             TryFormChange(&gParties[B_TRAINER_OPPONENT_A][1], FORM_CHANGE_BEGIN_WILD_ENCOUNTER, B_TRAINER_OPPONENT_A);
     }
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-F");
+#endif
 
     for (enum BattleTrainer trainer = B_TRAINER_PLAYER; trainer < MAX_BATTLE_TRAINERS; trainer++)
         gPartiesCount[trainer] = CalculatePartyCount(trainer);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-X");
+#endif
 
     gBattleCommunication[MULTIUSE_STATE] = 0;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("T-Z");
+#endif
 }
 
 #define BUFFER_PARTY_VS_SCREEN_STATUS(party, flags, i)                      \
@@ -862,20 +915,45 @@ static void CB2_HandleStartBattle(void)
 {
     u8 playerMultiplayerId;
     u8 enemyMultiplayerId;
+#ifdef PLATFORM_ANDROID
+    bool32 trace = !sAndroidBattleStartDiagnosticDone;
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("S-A");
+#endif
 
     RunTasks();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("S-B");
+#endif
     AnimateSprites();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("S-C");
+#endif
     BuildOamBuffer();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("S-E");
+#endif
 
     playerMultiplayerId = GetMultiplayerId();
     gBattleScripting.multiplayerId = playerMultiplayerId;
     enemyMultiplayerId = playerMultiplayerId ^ BIT_SIDE;
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("S-F");
+#endif
 
     switch (gBattleCommunication[MULTIUSE_STATE])
     {
     case 0:
         if (!IsDma3ManagerBusyWithBgCopy())
         {
+#ifdef PLATFORM_ANDROID
+            if (trace)
+                PortRuntime_SetBattleDiagnosticStage("S-X");
+#endif
             ShowBg(0);
             ShowBg(1);
             ShowBg(2);
@@ -885,8 +963,18 @@ static void CB2_HandleStartBattle(void)
         }
         if (gWirelessCommType)
             LoadWirelessStatusIndicatorSpriteGfx();
+#ifdef PLATFORM_ANDROID
+        if (trace)
+        {
+            PortRuntime_SetBattleDiagnosticStage("S-Z");
+            sAndroidBattleStartDiagnosticDone = TRUE;
+        }
+#endif
         break;
     case 1:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("S-2");
+#endif
         if (gBattleTypeFlags & BATTLE_TYPE_LINK)
         {
             if (gReceivedRemoteLinkPlayers)
@@ -993,6 +1081,9 @@ static void CB2_HandleStartBattle(void)
         }
         break;
     case 15:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("S-3");
+#endif
         InitBattleControllers();
         RecordedBattle_SetTrainerInfo();
         gBattleCommunication[SPRITES_INIT_STATE1] = 0;
@@ -1035,11 +1126,27 @@ static void CB2_HandleStartBattle(void)
         break;
     case 18:
         // Finish, start battle
+#ifdef PLATFORM_ANDROID
+        if (!sAndroidBattleSpriteInitDiagnosticStarted)
+        {
+            PortRuntime_SetBattleDiagnosticStage("S-4");
+            sAndroidBattleSpriteInitDiagnosticStarted = TRUE;
+        }
+#endif
         if (BattleInitAllSprites(&gBattleCommunication[SPRITES_INIT_STATE1], &gBattleCommunication[SPRITES_INIT_STATE2]))
         {
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("M-A");
+#endif
             gPreBattleCallback1 = gMain.callback1;
             gMain.callback1 = BattleMainCB1;
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("M-B");
+#endif
             SetMainCallback2(BattleMainCB2);
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("M-C");
+#endif
             if (gBattleTypeFlags & BATTLE_TYPE_LINK)
                 gBattleTypeFlags |= BATTLE_TYPE_LINK_IN_BATTLE;
         }
@@ -1729,11 +1836,39 @@ static void CB2_HandleStartMultiBattle(void)
 
 void BattleMainCB2(void)
 {
+#ifdef PLATFORM_ANDROID
+    bool32 trace = !sAndroidBattleMainCb2DiagnosticDone;
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("C2-A");
+#endif
     AnimateSprites();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("C2-B");
+#endif
     BuildOamBuffer();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("C2-C");
+#endif
     RunTextPrinters();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("C2-D");
+#endif
     UpdatePaletteFade();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("C2-E");
+#endif
     RunTasks();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+    {
+        PortRuntime_SetBattleDiagnosticStage("C2-Z");
+        sAndroidBattleMainCb2DiagnosticDone = TRUE;
+    }
+#endif
 
     if (JOY_HELD(B_BUTTON) && gBattleTypeFlags & BATTLE_TYPE_RECORDED && RecordedBattle_CanStopPlayback())
     {
@@ -1802,10 +1937,20 @@ void ModifyPersonalityForNature(u32 *personality, u32 newNature)
 
 void VBlankCB_Battle(void)
 {
+#ifdef PLATFORM_ANDROID
+    bool32 trace = !sAndroidBattleVBlankDiagnosticDone;
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-A");
+#endif
+
     // Change gRngSeed every vblank unless the battle could be recorded.
     if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER | BATTLE_TYPE_RECORDED)))
         AdvanceRandom();
 
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-B");
+#endif
     SetGpuReg(REG_OFFSET_BG0HOFS, gBattle_BG0_X);
     SetGpuReg(REG_OFFSET_BG0VOFS, gBattle_BG0_Y);
     SetGpuReg(REG_OFFSET_BG1HOFS, gBattle_BG1_X);
@@ -1818,10 +1963,34 @@ void VBlankCB_Battle(void)
     SetGpuReg(REG_OFFSET_WIN0V, gBattle_WIN0V);
     SetGpuReg(REG_OFFSET_WIN1H, gBattle_WIN1H);
     SetGpuReg(REG_OFFSET_WIN1V, gBattle_WIN1V);
+
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-C");
+#endif
     LoadOam();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-E");
+#endif
     ProcessSpriteCopyRequests();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-F");
+#endif
     TransferPlttBuffer();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-X");
+#endif
     ScanlineEffect_InitHBlankDmaTransfer();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+    {
+        PortRuntime_SetBattleDiagnosticStage("V-Z");
+        sAndroidBattleVBlankDiagnosticDone = TRUE;
+    }
+#endif
 }
 
 void SpriteCB_VsLetterDummy(struct Sprite *sprite)
@@ -2736,17 +2905,52 @@ void BeginBattleIntroDummy(void)
 
 void BeginBattleIntro(void)
 {
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("I-A");
+#endif
     BattleStartClearSetData();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("I-B");
+#endif
     gBattleCommunication[1] = 0;
     gBattleStruct->eventState.battleIntro = 0;
     gBattleMainFunc = DoBattleIntro;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("I-C");
+#endif
 }
 
 static void BattleMainCB1(void)
 {
+#ifdef PLATFORM_ANDROID
+    bool32 trace = !sAndroidBattleMainCb1DiagnosticDone;
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("C1-A");
+#endif
     gBattleMainFunc();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("C1-B");
+#endif
     for (enum BattlerId battler = 0; battler < gBattlersCount; battler++)
+    {
+#ifdef PLATFORM_ANDROID
+        if (trace)
+            PortRuntime_SetBattleDiagnosticStage(battler == 0 ? "C1-C" : "C1-E");
+#endif
         gBattlerControllerFuncs[battler](battler);
+#ifdef PLATFORM_ANDROID
+        if (trace)
+            PortRuntime_SetBattleDiagnosticStage(battler == 0 ? "C1-D" : "C1-F");
+#endif
+    }
+#ifdef PLATFORM_ANDROID
+    if (trace)
+    {
+        PortRuntime_SetBattleDiagnosticStage("C1-Z");
+        sAndroidBattleMainCb1DiagnosticDone = TRUE;
+    }
+#endif
 }
 
 static void ClearSetBScriptingStruct(void)
@@ -2768,8 +2972,15 @@ static void ClearSetBScriptingStruct(void)
 static void BattleStartClearSetData(void)
 {
     s32 i;
+    enum Species wildSpecies;
 
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("D-A");
+#endif
     TurnValuesCleanUp(FALSE);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("D-B");
+#endif
     memset(&gSpecialStatuses, 0, sizeof(gSpecialStatuses));
 
     memset(&gFieldTimers, 0, sizeof(gFieldTimers));
@@ -2777,6 +2988,9 @@ static void BattleStartClearSetData(void)
     memset(&gSideTimers, 0, sizeof(gSideTimers));
     memset(&gBattleResults, 0, sizeof(gBattleResults));
     ClearSetBScriptingStruct();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("D-C");
+#endif
 
     for (i = 0; i < MAX_BATTLERS_COUNT; i++)
     {
@@ -2800,6 +3014,9 @@ static void BattleStartClearSetData(void)
         gBattleStruct->lastTakenMoveFrom[i][3] = MOVE_NONE;
         gBattleStruct->AI_monToSwitchIntoId[i] = PARTY_SIZE;
     }
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("D-D");
+#endif
 
     gLastUsedMove = 0;
     gFieldStatuses = 0;
@@ -2830,6 +3047,9 @@ static void BattleStartClearSetData(void)
     gPaydayMoney = 0;
     gBattleResources->battleScriptsStack->size = 0;
     gBattleResources->battleCallbackStack->size = 0;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("D-E");
+#endif
 
     for (i = 0; i < BATTLE_COMMUNICATION_ENTRIES_COUNT; i++)
         gBattleCommunication[i] = 0;
@@ -2841,8 +3061,15 @@ static void BattleStartClearSetData(void)
     gBattleStruct->runTries = 0;
     gBattleStruct->safariGoNearCounter = 0;
     gBattleStruct->safariPkblThrowCounter = 0;
-    gBattleStruct->safariCatchFactor = gSpeciesInfo[GetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_SPECIES)].catchRate * 100 / 1275;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("D-F");
+#endif
+    wildSpecies = SanitizeSpeciesId(GetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_SPECIES));
+    gBattleStruct->safariCatchFactor = gSpeciesInfo[wildSpecies].catchRate * 100 / 1275;
     gBattleStruct->safariEscapeFactor = 3;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("D-X");
+#endif
     gBattleStruct->wildVictorySong = 0;
     gBattleStruct->moneyMultiplier = 1;
 
@@ -2851,6 +3078,9 @@ static void BattleStartClearSetData(void)
     gBattleStruct->palaceFlags = 0;
 
     gBattleResults.shinyWildMon = IsMonShiny(&gParties[B_TRAINER_OPPONENT_A][0]);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("D-Y");
+#endif
 
     gBattleStruct->arenaLostPlayerMons = 0;
     gBattleStruct->arenaLostOpponentMons = 0;
@@ -2871,6 +3101,9 @@ static void BattleStartClearSetData(void)
         }
     }
 
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("D-Z");
+#endif
     ClearPursuitValues();
     gSelectedMonPartyId = PARTY_SIZE; // Revival Blessing
     gCategoryIconSpriteId = 0xFF;
@@ -3148,6 +3381,7 @@ static void DoBattleIntro(void)
             else
             {
                 memcpy(&gBattleMons[battler], &gBattleResources->bufferB[battler][4], sizeof(struct BattlePokemon));
+                gBattleMons[battler].species = SanitizeSpeciesId(gBattleMons[battler].species);
                 gBattleMons[battler].types[0] = GetSpeciesType(gBattleMons[battler].species, 0);
                 gBattleMons[battler].types[1] = GetSpeciesType(gBattleMons[battler].species, 1);
                 gBattleMons[battler].types[2] = TYPE_MYSTERY;
@@ -3435,6 +3669,27 @@ static void TryDoEventsBeforeFirstTurn(void)
 
     if (gBattleControllerExecFlags)
         return;
+
+#ifdef PLATFORM_ANDROID
+    if (sAndroidBeforeFirstTurnDiagnosticState != gBattleStruct->eventState.beforeFirstTurn)
+    {
+        sAndroidBeforeFirstTurnDiagnosticState = gBattleStruct->eventState.beforeFirstTurn;
+        switch (gBattleStruct->eventState.beforeFirstTurn)
+        {
+        case FIRST_TURN_EVENTS_START:                 PortRuntime_SetBattleDiagnosticStage("Q0"); break;
+        case FIRST_TURN_EVENTS_OVERWORLD_WEATHER:     PortRuntime_SetBattleDiagnosticStage("Q1"); break;
+        case FIRST_TURN_EVENTS_TERRAIN:               PortRuntime_SetBattleDiagnosticStage("Q2"); break;
+        case FIRST_TURN_EVENTS_STARTING_STATUS:       PortRuntime_SetBattleDiagnosticStage("Q3"); break;
+        case FIRST_TURN_EVENTS_TOTEM_BOOST:           PortRuntime_SetBattleDiagnosticStage("Q4"); break;
+        case FIRST_TURN_SWITCH_IN_EVENTS:              PortRuntime_SetBattleDiagnosticStage("Q5"); break;
+        case FIRST_TURN_FAINTED_BATTLERS:              PortRuntime_SetBattleDiagnosticStage("Q6"); break;
+        case FIRST_TURN_EVENTS_TRAINER_SLIDE_A:        PortRuntime_SetBattleDiagnosticStage("Q7"); break;
+        case FIRST_TURN_EVENTS_TRAINER_SLIDE_B:        PortRuntime_SetBattleDiagnosticStage("Q8"); break;
+        case FIRST_TURN_EVENTS_TRAINER_SLIDE_PARTNER:  PortRuntime_SetBattleDiagnosticStage("Q9"); break;
+        case FIRST_TURN_EVENTS_END:                    PortRuntime_SetBattleDiagnosticStage("QA"); break;
+        }
+    }
+#endif
 
     switch (gBattleStruct->eventState.beforeFirstTurn)
     {

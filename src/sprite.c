@@ -589,8 +589,37 @@ void ResetOamRange(u32 start, u32 end)
 
 void LoadOam(void)
 {
-    if (!gMain.oamLoadDisabled)
-        CpuCopy32(gMain.oamBuffer, (void *)OAM, sizeof(gMain.oamBuffer));
+    if (gMain.oamLoadDisabled)
+        return;
+
+#ifdef PLATFORM_ANDROID
+    // Do not memcpy host C bitfields directly into emulated GBA OAM.
+    // Serialize the four GBA halfwords explicitly so Clang's host bitfield
+    // layout can never make sprites disappear or corrupt attributes.
+    volatile u16 *oam = (volatile u16 *)OAM;
+    for (u32 i = 0; i < 128; ++i)
+    {
+        const struct OamData *src = &gMain.oamBuffer[i];
+        oam[i * 4 + 0] =
+            (src->y & 0xFF)
+            | ((src->affineMode & 0x3) << 8)
+            | ((src->objMode & 0x3) << 10)
+            | ((src->mosaic & 0x1) << 12)
+            | ((src->bpp & 0x1) << 13)
+            | ((src->shape & 0x3) << 14);
+        oam[i * 4 + 1] =
+            (src->x & 0x1FF)
+            | ((src->matrixNum & 0x1F) << 9)
+            | ((src->size & 0x3) << 14);
+        oam[i * 4 + 2] =
+            (src->tileNum & 0x3FF)
+            | ((src->priority & 0x3) << 10)
+            | ((src->paletteNum & 0xF) << 12);
+        oam[i * 4 + 3] = src->affineParam;
+    }
+#else
+    CpuCopy32(gMain.oamBuffer, (void *)OAM, sizeof(gMain.oamBuffer));
+#endif
 }
 
 void ClearSpriteCopyRequests(void)
@@ -770,6 +799,34 @@ void SpriteCallbackDummy(struct Sprite *sprite)
 {
 }
 
+#ifdef PLATFORM_ANDROID
+static bool32 IsAndroidSpriteCopyRequestSafe(const struct SpriteCopyRequest *request)
+{
+    if (request == NULL || request->src == NULL || request->dest == NULL || request->size == 0)
+        return FALSE;
+
+    const uintptr_t src = (uintptr_t)request->src;
+    const uintptr_t dest = (uintptr_t)request->dest;
+    const uintptr_t objStart = (uintptr_t)OBJ_VRAM0;
+    const uintptr_t objEnd = objStart + OBJ_VRAM0_SIZE;
+
+    // Native assets, heap allocations and mapped host VRAM are real process
+    // pointers. A small 32-bit address here is a leftover GBA-era address or
+    // truncated pointer and must never be dereferenced on 64-bit Android.
+    if (sizeof(void *) > 4 && src <= UINT32_MAX)
+        return FALSE;
+
+    // Sprite frame copies are only valid inside OBJ VRAM. Check both ends
+    // without allowing integer wraparound.
+    if (dest < objStart || dest >= objEnd)
+        return FALSE;
+    if ((uintptr_t)request->size > objEnd - dest)
+        return FALSE;
+
+    return TRUE;
+}
+#endif
+
 void ProcessSpriteCopyRequests(void)
 {
     if (sShouldProcessSpriteCopyRequests)
@@ -778,7 +835,12 @@ void ProcessSpriteCopyRequests(void)
 
         while (sSpriteCopyRequestCount > 0)
         {
+#ifdef PLATFORM_ANDROID
+            if (IsAndroidSpriteCopyRequestSafe(&sSpriteCopyRequests[i]))
+                CpuCopy16(sSpriteCopyRequests[i].src, sSpriteCopyRequests[i].dest, sSpriteCopyRequests[i].size);
+#else
             CpuCopy16(sSpriteCopyRequests[i].src, sSpriteCopyRequests[i].dest, sSpriteCopyRequests[i].size);
+#endif
             sSpriteCopyRequestCount--;
             i++;
         }

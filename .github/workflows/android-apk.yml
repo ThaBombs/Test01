@@ -90,19 +90,140 @@ jobs:
           set -euo pipefail
           make -j2 generated
 
-      - name: Prepare intro compatibility assets
+      - name: Prepare Android menu compatibility assets
         shell: bash
         run: |
           set -euo pipefail
-          make -j2 build/emerald/src/intro.o
-
+          make -j2 \
+            build/emerald/src/main_menu.o \
+            build/emerald/src/option_menu.o \
+            build/emerald/src/text.o \
+            build/emerald/src/menu.o \
+            build/emerald/src/fonts.o \
+            build/emerald/src/text_window.o \
+            build/emerald/src/pokemon.o \
+            build/emerald/src/pokemon_spots.o \
+            build/emerald/src/item_icon.o \
+            build/emerald/src/config_changes.o \
+            build/emerald/src/menu_helpers.o \
+            build/emerald/src/pokemon_icon.o \
+            build/emerald/src/type_icons.o \
+            build/emerald/src/move_relearner.o \
+            build/emerald/src/menu_specialized.o \
+            build/emerald/src/item_use.o \
+            build/emerald/src/mail_data.o \
+            build/emerald/src/evolution_scene.o \
+            build/emerald/src/data.o \
+            build/emerald/src/graphics.o \
+            build/emerald/src/battle_gimmick.o \
+            build/emerald/src/starter_choose.o \
+            build/emerald/src/battle_anim.o \
+            build/emerald/src/battle_anim_bug.o \
+            build/emerald/src/battle_anim_dark.o \
+            build/emerald/src/battle_anim_dragon.o \
+            build/emerald/src/battle_anim_effects_1.o \
+            build/emerald/src/battle_anim_effects_2.o \
+            build/emerald/src/battle_anim_effects_3.o \
+            build/emerald/src/battle_anim_electric.o \
+            build/emerald/src/battle_anim_fight.o \
+            build/emerald/src/battle_anim_fire.o \
+            build/emerald/src/battle_anim_flying.o \
+            build/emerald/src/battle_anim_ghost.o \
+            build/emerald/src/battle_anim_ground.o \
+            build/emerald/src/battle_anim_ice.o \
+            build/emerald/src/battle_anim_mon_movement.o \
+            build/emerald/src/battle_anim_mons.o \
+            build/emerald/src/battle_anim_new.o \
+            build/emerald/src/battle_anim_normal.o \
+            build/emerald/src/battle_anim_poison.o \
+            build/emerald/src/battle_anim_psychic.o \
+            build/emerald/src/battle_anim_rock.o \
+            build/emerald/src/battle_anim_smokescreen.o \
+            build/emerald/src/battle_anim_sound_tasks.o \
+            build/emerald/src/battle_anim_status_effects.o \
+            build/emerald/src/battle_anim_throw.o \
+            build/emerald/src/battle_anim_utility_funcs.o \
+            build/emerald/src/battle_anim_water.o \
+            build/emerald/src/field_weather.o \
+            build/emerald/src/party_menu.o \
+            build/emerald/src/pokeball.o \
+            build/emerald/src/sound.o \
+            build/emerald/src/berry.o \
+            build/emerald/src/battle_arena.o \
+            build/emerald/src/battle_tv.o \
+            build/emerald/src/battle_terastal.o \
+            build/emerald/src/pokemon_animation.o \
+            build/emerald/src/fishing.o \
+            build/emerald/src/field_weather_effect.o \
+            build/emerald/src/pokerus.o \
+            build/emerald/src/roamer.o \
+            build/emerald/src/dexnav.o \
+            build/emerald/src/trainer_slide.o \
+            build/emerald/src/trainer.o \
+            build/emerald/src/trainer_pools.o \
+            build/emerald/src/battle_partner.o \
+            build/emerald/src/event_data.o \
+            build/emerald/src/difficulty.o \
+            build/emerald/src/battle_dynamax.o \
+            build/emerald/src/battle_z_move.o \
+            build/emerald/src/battle_ai_record.o \
+            build/emerald/src/battle_set_effect.o \
+            build/emerald/src/caps.o \
+            build/emerald/src/ow_abilities.o
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
 
       - name: Build debug APK
-        run: gradle -p android :app:assembleDebug --stacktrace
+        id: build_apk
+        shell: bash
+        continue-on-error: true
+        run: |
+          set +e
+          gradle -p android :app:assembleDebug --stacktrace 2>&1 | tee android/native-build.log
+          status=${PIPESTATUS[0]}
+          grep -E -B2 -A4 '(error:|fatal error:|undefined reference|FAILED:|ninja: build stopped)' android/native-build.log \
+            | head -n 240 > android/native-build-errors.txt || true
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Upload native build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-native-build-errors-${{ github.sha }}
+          path: android/native-build-errors.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Stop after failed native build
+        if: steps.build_apk.outputs.status != '0'
+        run: exit 1
+
+      - name: Report real battle probe dependencies
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          # CMake computes this from the combined relocatable object containing
+          # the real Emerald battle C engine, Android first-battle bridge and
+          # both full battle-script objects.
+          if [ -f android/real-battle-unresolved.txt ]; then
+            echo "Combined Emerald battle path unresolved symbols:"
+            cat android/real-battle-unresolved.txt
+          else
+            echo "Combined real battle dependency report was not generated."
+          fi
+
+      - name: Upload real battle probe diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-battle-probe-${{ github.sha }}
+          path: android/real-battle-unresolved.txt
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Report engine probe dependencies
         shell: bash
@@ -117,18 +238,29 @@ jobs:
           echo "Engine probe: $PROBE"
           "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u | tee android/engine-unresolved.txt
 
-      - name: Report intro probe dependencies
+      - name: Report main-menu probe dependencies
         shell: bash
         run: |
           set -euo pipefail
           NDK_NM="$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-nm"
-          PROBE="$(find android/app -type f -name 'libpokeemerald_intro_probe.a' -path '*arm64-v8a*' | head -n 1)"
+          PROBE="$(find android/app -type f -name 'libpokeemerald_main_menu_probe.a' -path '*arm64-v8a*' | head -n 1)"
           if [ -z "$PROBE" ]; then
-            echo "Intro probe archive was not built." >&2
+            echo "Main-menu probe archive was not built." >&2
             exit 1
           fi
-          echo "Intro probe: $PROBE"
-          "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u | tee android/intro-unresolved.txt
+          echo "Main-menu probe: $PROBE"
+          "$NDK_NM" -u "$PROBE" | sed -E 's/^[[:space:]]*U[[:space:]]+//' | sort -u | tee android/main-menu-unresolved.txt
+
+      - name: Upload NEW GAME compile diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: new-game-overworld-compile-${{ github.sha }}
+          path: |
+            android/new-game-compile.txt
+            android/overworld-compile.txt
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

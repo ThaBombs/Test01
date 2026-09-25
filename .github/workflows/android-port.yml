@@ -38,11 +38,19 @@ jobs:
           gradle-version: "8.9"
 
       - name: Install Android NDK and CMake
-        env:
-          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-          ANDROID_HOME: /usr/local/lib/android/sdk
+        shell: bash
         run: |
-          /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+          set -euo pipefail
+          SDKMANAGER="$(command -v sdkmanager || true)"
+          if [ -z "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)"
+          fi
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager not found" >&2
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
 
       - name: Install pokeemerald build dependencies
         run: |
@@ -56,7 +64,7 @@ jobs:
       - name: Prepare generated assets
         run: |
           make -j2 generated
-          make -j2 build/emerald/src/main_menu.o
+          make -j2 build/emerald/src/main_menu.o build/emerald/src/option_menu.o build/emerald/src/text.o build/emerald/src/menu.o build/emerald/src/fonts.o build/emerald/src/text_window.o build/emerald/src/pokemon.o build/emerald/src/graphics.o build/emerald/src/battle_gimmick.o build/emerald/src/starter_choose.o
 
       - name: Build Android debug APK
         run: |

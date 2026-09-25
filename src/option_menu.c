@@ -16,6 +16,10 @@
 #include "gba/m4a_internal.h"
 #include "constants/rgb.h"
 
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
+
 #define tMenuSelection data[0]
 #define tTextSpeed data[1]
 #define tBattleSceneOff data[2]
@@ -31,6 +35,9 @@ enum
     MENUITEM_BATTLESTYLE,
     MENUITEM_SOUND,
     MENUITEM_BUTTONMODE,
+#ifdef PLATFORM_ANDROID
+    MENUITEM_FASTFORWARD,
+#endif
     MENUITEM_FRAMETYPE,
     MENUITEM_CANCEL,
     MENUITEM_COUNT,
@@ -42,12 +49,21 @@ enum
     WIN_OPTIONS
 };
 
-#define YPOS_TEXTSPEED    (MENUITEM_TEXTSPEED * 16)
-#define YPOS_BATTLESCENE  (MENUITEM_BATTLESCENE * 16)
-#define YPOS_BATTLESTYLE  (MENUITEM_BATTLESTYLE * 16)
-#define YPOS_SOUND        (MENUITEM_SOUND * 16)
-#define YPOS_BUTTONMODE   (MENUITEM_BUTTONMODE * 16)
-#define YPOS_FRAMETYPE    (MENUITEM_FRAMETYPE * 16)
+#ifdef PLATFORM_ANDROID
+#define OPTION_ROW_HEIGHT 14
+#else
+#define OPTION_ROW_HEIGHT 16
+#endif
+
+#define YPOS_TEXTSPEED    (MENUITEM_TEXTSPEED * OPTION_ROW_HEIGHT)
+#define YPOS_BATTLESCENE  (MENUITEM_BATTLESCENE * OPTION_ROW_HEIGHT)
+#define YPOS_BATTLESTYLE  (MENUITEM_BATTLESTYLE * OPTION_ROW_HEIGHT)
+#define YPOS_SOUND        (MENUITEM_SOUND * OPTION_ROW_HEIGHT)
+#define YPOS_BUTTONMODE   (MENUITEM_BUTTONMODE * OPTION_ROW_HEIGHT)
+#ifdef PLATFORM_ANDROID
+#define YPOS_FASTFORWARD  (MENUITEM_FASTFORWARD * OPTION_ROW_HEIGHT)
+#endif
+#define YPOS_FRAMETYPE    (MENUITEM_FRAMETYPE * OPTION_ROW_HEIGHT)
 
 static void Task_OptionMenuFadeIn(u8 taskId);
 static void Task_OptionMenuProcessInput(u8 taskId);
@@ -66,6 +82,10 @@ static u8 FrameType_ProcessInput(u8 selection);
 static void FrameType_DrawChoices(u8 selection);
 static u8 ButtonMode_ProcessInput(u8 selection);
 static void ButtonMode_DrawChoices(u8 selection);
+#ifdef PLATFORM_ANDROID
+static void FastForward_ProcessInput(void);
+static void FastForward_DrawChoices(void);
+#endif
 static void DrawHeaderText(void);
 static void DrawOptionMenuTexts(void);
 static void DrawBgWindowFrames(void);
@@ -73,6 +93,42 @@ static void DrawBgWindowFrames(void);
 EWRAM_DATA static bool8 sArrowPressed = FALSE;
 
 static const u8 gText_Option[]             = _("OPTION");
+#ifdef PLATFORM_ANDROID
+static const u8 gText_TextSpeedSlow[]      = _("SLOW");
+static const u8 gText_TextSpeedMid[]       = _("MID");
+static const u8 gText_TextSpeedFast[]      = _("FAST");
+static const u8 gText_BattleSceneOn[]      = _("ON");
+static const u8 gText_BattleSceneOff[]     = _("OFF");
+static const u8 gText_BattleStyleShift[]   = _("SHIFT");
+static const u8 gText_BattleStyleSet[]     = _("SET");
+static const u8 gText_SoundMono[]          = _("MONO");
+static const u8 gText_SoundStereo[]        = _("STEREO");
+static const u8 gText_FrameType[]          = _("TYPE");
+static const u8 gText_FrameTypeNumber[]    = _("");
+static const u8 gText_ButtonTypeNormal[]   = _("NORMAL");
+static const u8 gText_ButtonTypeLR[]       = _("LR");
+static const u8 gText_ButtonTypeLEqualsA[] = _("L=A");
+static const u8 gText_ButtonEdit[]         = _("EDIT");
+static const u8 gText_FastForward2x[]      = _("2X");
+static const u8 gText_FastForward3x[]      = _("3X");
+static const u8 gText_FastForward4x[]      = _("4X");
+static const u8 gText_FastForwardHold[]    = _("HOLD");
+static const u8 gText_FastForwardToggle[]  = _("TOGGLE");
+static const u8 gText_SelectedMarker[]     = _("▶");
+static const u8 sAndroidTextColors[] =
+{
+    TEXT_COLOR_WHITE,
+    TEXT_COLOR_DARK_GRAY,
+    TEXT_COLOR_WHITE,
+};
+
+static const u16 sOptionMenuText_Pal[] =
+{
+    [TEXT_COLOR_WHITE] = RGB_WHITE,
+    [TEXT_COLOR_DARK_GRAY] = RGB_BLACK,
+    [TEXT_COLOR_LIGHT_GRAY] = RGB_WHITE,
+};
+#else
 static const u8 gText_TextSpeedSlow[]      = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}SLOW");
 static const u8 gText_TextSpeedMid[]       = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}MID");
 static const u8 gText_TextSpeedFast[]      = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}FAST");
@@ -89,6 +145,7 @@ static const u8 gText_ButtonTypeLR[]       = _("{COLOR GREEN}{SHADOW LIGHT_GREEN
 static const u8 gText_ButtonTypeLEqualsA[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}L=A");
 
 static const u16 sOptionMenuText_Pal[] = INCGFX_U16("graphics/interface/option_menu_text.pal", ".gbapal");
+#endif
 // note: this is only used in the Japanese release
 static const u8 sEqualSignGfx[] = INCGFX_U8("graphics/interface/option_menu_equals_sign.png", ".4bpp");
 
@@ -98,7 +155,12 @@ static const u8 *const sOptionMenuItemsNames[MENUITEM_COUNT] =
     [MENUITEM_BATTLESCENE] = COMPOUND_STRING("BATTLE SCENE"),
     [MENUITEM_BATTLESTYLE] = COMPOUND_STRING("BATTLE STYLE"),
     [MENUITEM_SOUND]       = COMPOUND_STRING("SOUND"),
+#ifdef PLATFORM_ANDROID
+    [MENUITEM_BUTTONMODE]  = COMPOUND_STRING("CONTROLS"),
+    [MENUITEM_FASTFORWARD] = COMPOUND_STRING("FAST FORWARD"),
+#else
     [MENUITEM_BUTTONMODE]  = COMPOUND_STRING("BUTTON MODE"),
+#endif
     [MENUITEM_FRAMETYPE]   = COMPOUND_STRING("FRAME"),
     [MENUITEM_CANCEL]      = COMPOUND_STRING("CANCEL"),
 };
@@ -191,6 +253,18 @@ void CB2_InitOptionMenu(void)
         ChangeBgY(3, 0, BG_COORD_SET);
         InitWindows(sOptionMenuWinTemplates);
         DeactivateAllTextPrinters();
+#ifdef PLATFORM_ANDROID
+        // The native renderer does not need Emerald's GBA WIN0 highlight trick.
+        // Keep the menu as ordinary BG layers and draw an explicit cursor.
+        SetGpuReg(REG_OFFSET_WIN0H, 0);
+        SetGpuReg(REG_OFFSET_WIN0V, 0);
+        SetGpuReg(REG_OFFSET_WININ, 0);
+        SetGpuReg(REG_OFFSET_WINOUT, 0);
+        SetGpuReg(REG_OFFSET_BLDCNT, 0);
+        SetGpuReg(REG_OFFSET_BLDALPHA, 0);
+        SetGpuReg(REG_OFFSET_BLDY, 0);
+        SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
+#else
         SetGpuReg(REG_OFFSET_WIN0H, 0);
         SetGpuReg(REG_OFFSET_WIN0V, 0);
         SetGpuReg(REG_OFFSET_WININ, WININ_WIN0_BG0);
@@ -199,6 +273,7 @@ void CB2_InitOptionMenu(void)
         SetGpuReg(REG_OFFSET_BLDALPHA, 0);
         SetGpuReg(REG_OFFSET_BLDY, 4);
         SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_WIN0_ON | DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
+#endif
         ShowBg(0);
         ShowBg(1);
         gMain.state++;
@@ -256,6 +331,9 @@ void CB2_InitOptionMenu(void)
         BattleStyle_DrawChoices(gTasks[taskId].tBattleStyle);
         Sound_DrawChoices(gTasks[taskId].tSound);
         ButtonMode_DrawChoices(gTasks[taskId].tButtonMode);
+#ifdef PLATFORM_ANDROID
+        FastForward_DrawChoices();
+#endif
         FrameType_DrawChoices(gTasks[taskId].tWindowFrameType);
         HighlightOptionMenuItem(gTasks[taskId].tMenuSelection);
 
@@ -281,6 +359,13 @@ static void Task_OptionMenuProcessInput(u8 taskId)
 {
     if (JOY_NEW(A_BUTTON))
     {
+#ifdef PLATFORM_ANDROID
+        if (gTasks[taskId].tMenuSelection == MENUITEM_BUTTONMODE)
+        {
+            PortRuntime_BeginTouchLayoutEdit();
+            return;
+        }
+#endif
         if (gTasks[taskId].tMenuSelection == MENUITEM_CANCEL)
             gTasks[taskId].func = Task_OptionMenuSave;
     }
@@ -342,9 +427,23 @@ static void Task_OptionMenuProcessInput(u8 taskId)
             previousOption = gTasks[taskId].tButtonMode;
             gTasks[taskId].tButtonMode = ButtonMode_ProcessInput(gTasks[taskId].tButtonMode);
 
+#ifdef PLATFORM_ANDROID
+            // Android keeps the legacy button-mode value unchanged; left/right
+            // instead edits the fast-forward multiplier shown on this row.
+            if (sArrowPressed)
+                ButtonMode_DrawChoices(gTasks[taskId].tButtonMode);
+#else
             if (previousOption != gTasks[taskId].tButtonMode)
                 ButtonMode_DrawChoices(gTasks[taskId].tButtonMode);
+#endif
             break;
+#ifdef PLATFORM_ANDROID
+        case MENUITEM_FASTFORWARD:
+            FastForward_ProcessInput();
+            if (sArrowPressed)
+                FastForward_DrawChoices();
+            break;
+#endif
         case MENUITEM_FRAMETYPE:
             previousOption = gTasks[taskId].tWindowFrameType;
             gTasks[taskId].tWindowFrameType = FrameType_ProcessInput(gTasks[taskId].tWindowFrameType);
@@ -389,12 +488,45 @@ static void Task_OptionMenuFadeOut(u8 taskId)
 
 static void HighlightOptionMenuItem(u8 index)
 {
+#ifdef PLATFORM_ANDROID
+    // The cursor owns a dedicated 12-pixel margin. Labels start at x=16, so
+    // moving the cursor can never erase or overwrite their first glyph.
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        0,
+        0,
+        12,
+        MENUITEM_COUNT * OPTION_ROW_HEIGHT);
+
+    AddTextPrinterParameterized3(
+        WIN_OPTIONS,
+        FONT_NORMAL,
+        2,
+        index * OPTION_ROW_HEIGHT + 1,
+        sAndroidTextColors,
+        TEXT_SKIP_DRAW,
+        gText_SelectedMarker);
+    CopyWindowToVram(WIN_OPTIONS, COPYWIN_GFX);
+#else
     SetGpuReg(REG_OFFSET_WIN0H, WIN_RANGE(16, DISPLAY_WIDTH - 16));
     SetGpuReg(REG_OFFSET_WIN0V, WIN_RANGE(index * 16 + 40, index * 16 + 56));
+#endif
 }
 
 static void DrawOptionMenuChoice(const u8 *text, u8 x, u8 y, u8 style)
 {
+#ifdef PLATFORM_ANDROID
+    (void)style;
+    AddTextPrinterParameterized3(
+        WIN_OPTIONS,
+        FONT_NORMAL,
+        x,
+        y + 1,
+        sAndroidTextColors,
+        TEXT_SKIP_DRAW,
+        text);
+#else
     u8 dst[16];
     u16 i;
 
@@ -409,6 +541,7 @@ static void DrawOptionMenuChoice(const u8 *text, u8 x, u8 y, u8 style)
 
     dst[i] = EOS;
     AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, dst, x, y + 1, TEXT_SKIP_DRAW, NULL);
+#endif
 }
 
 static u8 TextSpeed_ProcessInput(u8 selection)
@@ -436,6 +569,24 @@ static u8 TextSpeed_ProcessInput(u8 selection)
 
 static void TextSpeed_DrawChoices(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    const u8 *text = selection == 0
+        ? gText_TextSpeedSlow
+        : (selection == 1 ? gText_TextSpeedMid : gText_TextSpeedFast);
+
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_TEXTSPEED,
+        96,
+        OPTION_ROW_HEIGHT);
+    DrawOptionMenuChoice(
+        text,
+        GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
+        YPOS_TEXTSPEED,
+        0);
+#else
     u8 styles[3];
     s32 widthSlow, widthMid, widthFast, xMid;
 
@@ -455,6 +606,7 @@ static void TextSpeed_DrawChoices(u8 selection)
     DrawOptionMenuChoice(gText_TextSpeedMid, xMid, YPOS_TEXTSPEED, styles[1]);
 
     DrawOptionMenuChoice(gText_TextSpeedFast, GetStringRightAlignXOffset(FONT_NORMAL, gText_TextSpeedFast, 198), YPOS_TEXTSPEED, styles[2]);
+#endif
 }
 
 static u8 BattleScene_ProcessInput(u8 selection)
@@ -470,6 +622,24 @@ static u8 BattleScene_ProcessInput(u8 selection)
 
 static void BattleScene_DrawChoices(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    const u8 *text = selection == 0
+        ? gText_BattleSceneOn
+        : gText_BattleSceneOff;
+
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_BATTLESCENE,
+        96,
+        OPTION_ROW_HEIGHT);
+    DrawOptionMenuChoice(
+        text,
+        GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
+        YPOS_BATTLESCENE,
+        0);
+#else
     u8 styles[2];
 
     styles[0] = 0;
@@ -478,6 +648,7 @@ static void BattleScene_DrawChoices(u8 selection)
 
     DrawOptionMenuChoice(gText_BattleSceneOn, 104, YPOS_BATTLESCENE, styles[0]);
     DrawOptionMenuChoice(gText_BattleSceneOff, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleSceneOff, 198), YPOS_BATTLESCENE, styles[1]);
+#endif
 }
 
 static u8 BattleStyle_ProcessInput(u8 selection)
@@ -493,6 +664,24 @@ static u8 BattleStyle_ProcessInput(u8 selection)
 
 static void BattleStyle_DrawChoices(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    const u8 *text = selection == 0
+        ? gText_BattleStyleShift
+        : gText_BattleStyleSet;
+
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_BATTLESTYLE,
+        96,
+        OPTION_ROW_HEIGHT);
+    DrawOptionMenuChoice(
+        text,
+        GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
+        YPOS_BATTLESTYLE,
+        0);
+#else
     u8 styles[2];
 
     styles[0] = 0;
@@ -501,6 +690,7 @@ static void BattleStyle_DrawChoices(u8 selection)
 
     DrawOptionMenuChoice(gText_BattleStyleShift, 104, YPOS_BATTLESTYLE, styles[0]);
     DrawOptionMenuChoice(gText_BattleStyleSet, GetStringRightAlignXOffset(FONT_NORMAL, gText_BattleStyleSet, 198), YPOS_BATTLESTYLE, styles[1]);
+#endif
 }
 
 static u8 Sound_ProcessInput(u8 selection)
@@ -517,6 +707,24 @@ static u8 Sound_ProcessInput(u8 selection)
 
 static void Sound_DrawChoices(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    const u8 *text = selection == 0
+        ? gText_SoundMono
+        : gText_SoundStereo;
+
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_SOUND,
+        96,
+        OPTION_ROW_HEIGHT);
+    DrawOptionMenuChoice(
+        text,
+        GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
+        YPOS_SOUND,
+        0);
+#else
     u8 styles[2];
 
     styles[0] = 0;
@@ -525,7 +733,40 @@ static void Sound_DrawChoices(u8 selection)
 
     DrawOptionMenuChoice(gText_SoundMono, 104, YPOS_SOUND, styles[0]);
     DrawOptionMenuChoice(gText_SoundStereo, GetStringRightAlignXOffset(FONT_NORMAL, gText_SoundStereo, 198), YPOS_SOUND, styles[1]);
+#endif
 }
+
+#ifdef PLATFORM_ANDROID
+static void FastForward_ProcessInput(void)
+{
+    if (JOY_NEW(DPAD_LEFT | DPAD_RIGHT))
+    {
+        PortRuntime_SetFastForwardToggleMode(
+            !PortRuntime_GetFastForwardToggleMode());
+        sArrowPressed = TRUE;
+    }
+}
+
+static void FastForward_DrawChoices(void)
+{
+    const u8 *text = PortRuntime_GetFastForwardToggleMode()
+        ? gText_FastForwardToggle
+        : gText_FastForwardHold;
+
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_FASTFORWARD,
+        96,
+        OPTION_ROW_HEIGHT);
+    DrawOptionMenuChoice(
+        text,
+        GetStringRightAlignXOffset(FONT_NORMAL, text, 198),
+        YPOS_FASTFORWARD,
+        0);
+}
+#endif
 
 static u8 FrameType_ProcessInput(u8 selection)
 {
@@ -581,12 +822,43 @@ static void FrameType_DrawChoices(u8 selection)
 
     text[i] = EOS;
 
+#ifdef PLATFORM_ANDROID
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_FRAMETYPE,
+        96,
+        OPTION_ROW_HEIGHT);
+    DrawOptionMenuChoice(gText_FrameType, 148, YPOS_FRAMETYPE, 0);
+    DrawOptionMenuChoice(text, 180, YPOS_FRAMETYPE, 0);
+#else
     DrawOptionMenuChoice(gText_FrameType, 104, YPOS_FRAMETYPE, 0);
     DrawOptionMenuChoice(text, 128, YPOS_FRAMETYPE, 1);
+#endif
 }
 
 static u8 ButtonMode_ProcessInput(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    if (JOY_NEW(DPAD_RIGHT))
+    {
+        int multiplier = PortRuntime_GetFastForwardMultiplier() + 1;
+        if (multiplier > 4)
+            multiplier = 2;
+        PortRuntime_SetFastForwardMultiplier(multiplier);
+        sArrowPressed = TRUE;
+    }
+    if (JOY_NEW(DPAD_LEFT))
+    {
+        int multiplier = PortRuntime_GetFastForwardMultiplier() - 1;
+        if (multiplier < 2)
+            multiplier = 4;
+        PortRuntime_SetFastForwardMultiplier(multiplier);
+        sArrowPressed = TRUE;
+    }
+    return selection;
+#else
     if (JOY_NEW(DPAD_RIGHT))
     {
         if (selection <= 1)
@@ -606,10 +878,34 @@ static u8 ButtonMode_ProcessInput(u8 selection)
         sArrowPressed = TRUE;
     }
     return selection;
+#endif
 }
 
 static void ButtonMode_DrawChoices(u8 selection)
 {
+#ifdef PLATFORM_ANDROID
+    (void)selection;
+    FillWindowPixelRect(
+        WIN_OPTIONS,
+        PIXEL_FILL(TEXT_COLOR_WHITE),
+        104,
+        YPOS_BUTTONMODE,
+        96,
+        OPTION_ROW_HEIGHT);
+
+    const u8 *multiplierText = gText_FastForward2x;
+    if (PortRuntime_GetFastForwardMultiplier() == 3)
+        multiplierText = gText_FastForward3x;
+    else if (PortRuntime_GetFastForwardMultiplier() == 4)
+        multiplierText = gText_FastForward4x;
+
+    DrawOptionMenuChoice(gText_ButtonEdit, 148, YPOS_BUTTONMODE, 0);
+    DrawOptionMenuChoice(
+        multiplierText,
+        GetStringRightAlignXOffset(FONT_NORMAL, multiplierText, 198),
+        YPOS_BUTTONMODE,
+        0);
+#else
     s32 widthNormal, widthLR, widthLA, xLR;
     u8 styles[3];
 
@@ -629,6 +925,7 @@ static void ButtonMode_DrawChoices(u8 selection)
     DrawOptionMenuChoice(gText_ButtonTypeLR, xLR, YPOS_BUTTONMODE, styles[1]);
 
     DrawOptionMenuChoice(gText_ButtonTypeLEqualsA, GetStringRightAlignXOffset(FONT_NORMAL, gText_ButtonTypeLEqualsA, 198), YPOS_BUTTONMODE, styles[2]);
+#endif
 }
 
 static void DrawHeaderText(void)
@@ -644,7 +941,27 @@ static void DrawOptionMenuTexts(void)
 
     FillWindowPixelBuffer(WIN_OPTIONS, PIXEL_FILL(1));
     for (i = 0; i < MENUITEM_COUNT; i++)
-        AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, sOptionMenuItemsNames[i], 8, (i * 16) + 1, TEXT_SKIP_DRAW, NULL);
+    {
+#ifdef PLATFORM_ANDROID
+        AddTextPrinterParameterized3(
+            WIN_OPTIONS,
+            FONT_NORMAL,
+            18,
+            (i * OPTION_ROW_HEIGHT) + 1,
+            sAndroidTextColors,
+            TEXT_SKIP_DRAW,
+            sOptionMenuItemsNames[i]);
+#else
+        AddTextPrinterParameterized(
+            WIN_OPTIONS,
+            FONT_NORMAL,
+            sOptionMenuItemsNames[i],
+            8,
+            (i * 16) + 1,
+            TEXT_SKIP_DRAW,
+            NULL);
+#endif
+    }
     CopyWindowToVram(WIN_OPTIONS, COPYWIN_FULL);
 }
 

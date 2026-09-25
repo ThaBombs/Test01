@@ -30,6 +30,9 @@
 #include "constants/battle_palace.h"
 #include "constants/battle_move_effects.h"
 #include "constants/event_objects.h" // only for SHADOW_SIZE constants
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
 
 // this file's functions
 static u8 GetBattlePalaceMoveGroup(enum BattlerId battler, enum Move move);
@@ -717,41 +720,83 @@ bool8 BattleLoadAllHealthBoxesGfx(u8 state)
     {
         if (state == 1)
         {
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("L-A");
+#endif
             LoadSpritePalette(&sSpritePalettes_HealthBoxHealthBar[0]);
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("L-B");
+#endif
             LoadSpritePalette(&sSpritePalettes_HealthBoxHealthBar[1]);
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("L-C");
+#endif
             CategoryIcons_LoadSpritesGfx();
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("L-E");
+#endif
         }
         else if (!IsDoubleBattle())
         {
             if (state == 2)
             {
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("L-F");
+#endif
                 if (gBattleTypeFlags & BATTLE_TYPE_SAFARI)
                     LoadCompressedSpriteSheet(&sSpriteSheet_SafariHealthbox);
                 else
                     LoadCompressedSpriteSheet(&sSpriteSheet_SinglesPlayerHealthbox);
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("L-X");
+#endif
             }
             else if (state == 3)
             {
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-A");
+#endif
                 if (B_HP_PERCENTAGE_DISPLAY)
                     LoadCompressedSpriteSheet(&sSpriteSheet_SinglesOpponentLargeHealthbox);
                 else
                     LoadCompressedSpriteSheet(&sSpriteSheet_SinglesOpponentHealthbox);
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-B");
+#endif
             }
             else if (state == 4)
             {
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-C");
+#endif
                 LoadCompressedSpriteSheet(&sSpriteSheets_HealthBar[GetBattlerPosition(B_BATTLER_0)]);
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-E");
+#endif
             }
             else if (state == 5)
             {
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-F");
+#endif
                 LoadCompressedSpriteSheet(&sSpriteSheets_HealthBar[GetBattlerPosition(B_BATTLER_1)]);
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-X");
+#endif
             }
             else
             {
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-Z");
+#endif
                 retVal = TRUE;
             }
         }
         else
         {
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("R-A");
+#endif
             if (state == 2)
             {
                 switch (GetBattlerCoordsIndex(GetBattlerAtPosition(B_POSITION_PLAYER_LEFT)))
@@ -798,10 +843,16 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
     switch (*state1)
     {
     case 0:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-A");
+#endif
         ClearSpritesBattlerHealthboxAnimData();
         (*state1)++;
         break;
     case 1:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-B");
+#endif
         if (!BattleLoadAllHealthBoxesGfx(*battler))
         {
             (*battler)++;
@@ -813,9 +864,15 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
         }
         break;
     case 2:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-C");
+#endif
         (*state1)++;
         break;
     case 3:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-E");
+#endif
         if ((gBattleTypeFlags & BATTLE_TYPE_SAFARI) && *battler == 0)
             gHealthboxSpriteIds[*battler] = CreateSafariPlayerHealthboxSprites();
         else
@@ -829,6 +886,9 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
         }
         break;
     case 4:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-F");
+#endif
         InitBattlerHealthboxCoords(*battler);
         if (GetBattlerPosition(*battler) <= B_POSITION_OPPONENT_LEFT)
             DummyBattleInterfaceFunc(gHealthboxSpriteIds[*battler], FALSE);
@@ -843,6 +903,9 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
         }
         break;
     case 5:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-X");
+#endif
         if (!IsOnPlayerSide(*battler) || !(gBattleTypeFlags & BATTLE_TYPE_SAFARI))
             UpdateHealthboxAttribute(gHealthboxSpriteIds[*battler], GetBattlerMon(*battler), HEALTHBOX_ALL);
         SetHealthboxSpriteInvisible(gHealthboxSpriteIds[*battler]);
@@ -854,8 +917,17 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
         }
         break;
     case 6:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("Z-A");
+#endif
         LoadAndCreateEnemyShadowSprites();
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("Z-B");
+#endif
         BufferBattlePartyCurrentOrder();
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("Z-C");
+#endif
         retVal = TRUE;
         break;
     }
@@ -1133,15 +1205,27 @@ void SetBattlerSpriteAffineMode(u8 affineMode)
 
 void CreateEnemyShadowSprite(enum BattlerId battler)
 {
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("H-A");
+#endif
     if (B_ENEMY_MON_SHADOW_STYLE >= GEN_4 && P_GBA_STYLE_SPECIES_GFX == FALSE)
     {
         enum Species species = GetBattlerVisualSpecies(battler);
-        u8 size = gSpeciesInfo[species].enemyShadowSize;
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("H-B");
+#endif
+        u8 size = gSpeciesInfo[SanitizeSpeciesId(species)].enemyShadowSize;
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("H-C");
+#endif
 
         gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteIdPrimary = CreateSpriteUnchecked(&gSpriteTemplate_EnemyShadow,
                                                                                              GetBattlerSpriteCoord(battler, BATTLER_COORD_X),
                                                                                              GetBattlerSpriteCoord(battler, BATTLER_COORD_Y),
                                                                                              0xC8);
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("H-D");
+#endif
         if (gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteIdPrimary < MAX_SPRITES)
         {
             struct Sprite *sprite = &gSprites[gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteIdPrimary];
@@ -1156,6 +1240,9 @@ void CreateEnemyShadowSprite(enum BattlerId battler)
                                                                                                GetBattlerSpriteCoord(battler, BATTLER_COORD_X),
                                                                                                GetBattlerSpriteCoord(battler, BATTLER_COORD_Y),
                                                                                                0xC8);
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("H-E");
+#endif
         if (gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteIdSecondary < MAX_SPRITES)
         {
             struct Sprite *sprite = &gSprites[gBattleSpritesDataPtr->healthBoxesData[battler].shadowSpriteIdSecondary];
@@ -1187,9 +1274,15 @@ void LoadAndCreateEnemyShadowSprites(void)
     enum BattlerId battler;
     enum BattlerId i;
 
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("Z-D");
+#endif
     if (B_ENEMY_MON_SHADOW_STYLE >= GEN_4 && P_GBA_STYLE_SPECIES_GFX == FALSE)
     {
         LoadCompressedSpriteSheet(&gSpriteSheet_EnemyShadowsSized);
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("Z-E");
+#endif
 
         // initialize shadow sprite ids
         for (i = 0; i < gBattlersCount; i++)
@@ -1201,6 +1294,9 @@ void LoadAndCreateEnemyShadowSprites(void)
     else
     {
         LoadCompressedSpriteSheet(&gSpriteSheet_EnemyShadow);
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("Z-E");
+#endif
 
         // initialize shadow sprite ids
         for (i = 0; i < gBattlersCount; i++)
@@ -1209,8 +1305,17 @@ void LoadAndCreateEnemyShadowSprites(void)
         }
     }
 
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("Z-F");
+#endif
     battler = GetBattlerAtPosition(B_POSITION_OPPONENT_LEFT);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("Z-X");
+#endif
     CreateEnemyShadowSprite(battler);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("Z-Y");
+#endif
 
     if (IsDoubleBattle())
     {

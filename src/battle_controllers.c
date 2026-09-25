@@ -30,6 +30,9 @@
 #include "trainer.h"
 #include "util.h"
 #include "wild_encounter.h"
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
 #include "constants/abilities.h"
 #include "constants/item_effects.h"
 #include "constants/songs.h"
@@ -38,6 +41,12 @@
 
 static EWRAM_DATA u8 sLinkSendTaskId = 0;
 static EWRAM_DATA u8 sLinkReceiveTaskId = 0;
+
+#ifdef PLATFORM_ANDROID
+// Native function pointers are 64-bit and cannot be packed into two s16 task
+// fields like on GBA. Keep the send-out continuation per task at full width.
+static void (*sStartSendOutControllerCallbacks[NUM_TASKS])(enum BattlerId battler);
+#endif
 
 COMMON_DATA void (*gBattlerControllerFuncs[MAX_BATTLERS_COUNT])(enum BattlerId battler) = {0};
 COMMON_DATA u8 gBattleControllerData[MAX_BATTLERS_COUNT] = {0}; // Used by the battle controllers to store misc sprite/task IDs for each battler
@@ -135,6 +144,9 @@ void SetUpBattleVarsAndBirchZigzagoon(void)
 {
     s32 i;
 
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("F-A");
+#endif
     gBattleMainFunc = BeginBattleIntroDummy;
 
     for (i = 0; i < MAX_BATTLERS_COUNT; i++)
@@ -147,9 +159,21 @@ void SetUpBattleVarsAndBirchZigzagoon(void)
 
     HandleLinkBattleSetup();
     gBattleControllerExecFlags = 0;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("F-B");
+#endif
     ClearBattleAnimationVars();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("F-C");
+#endif
     BattleAI_SetupItems();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("F-E");
+#endif
     BattleAI_SetupFlags();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("F-X");
+#endif
 
     if (!IS_FRLG && gBattleTypeFlags & BATTLE_TYPE_FIRST_BATTLE)
         CreateWildMon(SPECIES_ZIGZAGOON, 2);
@@ -2900,7 +2924,11 @@ void BtlController_HandleIntroTrainerBallThrow(enum BattlerId battler, u16 tagTr
     taskId = CreateTask(Task_StartSendOutAnim, 5);
     gTasks[taskId].tBattlerId = battler;
     gTasks[taskId].tFramesToWait = framesToWait;
+#ifdef PLATFORM_ANDROID
+    sStartSendOutControllerCallbacks[taskId] = controllerCallback;
+#else
     SetWordTaskArg(taskId, tControllerFunc_1, (uint32_t)(controllerCallback));
+#endif
 
     if (gBattleSpritesDataPtr->healthBoxesData[battler].partyStatusSummaryShown)
         gTasks[gBattlerStatusSummaryTaskId[battler]].func = Task_HidePartyStatusSummary;
@@ -2957,7 +2985,12 @@ static void Task_StartSendOutAnim(u8 taskId)
             gBattleResources->bufferA[battler][1] = gBattlerPartyIndexes[battler];
             StartSendOutAnim(battler, FALSE, FALSE, ShouldDoSlideInAnim(battler));
         }
+#ifdef PLATFORM_ANDROID
+        gBattlerControllerFuncs[battler] = sStartSendOutControllerCallbacks[taskId];
+        sStartSendOutControllerCallbacks[taskId] = NULL;
+#else
         gBattlerControllerFuncs[battler] = (void*)(GetWordTaskArg(taskId, tControllerFunc_1));
+#endif
         DestroyTask(taskId);
     }
 }

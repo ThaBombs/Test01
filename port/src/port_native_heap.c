@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "global.h"
+#include "load_save.h"
 #include "decompress.h"
 #include "malloc.h"
 
@@ -12,6 +13,17 @@ void InitHeap(void *heapStart, u32 heapSize)
     // Keep the API so existing game code remains unchanged.
     (void)heapStart;
     (void)heapSize;
+}
+
+
+void MoveSaveBlocks_ResetHeap(void)
+{
+    // The GBA routine temporarily copies and relocates save blocks inside
+    // EWRAM before resetting its fixed heap. Android keeps stable native save
+    // pointers and uses the host allocator, so relocation is neither required
+    // nor safe here. Preserve the Emerald call boundary and reset the native
+    // heap API in place.
+    InitHeap(gHeap, HEAP_SIZE);
 }
 
 void *AllocUnchecked_(u32 size, const char *location)

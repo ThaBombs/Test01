@@ -15,18 +15,6 @@ struct PokemonCrySong gPokemonCrySongs[MAX_POKEMON_CRIES];
 
 static bool sVSyncEnabled;
 
-void InitMapMusic(void)
-{
-}
-
-void MapMusicMain(void)
-{
-}
-
-void ResetMapMusic(void)
-{
-}
-
 static void ResetAudioState(void)
 {
     memset(&gMPlayInfo_BGM, 0, sizeof(gMPlayInfo_BGM));
@@ -140,6 +128,69 @@ void m4aMPlayPanpotControl(struct MusicPlayerInfo *mplayInfo, u16 trackBits, s8 
     (void)mplayInfo;
     (void)trackBits;
     (void)pan;
+}
+
+
+/*
+ * Pokemon cry control entry points normally supplied by the GBA M4A mixer.
+ * Android keeps the game-side cry state machine in sound.c, while this host
+ * bridge currently treats sample playback as an inert sink.
+ */
+struct MusicPlayerInfo *SetPokemonCryTone(struct ToneData *tone)
+{
+    (void)tone;
+    return &gMPlayInfo_BGM;
+}
+
+void SetPokemonCryVolume(u8 val)
+{
+    (void)val;
+}
+
+void SetPokemonCryPanpot(s8 val)
+{
+    (void)val;
+}
+
+void SetPokemonCryPitch(s16 val)
+{
+    (void)val;
+}
+
+void SetPokemonCryLength(u16 val)
+{
+    (void)val;
+}
+
+void SetPokemonCryRelease(u8 val)
+{
+    (void)val;
+}
+
+void SetPokemonCryProgress(u32 val)
+{
+    (void)val;
+}
+
+bool32 IsPokemonCryPlaying(struct MusicPlayerInfo *mplayInfo)
+{
+    (void)mplayInfo;
+    return FALSE;
+}
+
+void SetPokemonCryChorus(s8 val)
+{
+    (void)val;
+}
+
+void SetPokemonCryStereo(u32 val)
+{
+    (void)val;
+}
+
+void SetPokemonCryPriority(u8 val)
+{
+    (void)val;
 }
 
 bool PortGbaAudio_SelfTest(void)

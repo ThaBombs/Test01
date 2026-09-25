@@ -41,6 +41,10 @@
 #include "window.h"
 #include "mystery_gift_menu.h"
 
+#ifdef PLATFORM_ANDROID
+#include "port_test_overworld.h"
+#endif
+
 /*
  * Main menu state machine
  * -----------------------
@@ -247,6 +251,15 @@ static void MainMenu_FormatSavegameBadges(void);
 
 // .rodata
 
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+// Birch's new-game presentation is not part of the first Android menu
+// milestone. Keep compile-time placeholders so main_menu.c can be linked
+// without generating presentation assets that are unreachable in this build.
+static const u16 sBirchSpeechBgPals[][16] = {{0}, {0}};
+static const u32 sBirchSpeechShadowGfx[] = {0};
+static const u32 sBirchSpeechBgMap[] = {0};
+static const u16 sBirchSpeechBgGradientPal[] = {0};
+#else
 static const u16 sBirchSpeechBgPals[][16] = {
     INCGFX_U16("graphics/birch_speech/bg0.pal", ".gbapal"),
     INCGFX_U16("graphics/birch_speech/bg1.pal", ".gbapal")
@@ -255,6 +268,7 @@ static const u16 sBirchSpeechBgPals[][16] = {
 static const u32 sBirchSpeechShadowGfx[] = INCGFX_U32("graphics/birch_speech/shadow.png", ".4bpp.smol");
 static const u32 sBirchSpeechBgMap[] = INCGFX_U32("graphics/birch_speech/map.bin", ".smolTM");
 static const u16 sBirchSpeechBgGradientPal[] = INCGFX_U16("graphics/birch_speech/bg2.pal", ".gbapal");
+#endif
 
 static const u8 gText_SaveFileCorrupted[] = _("The save file is corrupted. The\nprevious save file will be loaded.");
 static const u8 gText_SaveFileErased[] = _("The save file has been erased\ndue to corruption or damage.");
@@ -600,10 +614,14 @@ static u32 InitMainMenu(bool8 returningFromOptionsMenu)
     ResetTasks();
     ResetSpriteData();
     FreeAllSpritePalettes();
+#ifndef PORT_BOOTSTRAP_MENU_ONLY
     if (returningFromOptionsMenu)
         BeginNormalPaletteFade(PALETTES_ALL, 0, 0x10, 0, RGB_BLACK); // fade to black
     else
         BeginNormalPaletteFade(PALETTES_ALL, 0, 0x10, 0, RGB_WHITEALPHA); // fade to white
+#else
+    (void)returningFromOptionsMenu;
+#endif
     ResetBgsAndClearDma3BusyFlags(0);
     InitBgsFromTemplates(0, sMainMenuBgTemplates, ARRAY_COUNT(sMainMenuBgTemplates));
     ChangeBgX(0, 0, BG_COORD_SET);
@@ -645,6 +663,20 @@ static u32 InitMainMenu(bool8 returningFromOptionsMenu)
 static void Task_MainMenuCheckSaveFile(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
+
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+    // Save loading is the next Android milestone. For the first visible
+    // menu build, behave like a fresh install and keep optional wireless
+    // menu entries out of the dependency graph. Android also skips the
+    // legacy title fade, so the real menu can be constructed immediately.
+    tMenuType = HAS_NO_SAVED_GAME;
+    tCurrItem = 0;
+    tItemCount = 2;
+    tIsScrolled = FALSE;
+    tWirelessAdapterConnected = FALSE;
+    sCurrItemAndOptionMenuCheck = 0;
+    gTasks[taskId].func = Task_DisplayMainMenu;
+#else
 
     if (!gPaletteFade.active)
     {
@@ -709,6 +741,8 @@ static void Task_MainMenuCheckSaveFile(u8 taskId)
         tCurrItem = sCurrItemAndOptionMenuCheck;
         tItemCount = tMenuType + 2;
     }
+
+#endif
 }
 
 static void Task_WaitForSaveFileErrorWindow(u8 taskId)
@@ -797,6 +831,20 @@ static void Task_DisplayMainMenu(u8 taskId)
             LoadPalette(&palette, BG_PLTT_ID(15) + 1, PLTT_SIZEOF(1));
         }
 
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+        FillWindowPixelBuffer(0, PIXEL_FILL(0xA));
+        FillWindowPixelBuffer(1, PIXEL_FILL(0xA));
+        AddTextPrinterParameterized3(0, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuNewGame);
+        AddTextPrinterParameterized3(1, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuOption);
+        PutWindowTilemap(0);
+        PutWindowTilemap(1);
+        // Use full copies for the Android bootstrap so tile graphics and the
+        // associated BG map always reach host VRAM in the same frame.
+        CopyWindowToVram(0, COPYWIN_FULL);
+        CopyWindowToVram(1, COPYWIN_FULL);
+        DrawMainMenuWindowBorder(&sWindowTemplates_MainMenu[0], MAIN_MENU_BORDER_TILE);
+        DrawMainMenuWindowBorder(&sWindowTemplates_MainMenu[1], MAIN_MENU_BORDER_TILE);
+#else
         switch (gTasks[taskId].tMenuType)
         {
         case HAS_NO_SAVED_GAME:
@@ -891,6 +939,7 @@ static void Task_DisplayMainMenu(u8 taskId)
             }
             break;
         }
+#endif
         gTasks[taskId].func = Task_HighlightSelectedMainMenuItem;
     }
 }
@@ -907,18 +956,26 @@ static bool8 HandleMainMenuInput(u8 taskId)
 
     if (JOY_NEW(A_BUTTON))
     {
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+        gTasks[taskId].func = Task_HandleMainMenuAPressed;
+#else
         PlaySE(SE_SELECT);
         IsWirelessAdapterConnected();   // why bother calling this here? debug? Task_HandleMainMenuAPressed will check too
         BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_BLACK);
         gTasks[taskId].func = Task_HandleMainMenuAPressed;
+#endif
     }
     else if (JOY_NEW(B_BUTTON))
     {
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+        gTasks[taskId].func = Task_HandleMainMenuBPressed;
+#else
         PlaySE(SE_SELECT);
         BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_WHITEALPHA);
         SetGpuReg(REG_OFFSET_WIN0H, WIN_RANGE(0, DISPLAY_WIDTH));
         SetGpuReg(REG_OFFSET_WIN0V, WIN_RANGE(0, DISPLAY_HEIGHT));
         gTasks[taskId].func = Task_HandleMainMenuBPressed;
+#endif
     }
     else if ((JOY_NEW(DPAD_UP)) && tCurrItem > 0)
     {
@@ -955,6 +1012,25 @@ static void Task_HandleMainMenuInput(u8 taskId)
 
 static void Task_HandleMainMenuAPressed(u8 taskId)
 {
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+    // Android milestone path: NEW GAME skips Birch/truck presentation and
+    // enters a real Emerald overworld map directly. OPTION remains the real
+    // Emerald option menu.
+    if (gTasks[taskId].tCurrItem == 0)
+    {
+        FreeAllWindowBuffers();
+        DestroyTask(taskId);
+        PortGame_StartTestOverworld();
+    }
+    else
+    {
+        gMain.savedCallback = CB2_ReinitMainMenu;
+        FreeAllWindowBuffers();
+        SetMainCallback2(CB2_InitOptionMenu);
+        DestroyTask(taskId);
+    }
+#else
+
     bool8 wirelessAdapterConnected;
     u8 action;
 
@@ -1136,10 +1212,16 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
         else
             sCurrItemAndOptionMenuCheck |= OPTION_MENU_FLAG;  // entering the options menu
     }
+
+#endif
 }
 
 static void Task_HandleMainMenuBPressed(u8 taskId)
 {
+#ifdef PORT_BOOTSTRAP_MENU_ONLY
+    gTasks[taskId].func = Task_HighlightSelectedMainMenuItem;
+#else
+
     if (!gPaletteFade.active)
     {
         if (gTasks[taskId].tMenuType == HAS_MYSTERY_EVENTS)
@@ -1149,6 +1231,8 @@ static void Task_HandleMainMenuBPressed(u8 taskId)
         SetMainCallback2(CB2_InitTitleScreen);
         DestroyTask(taskId);
     }
+
+#endif
 }
 
 static void Task_DisplayMainMenuInvalidActionError(u8 taskId)

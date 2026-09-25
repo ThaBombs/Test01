@@ -56,6 +56,14 @@ static void AddTreeBonus(struct BerryTree *tree, u8 bonus);
 #define GROWTH_DURATION(g3, g4, g5, xy, oras, g7) OW_BERRY_GROWTH_RATE == GEN_3 ? g3 : OW_BERRY_GROWTH_RATE == GEN_4 ? g4 : OW_BERRY_GROWTH_RATE == GEN_5 ? g5 : OW_BERRY_GROWTH_RATE == GEN_6_XY ? xy : OW_BERRY_GROWTH_RATE == GEN_6_ORAS ? oras : g7
 #define YIELD_RATE(g3, g4, xy, oras) OW_BERRY_YIELD_RATE == GEN_3 ? g3 : OW_BERRY_YIELD_RATE == GEN_4 ? g4 : OW_BERRY_YIELD_RATE == GEN_6_XY ? xy : oras
 
+#ifdef PLATFORM_ANDROID
+#define BERRY_TREE_PIC_DATA(x) NULL
+#define BERRY_TREE_PAL_DATA(x) NULL
+#else
+#define BERRY_TREE_PIC_DATA(x) (x)
+#define BERRY_TREE_PAL_DATA(x) (x)
+#endif
+
 const struct Berry gBerries[NUM_BERRIES + 1] =
 {
     [BERRY_ID_NONE] = {
@@ -66,8 +74,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         },
         .berryPic = gBerryPic_Enigma,
         .berryPal =  gBerryPalette_Enigma,
-        .berryTreePicTable = gPicTable_DurinBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Durin,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_DurinBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Durin),
     },
     [BERRY_ID_CHERI] =
     {
@@ -98,8 +106,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  20,
         .berryPic = gBerryPic_Cheri,
         .berryPal =  gBerryPalette_Cheri,
-        .berryTreePicTable = gPicTable_CheriBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Cheri,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_CheriBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Cheri),
     },
 
     [BERRY_ID_CHESTO] =
@@ -131,8 +139,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  20,
         .berryPic = gBerryPic_Chesto,
         .berryPal = gBerryPalette_Chesto,
-        .berryTreePicTable = gPicTable_ChestoBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Chesto,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_ChestoBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Chesto),
     },
 
     [BERRY_ID_PECHA] =
@@ -164,8 +172,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  20,
         .berryPic = gBerryPic_Pecha,
         .berryPal =  gBerryPalette_Pecha,
-        .berryTreePicTable = gPicTable_PechaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Pecha,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_PechaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Pecha),
     },
 
     [BERRY_ID_RAWST] =
@@ -197,8 +205,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  20,
         .berryPic = gBerryPic_Rawst,
         .berryPal =  gBerryPalette_Rawst,
-        .berryTreePicTable = gPicTable_RawstBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Rawst,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_RawstBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Rawst),
     },
 
     [BERRY_ID_ASPEAR] =
@@ -230,8 +238,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  20,
         .berryPic = gBerryPic_Aspear,
         .berryPal = gBerryPalette_Aspear,
-        .berryTreePicTable = gPicTable_AspearBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Aspear,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_AspearBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Aspear),
     },
 
     [BERRY_ID_LEPPA] =
@@ -263,8 +271,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Leppa,
         .berryPal =  gBerryPalette_Leppa,
-        .berryTreePicTable = gPicTable_LeppaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Leppa,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_LeppaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Leppa),
     },
 
     [BERRY_ID_ORAN] =
@@ -296,8 +304,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Oran,
         .berryPal =   gBerryPalette_Oran,
-        .berryTreePicTable = gPicTable_OranBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Oran,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_OranBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Oran),
     },
 
     [BERRY_ID_PERSIM] =
@@ -329,8 +337,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Persim,
         .berryPal = gBerryPalette_Persim,
-        .berryTreePicTable = gPicTable_PersimBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Persim,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_PersimBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Persim),
     },
 
     [BERRY_ID_LUM] =
@@ -362,8 +370,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Lum,
         .berryPal =    gBerryPalette_Lum,
-        .berryTreePicTable = gPicTable_LumBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Lum,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_LumBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Lum),
     },
 
     [BERRY_ID_SITRUS] =
@@ -395,8 +403,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Sitrus,
         .berryPal = gBerryPalette_Sitrus,
-        .berryTreePicTable = gPicTable_SitrusBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Sitrus,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_SitrusBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Sitrus),
     },
 
     [BERRY_ID_FIGY] =
@@ -428,8 +436,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  50,
         .berryPic = gBerryPic_Figy,
         .berryPal =   gBerryPalette_Figy,
-        .berryTreePicTable = gPicTable_FigyBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Figy,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_FigyBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Figy),
     },
 
     [BERRY_ID_WIKI] =
@@ -461,8 +469,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  50,
         .berryPic = gBerryPic_Wiki,
         .berryPal =   gBerryPalette_Wiki,
-        .berryTreePicTable = gPicTable_WikiBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Wiki,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_WikiBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Wiki),
     },
 
     [BERRY_ID_MAGO] =
@@ -494,8 +502,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  50,
         .berryPic = gBerryPic_Mago,
         .berryPal =   gBerryPalette_Mago,
-        .berryTreePicTable = gPicTable_MagoBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Mago,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_MagoBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Mago),
     },
 
     [BERRY_ID_AGUAV] =
@@ -527,8 +535,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  50,
         .berryPic = gBerryPic_Aguav,
         .berryPal =  gBerryPalette_Aguav,
-        .berryTreePicTable = gPicTable_AguavBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Aguav,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_AguavBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Aguav),
     },
 
     [BERRY_ID_IAPAPA] =
@@ -560,8 +568,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  50,
         .berryPic = gBerryPic_Iapapa,
         .berryPal = gBerryPalette_Iapapa,
-        .berryTreePicTable = gPicTable_IapapaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Iapapa,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_IapapaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Iapapa),
     },
 
     [BERRY_ID_RAZZ] =
@@ -593,8 +601,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  70,
         .berryPic = gBerryPic_Razz,
         .berryPal =   gBerryPalette_Razz,
-        .berryTreePicTable = gPicTable_RazzBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Razz,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_RazzBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Razz),
     },
 
     [BERRY_ID_BLUK] =
@@ -626,8 +634,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  70,
         .berryPic = gBerryPic_Bluk,
         .berryPal =   gBerryPalette_Bluk,
-        .berryTreePicTable = gPicTable_RazzBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Razz,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_RazzBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Razz),
     },
 
     [BERRY_ID_NANAB] =
@@ -659,8 +667,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  70,
         .berryPic = gBerryPic_Nanab,
         .berryPal =  gBerryPalette_Nanab,
-        .berryTreePicTable = gPicTable_MagoBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Mago,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_MagoBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Mago),
     },
 
     [BERRY_ID_WEPEAR] =
@@ -692,8 +700,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  70,
         .berryPic = gBerryPic_Wepear,
         .berryPal = gBerryPalette_Wepear,
-        .berryTreePicTable = gPicTable_WepearBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Wepear,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_WepearBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Wepear),
     },
 
     [BERRY_ID_PINAP] =
@@ -725,8 +733,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  70,
         .berryPic = gBerryPic_Pinap,
         .berryPal =  gBerryPalette_Pinap,
-        .berryTreePicTable = gPicTable_IapapaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Iapapa,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_IapapaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Iapapa),
     },
 
     [BERRY_ID_POMEG] =
@@ -758,8 +766,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 100,
         .berryPic = gBerryPic_Pomeg,
         .berryPal =  gBerryPalette_Pomeg,
-        .berryTreePicTable = gPicTable_PomegBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Pomeg,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_PomegBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Pomeg),
     },
 
     [BERRY_ID_KELPSY] =
@@ -791,8 +799,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 100,
         .berryPic = gBerryPic_Kelpsy,
         .berryPal = gBerryPalette_Kelpsy,
-        .berryTreePicTable = gPicTable_KelpsyBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Kelpsy,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_KelpsyBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Kelpsy),
     },
 
     [BERRY_ID_QUALOT] =
@@ -824,8 +832,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 100,
         .berryPic = gBerryPic_Qualot,
         .berryPal = gBerryPalette_Qualot,
-        .berryTreePicTable = gPicTable_WepearBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Wepear,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_WepearBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Wepear),
     },
 
     [BERRY_ID_HONDEW] =
@@ -857,8 +865,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 100,
         .berryPic = gBerryPic_Hondew,
         .berryPal = gBerryPalette_Hondew,
-        .berryTreePicTable = gPicTable_HondewBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Hondew,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_HondewBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Hondew),
     },
 
     [BERRY_ID_GREPA] =
@@ -890,8 +898,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 100,
         .berryPic = gBerryPic_Grepa,
         .berryPal =  gBerryPalette_Grepa,
-        .berryTreePicTable = gPicTable_GrepaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Grepa,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_GrepaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Grepa),
     },
 
     [BERRY_ID_TAMATO] =
@@ -923,8 +931,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 150,
         .berryPic = gBerryPic_Tamato,
         .berryPal = gBerryPalette_Tamato,
-        .berryTreePicTable = gPicTable_TamatoBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Tamato,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_TamatoBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Tamato),
     },
 
     [BERRY_ID_CORNN] =
@@ -956,8 +964,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 150,
         .berryPic = gBerryPic_Cornn,
         .berryPal =  gBerryPalette_Cornn,
-        .berryTreePicTable = gPicTable_CornnBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Cornn,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_CornnBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Cornn),
     },
 
     [BERRY_ID_MAGOST] =
@@ -989,8 +997,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 150,
         .berryPic = gBerryPic_Magost,
         .berryPal = gBerryPalette_Magost,
-        .berryTreePicTable = gPicTable_PomegBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Pomeg,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_PomegBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Pomeg),
     },
 
     [BERRY_ID_RABUTA] =
@@ -1022,8 +1030,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 150,
         .berryPic = gBerryPic_Rabuta,
         .berryPal = gBerryPalette_Rabuta,
-        .berryTreePicTable = gPicTable_RabutaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Rabuta,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_RabutaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Rabuta),
     },
 
     [BERRY_ID_NOMEL] =
@@ -1055,8 +1063,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 150,
         .berryPic = gBerryPic_Nomel,
         .berryPal =  gBerryPalette_Nomel,
-        .berryTreePicTable = gPicTable_NomelBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Nomel,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_NomelBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Nomel),
     },
 
     [BERRY_ID_SPELON] =
@@ -1088,8 +1096,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 250,
         .berryPic = gBerryPic_Spelon,
         .berryPal = gBerryPalette_Spelon,
-        .berryTreePicTable = gPicTable_SpelonBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Spelon,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_SpelonBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Spelon),
     },
 
     [BERRY_ID_PAMTRE] =
@@ -1121,8 +1129,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 250,
         .berryPic = gBerryPic_Pamtre,
         .berryPal = gBerryPalette_Pamtre,
-        .berryTreePicTable = gPicTable_PamtreBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Pamtre,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_PamtreBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Pamtre),
     },
 
     [BERRY_ID_WATMEL] =
@@ -1154,8 +1162,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 250,
         .berryPic = gBerryPic_Watmel,
         .berryPal = gBerryPalette_Watmel,
-        .berryTreePicTable = gPicTable_RabutaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Rabuta,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_RabutaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Rabuta),
     },
 
     [BERRY_ID_DURIN] =
@@ -1187,8 +1195,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 250,
         .berryPic = gBerryPic_Durin,
         .berryPal =  gBerryPalette_Durin,
-        .berryTreePicTable = gPicTable_DurinBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Durin,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_DurinBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Durin),
     },
 
     [BERRY_ID_BELUE] =
@@ -1220,8 +1228,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 250,
         .berryPic = gBerryPic_Belue,
         .berryPal =  gBerryPalette_Belue,
-        .berryTreePicTable = gPicTable_HondewBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Hondew,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_HondewBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Hondew),
     },
 
     [BERRY_ID_OCCA] =
@@ -1253,8 +1261,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 100,
         .berryPic = gBerryPic_Occa,
         .berryPal = gBerryPalette_Occa,
-        .berryTreePicTable = gPicTable_OccaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Occa,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_OccaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Occa),
     },
 
     [BERRY_ID_PASSHO] =
@@ -1286,8 +1294,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Passho,
         .berryPal = gBerryPalette_Passho,
-        .berryTreePicTable = gPicTable_CornnBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Cornn,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_CornnBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Cornn),
     },
 
     [BERRY_ID_WACAN] =
@@ -1319,8 +1327,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Wacan,
         .berryPal = gBerryPalette_Wacan,
-        .berryTreePicTable = gPicTable_RazzBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Razz,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_RazzBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Razz),
     },
 
     [BERRY_ID_RINDO] =
@@ -1352,8 +1360,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Rindo,
         .berryPal = gBerryPalette_Rindo,
-        .berryTreePicTable = gPicTable_TamatoBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Tamato,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_TamatoBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Tamato),
     },
 
     [BERRY_ID_YACHE] =
@@ -1385,8 +1393,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Yache,
         .berryPal = gBerryPalette_Yache,
-        .berryTreePicTable = gPicTable_YacheBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Yache,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_YacheBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Yache),
     },
 
     [BERRY_ID_CHOPLE] =
@@ -1418,8 +1426,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Chople,
         .berryPal = gBerryPalette_Chople,
-        .berryTreePicTable = gPicTable_ChopleBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Chople,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_ChopleBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Chople),
     },
 
     [BERRY_ID_KEBIA] =
@@ -1451,8 +1459,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Kebia,
         .berryPal = gBerryPalette_Kebia,
-        .berryTreePicTable = gPicTable_KebiaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Kebia,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_KebiaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Kebia),
     },
 
     [BERRY_ID_SHUCA] =
@@ -1484,8 +1492,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  20,
         .berryPic = gBerryPic_Shuca,
         .berryPal = gBerryPalette_Shuca,
-        .berryTreePicTable = gPicTable_ShucaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Shuca,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_ShucaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Shuca),
     },
 
     [BERRY_ID_COBA] =
@@ -1517,8 +1525,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Coba,
         .berryPal = gBerryPalette_Coba,
-        .berryTreePicTable = gPicTable_RawstBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Rawst,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_RawstBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Rawst),
     },
 
     [BERRY_ID_PAYAPA] =
@@ -1550,8 +1558,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Payapa,
         .berryPal = gBerryPalette_Payapa,
-        .berryTreePicTable = gPicTable_PayapaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Payapa,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_PayapaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Payapa),
     },
 
     [BERRY_ID_TANGA] =
@@ -1583,8 +1591,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Tanga,
         .berryPal = gBerryPalette_Tanga,
-        .berryTreePicTable = gPicTable_TangaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Tanga,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_TangaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Tanga),
     },
 
     [BERRY_ID_CHARTI] =
@@ -1616,8 +1624,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Charti,
         .berryPal = gBerryPalette_Charti,
-        .berryTreePicTable = gPicTable_LansatBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Lansat,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_LansatBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Lansat),
     },
 
     [BERRY_ID_KASIB] =
@@ -1649,8 +1657,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Kasib,
         .berryPal = gBerryPalette_Kasib,
-        .berryTreePicTable = gPicTable_KasibBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Kasib,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_KasibBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Kasib),
     },
 
     [BERRY_ID_HABAN] =
@@ -1682,8 +1690,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  30,
         .berryPic = gBerryPic_Haban,
         .berryPal = gBerryPalette_Haban,
-        .berryTreePicTable = gPicTable_HabanBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Haban,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_HabanBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Haban),
     },
 
     [BERRY_ID_COLBUR] =
@@ -1715,8 +1723,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  50,
         .berryPic = gBerryPic_Colbur,
         .berryPal = gBerryPalette_Colbur,
-        .berryTreePicTable = gPicTable_ColburBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Colbur,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_ColburBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Colbur),
     },
 
     [BERRY_ID_BABIRI] =
@@ -1748,8 +1756,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  50,
         .berryPic = gBerryPic_Babiri,
         .berryPal = gBerryPalette_Babiri,
-        .berryTreePicTable = gPicTable_LiechiBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Liechi,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_LiechiBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Liechi),
     },
 
     [BERRY_ID_CHILAN] =
@@ -1781,8 +1789,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  70,
         .berryPic = gBerryPic_Chilan,
         .berryPal = gBerryPalette_Chilan,
-        .berryTreePicTable = gPicTable_GrepaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Grepa,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_GrepaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Grepa),
     },
 
     [BERRY_ID_LIECHI] =
@@ -1814,8 +1822,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 500,
         .berryPic = gBerryPic_Liechi,
         .berryPal = gBerryPalette_Liechi,
-        .berryTreePicTable = gPicTable_LiechiBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Liechi,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_LiechiBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Liechi),
     },
 
     [BERRY_ID_GANLON] =
@@ -1847,8 +1855,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 500,
         .berryPic = gBerryPic_Ganlon,
         .berryPal = gBerryPalette_Ganlon,
-        .berryTreePicTable = gPicTable_HondewBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Hondew,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_HondewBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Hondew),
     },
 
     [BERRY_ID_SALAC] =
@@ -1880,8 +1888,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 500,
         .berryPic = gBerryPic_Salac,
         .berryPal =  gBerryPalette_Salac,
-        .berryTreePicTable = gPicTable_AguavBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Aguav,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_AguavBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Aguav),
     },
 
     [BERRY_ID_PETAYA] =
@@ -1913,8 +1921,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 500,
         .berryPic = gBerryPic_Petaya,
         .berryPal = gBerryPalette_Petaya,
-        .berryTreePicTable = gPicTable_PomegBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Pomeg,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_PomegBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Pomeg),
     },
 
     [BERRY_ID_APICOT] =
@@ -1946,8 +1954,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 500,
         .berryPic = gBerryPic_Apicot,
         .berryPal = gBerryPalette_Apicot,
-        .berryTreePicTable = gPicTable_GrepaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Grepa,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_GrepaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Grepa),
     },
 
     [BERRY_ID_LANSAT] =
@@ -1979,8 +1987,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 750,
         .berryPic = gBerryPic_Lansat,
         .berryPal = gBerryPalette_Lansat,
-        .berryTreePicTable = gPicTable_LansatBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Lansat,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_LansatBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Lansat),
     },
 
     [BERRY_ID_STARF] =
@@ -2012,8 +2020,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 750,
         .berryPic = gBerryPic_Starf,
         .berryPal =  gBerryPalette_Starf,
-        .berryTreePicTable = gPicTable_CornnBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Cornn,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_CornnBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Cornn),
     },
 
     [BERRY_ID_ENIGMA] =
@@ -2045,8 +2053,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 200,
         .berryPic = gBerryPic_Enigma,
         .berryPal = gBerryPalette_Enigma,
-        .berryTreePicTable = gPicTable_DurinBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Durin,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_DurinBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Durin),
     },
 
     [BERRY_ID_MICLE] =
@@ -2078,8 +2086,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 250,
         .berryPic = gBerryPic_Micle,
         .berryPal = gBerryPalette_Micle,
-        .berryTreePicTable = gPicTable_MicleBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Micle,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_MicleBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Micle),
     },
 
     [BERRY_ID_CUSTAP] =
@@ -2111,8 +2119,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 750,
         .berryPic = gBerryPic_Custap,
         .berryPal = gBerryPalette_Custap,
-        .berryTreePicTable = gPicTable_CustapBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Custap,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_CustapBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Custap),
     },
 
     [BERRY_ID_JABOCA] =
@@ -2144,8 +2152,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 250,
         .berryPic = gBerryPic_Jaboca,
         .berryPal = gBerryPalette_Jaboca,
-        .berryTreePicTable = gPicTable_JabocaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Jaboca,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_JabocaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Jaboca),
     },
 
     [BERRY_ID_ROWAP] =
@@ -2177,8 +2185,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 250,
         .berryPic = gBerryPic_Rowap,
         .berryPal = gBerryPalette_Rowap,
-        .berryTreePicTable = gPicTable_RowapBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Rowap,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_RowapBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Rowap),
     },
 
     [BERRY_ID_ROSELI] =
@@ -2210,8 +2218,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder =  50,
         .berryPic = gBerryPic_Roseli,
         .berryPal = gBerryPalette_Roseli,
-        .berryTreePicTable = gPicTable_RoseliBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Roseli,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_RoseliBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Roseli),
     },
 
     [BERRY_ID_KEE] =
@@ -2243,8 +2251,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 500,
         .berryPic = gBerryPic_Kee,
         .berryPal = gBerryPalette_Kee,
-        .berryTreePicTable = gPicTable_PechaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Pecha,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_PechaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Pecha),
     },
 
     [BERRY_ID_MARANGA] =
@@ -2276,8 +2284,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 500,
         .berryPic = gBerryPic_Maranga,
         .berryPal = gBerryPalette_Maranga,
-        .berryTreePicTable = gPicTable_OccaBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Occa,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_OccaBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Occa),
     },
 
     [BERRY_ID_ENGIMA_E_READER] =
@@ -2307,8 +2315,8 @@ const struct Berry gBerries[NUM_BERRIES + 1] =
         .berryCrushPowder = 200,
         .berryPic = gBerryPic_Enigma,
         .berryPal = gBerryPalette_Enigma,
-        .berryTreePicTable = gPicTable_DurinBerryTree,
-        .berryTreePaletteSlotTable = gBerryTreePaletteSlotTable_Durin,
+        .berryTreePicTable = BERRY_TREE_PIC_DATA(gPicTable_DurinBerryTree),
+        .berryTreePaletteSlotTable = BERRY_TREE_PAL_DATA(gBerryTreePaletteSlotTable_Durin),
     },
 };
 

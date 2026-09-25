@@ -1,4 +1,5 @@
 #include "port_game_bootstrap.h"
+#include "port_main_menu_startup.h"
 
 #include <android/log.h>
 #include <stdarg.h>
@@ -33,7 +34,6 @@ struct PokemonStorage *gPokemonStoragePtr = &gPokemonStorage.block;
 u32 *gTrainerHillVBlankCounter = NULL;
 const bool8 gTestRunnerEnabled = FALSE;
 const bool8 gTestRunnerSkipIsFail = FALSE;
-u32 gBattleTypeFlags = 0;
 
 void CheckForFlashMemory(void)
 {
@@ -47,16 +47,6 @@ void PlayTimeCounter_Update(void)
     // save before one has been initialized.
 }
 
-void SetDefaultFontsPointer(void)
-{
-    // Font tables are initialized when the text/UI stack is brought online.
-}
-
-void ScanlineEffect_Stop(void)
-{
-    // Host rendering has no GBA scanline DMA running during bootstrap.
-}
-
 void PortGame_InitialCallback(void)
 {
     if (sBootstrapFrameCount++ == 0)
@@ -67,8 +57,10 @@ void PortGame_InitialCallback(void)
             "Emerald main callback reached from Android frame loop.");
     }
 
-    // Intentionally minimal first native callback. Replacing this with the
-    // original intro/title callback is the next engine-integration milestone.
+    // Android skips the copyright, intro, and Press Start presentation.
+    // Preserve the legacy boot side effects, then hand control directly to
+    // the real CONTINUE / NEW GAME / OPTION menu.
+    PortGame_StartMainMenu();
 }
 
 void AssertfCrashScreen(const void *return0, const char *fmt, ...)

@@ -15,6 +15,9 @@
 #include "string_util.h"
 #include "text.h"
 #include "window.h"
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
 #include "constants/songs.h"
 #include "constants/speaker_names.h"
 
@@ -471,6 +474,7 @@ bool32 AddTextPrinter(struct TextPrinterTemplate *printerTemplate, u8 speed, voi
     if (!gFonts)
         return FALSE;
 
+
     struct TextPrinter sTempTextPrinter = {0};
 
     sTempTextPrinter.active = TRUE;
@@ -784,9 +788,15 @@ inline static void GLYPH_COPY(u8 *windowTiles, u32 widthOffset, u32 x0, u32 y0, 
     if (width <= 0)
         return;
 
-    u32 widthMask = (1 << (width * 4)) - 1;
+    // Avoid undefined 32-bit shifts on native hosts. The original GBA
+    // implementation relies on ARM behavior here: an 8-pixel glyph needs a
+    // full 32-bit mask, and a glyph aligned to an 8-pixel tile boundary must
+    // not spill into the tile to its right.
+    const u32 widthMask = width >= 8
+        ? 0xFFFFFFFFu
+        : ((1u << (width * 4)) - 1u);
 
-    u32 shift0 = (x0 % 8) * 4, shift8 = 32 - shift0;
+    const u32 shift0 = (x0 % 8) * 4;
 
     u32 *alignedWindowTilesX = (u32 *)(windowTiles + ((x0 / 8) * TILE_SIZE_4BPP));
 
@@ -801,13 +811,16 @@ inline static void GLYPH_COPY(u8 *windowTiles, u32 widthOffset, u32 x0, u32 y0, 
         mask = mask & 0x11111111;
         mask = mask * 0xF;
 
-        u32 pixels0 = pixels << shift0, pixels8 = pixels >> shift8;
-        u32 mask0 = mask << shift0, mask8 = mask >> shift8;
+        const u32 pixels0 = pixels << shift0;
+        const u32 mask0 = mask << shift0;
+        const u32 pixels8 = shift0 == 0 ? 0 : pixels >> (32 - shift0);
+        const u32 mask8 = shift0 == 0 ? 0 : mask >> (32 - shift0);
 
         u32 *alignedWindowTiles = (u32 *)((u8 *)alignedWindowTilesX + ((y / 8) * widthOffset) + ((y % 8) * 4));
 
         alignedWindowTiles[0] = (alignedWindowTiles[0] & ~mask0) | pixels0;
-        alignedWindowTiles[8] = (alignedWindowTiles[8] & ~mask8) | pixels8;
+        if (mask8 != 0)
+            alignedWindowTiles[8] = (alignedWindowTiles[8] & ~mask8) | pixels8;
     }
 }
 
@@ -1331,6 +1344,7 @@ static u16 RenderText(struct TextPrinter *textPrinter)
     u16 currChar;
     s32 width;
     s32 widthHelper;
+
 
     switch (textPrinter->state)
     {
