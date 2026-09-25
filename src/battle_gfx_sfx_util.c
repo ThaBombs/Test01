@@ -720,41 +720,83 @@ bool8 BattleLoadAllHealthBoxesGfx(u8 state)
     {
         if (state == 1)
         {
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("L-A");
+#endif
             LoadSpritePalette(&sSpritePalettes_HealthBoxHealthBar[0]);
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("L-B");
+#endif
             LoadSpritePalette(&sSpritePalettes_HealthBoxHealthBar[1]);
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("L-C");
+#endif
             CategoryIcons_LoadSpritesGfx();
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("L-E");
+#endif
         }
         else if (!IsDoubleBattle())
         {
             if (state == 2)
             {
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("L-F");
+#endif
                 if (gBattleTypeFlags & BATTLE_TYPE_SAFARI)
                     LoadCompressedSpriteSheet(&sSpriteSheet_SafariHealthbox);
                 else
                     LoadCompressedSpriteSheet(&sSpriteSheet_SinglesPlayerHealthbox);
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("L-X");
+#endif
             }
             else if (state == 3)
             {
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-A");
+#endif
                 if (B_HP_PERCENTAGE_DISPLAY)
                     LoadCompressedSpriteSheet(&sSpriteSheet_SinglesOpponentLargeHealthbox);
                 else
                     LoadCompressedSpriteSheet(&sSpriteSheet_SinglesOpponentHealthbox);
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-B");
+#endif
             }
             else if (state == 4)
             {
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-C");
+#endif
                 LoadCompressedSpriteSheet(&sSpriteSheets_HealthBar[GetBattlerPosition(B_BATTLER_0)]);
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-E");
+#endif
             }
             else if (state == 5)
             {
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-F");
+#endif
                 LoadCompressedSpriteSheet(&sSpriteSheets_HealthBar[GetBattlerPosition(B_BATTLER_1)]);
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-X");
+#endif
             }
             else
             {
+#ifdef PLATFORM_ANDROID
+                PortRuntime_SetBattleDiagnosticStage("O-Z");
+#endif
                 retVal = TRUE;
             }
         }
         else
         {
+#ifdef PLATFORM_ANDROID
+            PortRuntime_SetBattleDiagnosticStage("R-A");
+#endif
             if (state == 2)
             {
                 switch (GetBattlerCoordsIndex(GetBattlerAtPosition(B_POSITION_PLAYER_LEFT)))
