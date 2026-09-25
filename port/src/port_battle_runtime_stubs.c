@@ -1060,6 +1060,11 @@ bool8 InMultiPartnerRoom(void)
     return FALSE;
 }
 
+bool32 InUnionRoom(void)
+{
+    return FALSE;
+}
+
 static bool32 AndroidFieldMoveUnavailable(enum FieldMove fieldMove)
 {
     (void)fieldMove;
