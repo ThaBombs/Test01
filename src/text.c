@@ -605,42 +605,18 @@ void RunTextPrinters(void)
 
 bool32 IsTextPrinterActiveOnWindow(u32 windowId)
 {
-#ifdef PLATFORM_ANDROID
-    if (gMain.inBattle)
-        PortRuntime_SetBattleDiagnosticStage("J0");
-#endif
     struct TextPrinter *currentPrinter = sFirstTextPrinter;
-#ifdef PLATFORM_ANDROID
-    if (gMain.inBattle)
-        PortRuntime_SetBattleDiagnosticStage(currentPrinter == NULL ? "J1" : "J2");
-#endif
 
     while (currentPrinter != NULL)
     {
-#ifdef PLATFORM_ANDROID
-        if (gMain.inBattle)
-            PortRuntime_SetBattleDiagnosticStage("J3");
-#endif
         if (currentPrinter->printerTemplate.type == WINDOW_TEXT_PRINTER
          && currentPrinter->printerTemplate.windowId == windowId)
         {
-#ifdef PLATFORM_ANDROID
-            if (gMain.inBattle)
-                PortRuntime_SetBattleDiagnosticStage(currentPrinter->active ? "J4" : "J5");
-#endif
             return currentPrinter->active;
         }
-#ifdef PLATFORM_ANDROID
-        if (gMain.inBattle)
-            PortRuntime_SetBattleDiagnosticStage("J6");
-#endif
         currentPrinter = currentPrinter->nextPrinter;
     }
 
-#ifdef PLATFORM_ANDROID
-    if (gMain.inBattle)
-        PortRuntime_SetBattleDiagnosticStage("J7");
-#endif
     return FALSE;
 }
 
