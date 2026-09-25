@@ -256,6 +256,7 @@ static bool32 sAndroidBattleSpriteInitDiagnosticStarted;
 static bool32 sAndroidBattleMainCb1DiagnosticDone;
 static bool32 sAndroidBattleMainCb2DiagnosticDone;
 static bool32 sAndroidR8ControllerTraceDone;
+static bool32 sAndroidR8Cb2TraceDone;
 static u8 sAndroidBattleIntroDiagnosticState;
 static u8 sAndroidBeforeFirstTurnDiagnosticState;
 #endif
@@ -491,6 +492,7 @@ void CB2_InitBattle(void)
     sAndroidBattleMainCb1DiagnosticDone = FALSE;
     sAndroidBattleMainCb2DiagnosticDone = FALSE;
     sAndroidR8ControllerTraceDone = FALSE;
+    sAndroidR8Cb2TraceDone = FALSE;
     sAndroidBattleIntroDiagnosticState = 0xFF;
     sAndroidBeforeFirstTurnDiagnosticState = 0xFF;
     PortRuntime_SetBattleDiagnosticStage("BATTLE A");
@@ -1842,28 +1844,40 @@ void BattleMainCB2(void)
 {
 #ifdef PLATFORM_ANDROID
     bool32 trace = !sAndroidBattleMainCb2DiagnosticDone;
+    bool32 traceR8 = !sAndroidR8Cb2TraceDone
+                  && sAndroidBattleIntroDiagnosticState == BATTLE_INTRO_STATE_WAIT_FOR_INTRO_TEXT;
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C2-A");
+    if (traceR8)
+        PortRuntime_SetBattleDiagnosticStage("Y0");
 #endif
     AnimateSprites();
 #ifdef PLATFORM_ANDROID
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C2-B");
+    if (traceR8)
+        PortRuntime_SetBattleDiagnosticStage("Y1");
 #endif
     BuildOamBuffer();
 #ifdef PLATFORM_ANDROID
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C2-C");
+    if (traceR8)
+        PortRuntime_SetBattleDiagnosticStage("Y2");
 #endif
     RunTextPrinters();
 #ifdef PLATFORM_ANDROID
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C2-D");
+    if (traceR8)
+        PortRuntime_SetBattleDiagnosticStage("Y3");
 #endif
     UpdatePaletteFade();
 #ifdef PLATFORM_ANDROID
     if (trace)
         PortRuntime_SetBattleDiagnosticStage("C2-E");
+    if (traceR8)
+        PortRuntime_SetBattleDiagnosticStage("Y4");
 #endif
     RunTasks();
 #ifdef PLATFORM_ANDROID
@@ -1871,6 +1885,11 @@ void BattleMainCB2(void)
     {
         PortRuntime_SetBattleDiagnosticStage("C2-Z");
         sAndroidBattleMainCb2DiagnosticDone = TRUE;
+    }
+    if (traceR8)
+    {
+        PortRuntime_SetBattleDiagnosticStage("Y5");
+        sAndroidR8Cb2TraceDone = TRUE;
     }
 #endif
 
