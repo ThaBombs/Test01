@@ -30,6 +30,9 @@
 #include "constants/battle_palace.h"
 #include "constants/battle_move_effects.h"
 #include "constants/event_objects.h" // only for SHADOW_SIZE constants
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
 
 // this file's functions
 static u8 GetBattlePalaceMoveGroup(enum BattlerId battler, enum Move move);
@@ -798,10 +801,16 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
     switch (*state1)
     {
     case 0:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-A");
+#endif
         ClearSpritesBattlerHealthboxAnimData();
         (*state1)++;
         break;
     case 1:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-B");
+#endif
         if (!BattleLoadAllHealthBoxesGfx(*battler))
         {
             (*battler)++;
@@ -813,9 +822,15 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
         }
         break;
     case 2:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-C");
+#endif
         (*state1)++;
         break;
     case 3:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-E");
+#endif
         if ((gBattleTypeFlags & BATTLE_TYPE_SAFARI) && *battler == 0)
             gHealthboxSpriteIds[*battler] = CreateSafariPlayerHealthboxSprites();
         else
@@ -829,6 +844,9 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
         }
         break;
     case 4:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-F");
+#endif
         InitBattlerHealthboxCoords(*battler);
         if (GetBattlerPosition(*battler) <= B_POSITION_OPPONENT_LEFT)
             DummyBattleInterfaceFunc(gHealthboxSpriteIds[*battler], FALSE);
@@ -843,6 +861,9 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
         }
         break;
     case 5:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-X");
+#endif
         if (!IsOnPlayerSide(*battler) || !(gBattleTypeFlags & BATTLE_TYPE_SAFARI))
             UpdateHealthboxAttribute(gHealthboxSpriteIds[*battler], GetBattlerMon(*battler), HEALTHBOX_ALL);
         SetHealthboxSpriteInvisible(gHealthboxSpriteIds[*battler]);
@@ -854,6 +875,9 @@ bool8 BattleInitAllSprites(u8 *state1, u8 *battler)
         }
         break;
     case 6:
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("B-Z");
+#endif
         LoadAndCreateEnemyShadowSprites();
         BufferBattlePartyCurrentOrder();
         retVal = TRUE;
