@@ -799,6 +799,34 @@ void SpriteCallbackDummy(struct Sprite *sprite)
 {
 }
 
+#ifdef PLATFORM_ANDROID
+static bool32 IsAndroidSpriteCopyRequestSafe(const struct SpriteCopyRequest *request)
+{
+    if (request == NULL || request->src == NULL || request->dest == NULL || request->size == 0)
+        return FALSE;
+
+    const uintptr_t src = (uintptr_t)request->src;
+    const uintptr_t dest = (uintptr_t)request->dest;
+    const uintptr_t objStart = (uintptr_t)OBJ_VRAM0;
+    const uintptr_t objEnd = objStart + OBJ_VRAM0_SIZE;
+
+    // Native assets, heap allocations and mapped host VRAM are real process
+    // pointers. A small 32-bit address here is a leftover GBA-era address or
+    // truncated pointer and must never be dereferenced on 64-bit Android.
+    if (sizeof(void *) > 4 && src <= UINT32_MAX)
+        return FALSE;
+
+    // Sprite frame copies are only valid inside OBJ VRAM. Check both ends
+    // without allowing integer wraparound.
+    if (dest < objStart || dest >= objEnd)
+        return FALSE;
+    if ((uintptr_t)request->size > objEnd - dest)
+        return FALSE;
+
+    return TRUE;
+}
+#endif
+
 void ProcessSpriteCopyRequests(void)
 {
     if (sShouldProcessSpriteCopyRequests)
@@ -807,7 +835,12 @@ void ProcessSpriteCopyRequests(void)
 
         while (sSpriteCopyRequestCount > 0)
         {
+#ifdef PLATFORM_ANDROID
+            if (IsAndroidSpriteCopyRequestSafe(&sSpriteCopyRequests[i]))
+                CpuCopy16(sSpriteCopyRequests[i].src, sSpriteCopyRequests[i].dest, sSpriteCopyRequests[i].size);
+#else
             CpuCopy16(sSpriteCopyRequests[i].src, sSpriteCopyRequests[i].dest, sSpriteCopyRequests[i].size);
+#endif
             sSpriteCopyRequestCount--;
             i++;
         }
