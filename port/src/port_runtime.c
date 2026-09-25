@@ -94,6 +94,7 @@ static int sEditorSelected = TOUCH_CONTROL_DPAD;
 static char sTouchLayoutPath[512];
 static char sBattleDiagnosticPath[512];
 static char sPreviousBattleDiagnostic[32];
+static uint64_t sBattleDiagnosticVisibleUntil;
 
 static int ClampInt(int value, int low, int high)
 {
@@ -396,8 +397,14 @@ void PortRuntime_SetStoragePath(const char *path)
     if (diagnostic != NULL)
     {
         if (fgets(sPreviousBattleDiagnostic, sizeof(sPreviousBattleDiagnostic), diagnostic) != NULL)
+        {
             sPreviousBattleDiagnostic[strcspn(sPreviousBattleDiagnostic, "\r\n")] = '\0';
+            sBattleDiagnosticVisibleUntil = sPortState.frameCount + 300;
+        }
         fclose(diagnostic);
+        // Consume the previous crash breadcrumb. A new battle attempt will
+        // write a fresh stage if it crashes again.
+        remove(sBattleDiagnosticPath);
     }
 
     LoadTouchLayout();
@@ -911,7 +918,8 @@ void PortRuntime_Render(uint32_t *pixels, int width, int height, int stridePixel
 
     DrawTouchControls(pixels, width, height, stridePixels);
 
-    if (sPreviousBattleDiagnostic[0] != '\0')
+    if (sPreviousBattleDiagnostic[0] != '\0'
+     && sPortState.frameCount < sBattleDiagnosticVisibleUntil)
     {
         const int bannerY = height * 5 / 100;
         const int bannerHalfW = MinInt(width * 3 / 10, 180);
