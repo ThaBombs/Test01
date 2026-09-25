@@ -975,8 +975,8 @@ void PortRuntime_Render(uint32_t *pixels, int width, int height, int stridePixel
      && sPortState.frameCount < sBattleDiagnosticVisibleUntil)
     {
         const int bannerY = height * 5 / 100;
-        const int bannerHalfW = MinInt(width * 3 / 10, 180);
-        const int bannerHalfH = 18;
+        const int bannerHalfW = MinInt(width * 48 / 100, 520);
+        const int bannerHalfH = 14;
         BlendFillRect(
             pixels, width, height, stridePixels,
             width / 2 - bannerHalfW, bannerY - bannerHalfH,
@@ -985,7 +985,7 @@ void PortRuntime_Render(uint32_t *pixels, int width, int height, int stridePixel
         DrawCenteredText(
             pixels, width, height, stridePixels,
             width / 2, bannerY,
-            sPreviousBattleDiagnostic, 2,
+            sPreviousBattleDiagnostic, 1,
             Rgb(255, 255, 255), 255);
     }
 }
