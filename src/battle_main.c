@@ -249,6 +249,10 @@ COMMON_DATA u8 gLeveledUpInBattle = 0;
 COMMON_DATA u8 gHealthboxSpriteIds[MAX_BATTLERS_COUNT] = {0};
 COMMON_DATA u8 gMultiUsePlayerCursor = 0;
 COMMON_DATA u8 gNumberOfMovesToChoose = 0;
+#ifdef PLATFORM_ANDROID
+static bool32 sAndroidBattleVBlankDiagnosticDone;
+static bool32 sAndroidBattleStartDiagnosticDone;
+#endif
 
 static const struct ScanlineEffectParams sIntroScanlineParams16Bit =
 {
@@ -475,6 +479,8 @@ const u8 *const gStatusConditionStringsTable[][2] =
 void CB2_InitBattle(void)
 {
 #ifdef PLATFORM_ANDROID
+    sAndroidBattleVBlankDiagnosticDone = FALSE;
+    sAndroidBattleStartDiagnosticDone = FALSE;
     PortRuntime_SetBattleDiagnosticStage("BATTLE A");
 #endif
     if (!gTestRunnerEnabled)
@@ -901,20 +907,45 @@ static void CB2_HandleStartBattle(void)
 {
     u8 playerMultiplayerId;
     u8 enemyMultiplayerId;
+#ifdef PLATFORM_ANDROID
+    bool32 trace = !sAndroidBattleStartDiagnosticDone;
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("S-A");
+#endif
 
     RunTasks();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("S-B");
+#endif
     AnimateSprites();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("S-C");
+#endif
     BuildOamBuffer();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("S-E");
+#endif
 
     playerMultiplayerId = GetMultiplayerId();
     gBattleScripting.multiplayerId = playerMultiplayerId;
     enemyMultiplayerId = playerMultiplayerId ^ BIT_SIDE;
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("S-F");
+#endif
 
     switch (gBattleCommunication[MULTIUSE_STATE])
     {
     case 0:
         if (!IsDma3ManagerBusyWithBgCopy())
         {
+#ifdef PLATFORM_ANDROID
+            if (trace)
+                PortRuntime_SetBattleDiagnosticStage("S-X");
+#endif
             ShowBg(0);
             ShowBg(1);
             ShowBg(2);
@@ -924,6 +955,13 @@ static void CB2_HandleStartBattle(void)
         }
         if (gWirelessCommType)
             LoadWirelessStatusIndicatorSpriteGfx();
+#ifdef PLATFORM_ANDROID
+        if (trace)
+        {
+            PortRuntime_SetBattleDiagnosticStage("S-Z");
+            sAndroidBattleStartDiagnosticDone = TRUE;
+        }
+#endif
         break;
     case 1:
         if (gBattleTypeFlags & BATTLE_TYPE_LINK)
@@ -1841,10 +1879,20 @@ void ModifyPersonalityForNature(u32 *personality, u32 newNature)
 
 void VBlankCB_Battle(void)
 {
+#ifdef PLATFORM_ANDROID
+    bool32 trace = !sAndroidBattleVBlankDiagnosticDone;
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-A");
+#endif
+
     // Change gRngSeed every vblank unless the battle could be recorded.
     if (!(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER | BATTLE_TYPE_RECORDED)))
         AdvanceRandom();
 
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-B");
+#endif
     SetGpuReg(REG_OFFSET_BG0HOFS, gBattle_BG0_X);
     SetGpuReg(REG_OFFSET_BG0VOFS, gBattle_BG0_Y);
     SetGpuReg(REG_OFFSET_BG1HOFS, gBattle_BG1_X);
@@ -1857,10 +1905,34 @@ void VBlankCB_Battle(void)
     SetGpuReg(REG_OFFSET_WIN0V, gBattle_WIN0V);
     SetGpuReg(REG_OFFSET_WIN1H, gBattle_WIN1H);
     SetGpuReg(REG_OFFSET_WIN1V, gBattle_WIN1V);
+
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-C");
+#endif
     LoadOam();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-E");
+#endif
     ProcessSpriteCopyRequests();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-F");
+#endif
     TransferPlttBuffer();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+        PortRuntime_SetBattleDiagnosticStage("V-X");
+#endif
     ScanlineEffect_InitHBlankDmaTransfer();
+#ifdef PLATFORM_ANDROID
+    if (trace)
+    {
+        PortRuntime_SetBattleDiagnosticStage("V-Z");
+        sAndroidBattleVBlankDiagnosticDone = TRUE;
+    }
+#endif
 }
 
 void SpriteCB_VsLetterDummy(struct Sprite *sprite)
