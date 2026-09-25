@@ -1469,7 +1469,13 @@ void BtlController_EmitDebugMenu(enum BattlerId battler, u32 bufferId)
 // Can be used for all the controllers.
 void BtlController_Complete(enum BattlerId battler)
 {
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("K0");
+#endif
     gBattlerControllerEndFuncs[battler](battler);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("K1");
+#endif
 }
 
 static u32 GetBattlerMonData(enum BattlerId battler, struct Pokemon *party, u32 monId, u8 *dst)
@@ -2249,8 +2255,19 @@ static void Controller_WaitForTrainerPic(enum BattlerId battler)
 
 void Controller_WaitForString(enum BattlerId battler)
 {
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("W0");
+#endif
     if (!IsTextPrinterActiveOnWindow(B_WIN_MSG))
+    {
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("W1");
+#endif
         BtlController_Complete(battler);
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("W2");
+#endif
+    }
 }
 
 static void Controller_WaitForPartyStatusSummary(enum BattlerId battler)
@@ -2670,10 +2687,19 @@ void BtlController_HandlePrintString(enum BattlerId battler)
 {
     u16 *stringId;
 
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("P0");
+#endif
     gBattle_BG0_X = 0;
     gBattle_BG0_Y = 0;
     stringId = (u16 *)(&gBattleResources->bufferA[battler][2]);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("P1");
+#endif
     BufferStringBattle(*stringId, battler);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("P2");
+#endif
 
     if (gTestRunnerEnabled)
     {
@@ -2689,7 +2715,13 @@ void BtlController_HandlePrintString(enum BattlerId battler)
     // if (BattleStringShouldBeColored(*stringId))
     //     BattlePutTextOnWindow(gDisplayedStringBattle, (B_WIN_MSG | B_TEXT_FLAG_NPC_CONTEXT_FONT));
     // else
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("P3");
+#endif
         BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MSG);
+#ifdef PLATFORM_ANDROID
+        PortRuntime_SetBattleDiagnosticStage("P4");
+#endif
 
     if (gBattleTypeFlags & BATTLE_TYPE_FIRST_BATTLE && GetBattlerSide(battler) == B_SIDE_OPPONENT)
     {
@@ -2705,11 +2737,17 @@ void BtlController_HandlePrintString(enum BattlerId battler)
     }
 
     gBattlerControllerFuncs[battler] = Controller_WaitForString;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("P5");
+#endif
     if (ShouldUpdateTvData(battler))
         BattleTv_SetDataBasedOnString(*stringId);
     if (IsControllerPlayer(battler)
      || IsControllerOpponent(battler))
         BattleArena_DeductSkillPoints(battler, *stringId);
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("P6");
+#endif
 }
 
 void BtlController_HandlePrintStringPlayerOnly(enum BattlerId battler)
