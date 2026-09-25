@@ -30,6 +30,9 @@
 #include "trainer.h"
 #include "util.h"
 #include "wild_encounter.h"
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
 #include "constants/abilities.h"
 #include "constants/item_effects.h"
 #include "constants/songs.h"
@@ -135,6 +138,9 @@ void SetUpBattleVarsAndBirchZigzagoon(void)
 {
     s32 i;
 
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("F-A");
+#endif
     gBattleMainFunc = BeginBattleIntroDummy;
 
     for (i = 0; i < MAX_BATTLERS_COUNT; i++)
@@ -147,9 +153,21 @@ void SetUpBattleVarsAndBirchZigzagoon(void)
 
     HandleLinkBattleSetup();
     gBattleControllerExecFlags = 0;
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("F-B");
+#endif
     ClearBattleAnimationVars();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("F-C");
+#endif
     BattleAI_SetupItems();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("F-E");
+#endif
     BattleAI_SetupFlags();
+#ifdef PLATFORM_ANDROID
+    PortRuntime_SetBattleDiagnosticStage("F-X");
+#endif
 
     if (!IS_FRLG && gBattleTypeFlags & BATTLE_TYPE_FIRST_BATTLE)
         CreateWildMon(SPECIES_ZIGZAGOON, 2);
