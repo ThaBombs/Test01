@@ -42,6 +42,12 @@
 static EWRAM_DATA u8 sLinkSendTaskId = 0;
 static EWRAM_DATA u8 sLinkReceiveTaskId = 0;
 
+#ifdef PLATFORM_ANDROID
+// Native function pointers are 64-bit and cannot be packed into two s16 task
+// fields like on GBA. Keep the send-out continuation per task at full width.
+static void (*sStartSendOutControllerCallbacks[NUM_TASKS])(enum BattlerId battler);
+#endif
+
 COMMON_DATA void (*gBattlerControllerFuncs[MAX_BATTLERS_COUNT])(enum BattlerId battler) = {0};
 COMMON_DATA u8 gBattleControllerData[MAX_BATTLERS_COUNT] = {0}; // Used by the battle controllers to store misc sprite/task IDs for each battler
 COMMON_DATA void (*gBattlerControllerEndFuncs[MAX_BATTLERS_COUNT])(enum BattlerId battler) = {0}; // Controller's buffer complete function for each battler
@@ -2918,7 +2924,11 @@ void BtlController_HandleIntroTrainerBallThrow(enum BattlerId battler, u16 tagTr
     taskId = CreateTask(Task_StartSendOutAnim, 5);
     gTasks[taskId].tBattlerId = battler;
     gTasks[taskId].tFramesToWait = framesToWait;
+#ifdef PLATFORM_ANDROID
+    sStartSendOutControllerCallbacks[taskId] = controllerCallback;
+#else
     SetWordTaskArg(taskId, tControllerFunc_1, (uint32_t)(controllerCallback));
+#endif
 
     if (gBattleSpritesDataPtr->healthBoxesData[battler].partyStatusSummaryShown)
         gTasks[gBattlerStatusSummaryTaskId[battler]].func = Task_HidePartyStatusSummary;
@@ -2975,7 +2985,12 @@ static void Task_StartSendOutAnim(u8 taskId)
             gBattleResources->bufferA[battler][1] = gBattlerPartyIndexes[battler];
             StartSendOutAnim(battler, FALSE, FALSE, ShouldDoSlideInAnim(battler));
         }
+#ifdef PLATFORM_ANDROID
+        gBattlerControllerFuncs[battler] = sStartSendOutControllerCallbacks[taskId];
+        sStartSendOutControllerCallbacks[taskId] = NULL;
+#else
         gBattlerControllerFuncs[battler] = (void*)(GetWordTaskArg(taskId, tControllerFunc_1));
+#endif
         DestroyTask(taskId);
     }
 }
