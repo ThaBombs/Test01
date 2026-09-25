@@ -70,6 +70,7 @@ target_compile_options(
 find_library(ANDROID_LIB android)
 find_library(LOG_LIB log)
 find_library(M_LIB m)
+find_library(DL_LIB dl)
 
 target_link_libraries(
     pokeemerald_native
@@ -77,6 +78,7 @@ target_link_libraries(
     ${ANDROID_LIB}
     ${LOG_LIB}
     ${M_LIB}
+    ${DL_LIB}
 )
 
 target_link_options(
