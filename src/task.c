@@ -3,12 +3,22 @@
 
 COMMON_DATA struct Task gTasks[NUM_TASKS] = {0};
 
+#ifdef PLATFORM_ANDROID
+static uintptr_t sTaskPointerArgs[NUM_TASKS][NUM_TASK_DATA];
+static TaskFunc sTaskFollowupFuncs[NUM_TASKS];
+#endif
+
 static void InsertTask(u8 newTaskId);
 static u8 FindFirstActiveTask(void);
 
 void ResetTasks(void)
 {
     u8 i;
+
+#ifdef PLATFORM_ANDROID
+    memset(sTaskPointerArgs, 0, sizeof(sTaskPointerArgs));
+    memset(sTaskFollowupFuncs, 0, sizeof(sTaskFollowupFuncs));
+#endif
 
     for (i = 0; i < NUM_TASKS; i++)
     {
@@ -36,6 +46,10 @@ u8 CreateTask(TaskFunc func, u8 priority)
             gTasks[i].priority = priority;
             InsertTask(i);
             memset(gTasks[i].data, 0, sizeof(gTasks[i].data));
+#ifdef PLATFORM_ANDROID
+            memset(sTaskPointerArgs[i], 0, sizeof(sTaskPointerArgs[i]));
+            sTaskFollowupFuncs[i] = NULL;
+#endif
             gTasks[i].isActive = TRUE;
             return i;
         }
@@ -138,18 +152,29 @@ void TaskDummy(u8 taskId)
 
 void SetTaskFuncWithFollowupFunc(u8 taskId, TaskFunc func, TaskFunc followupFunc)
 {
+#ifdef PLATFORM_ANDROID
+    // GBA stores function pointers in two s16 task fields. Native Android is
+    // 64-bit, so preserve the full pointer out-of-band instead of truncating it.
+    sTaskFollowupFuncs[taskId] = followupFunc;
+#else
     u8 followupFuncIndex = NUM_TASK_DATA - 2; // Should be const.
 
     gTasks[taskId].data[followupFuncIndex] = (s16)((u32)followupFunc);
     gTasks[taskId].data[followupFuncIndex + 1] = (s16)((u32)followupFunc >> 16); // Store followupFunc as two half-words in the data array.
+#endif
     gTasks[taskId].func = func;
 }
 
 void SwitchTaskToFollowupFunc(u8 taskId)
 {
+#ifdef PLATFORM_ANDROID
+    if (sTaskFollowupFuncs[taskId] != NULL)
+        gTasks[taskId].func = sTaskFollowupFuncs[taskId];
+#else
     u8 followupFuncIndex = NUM_TASK_DATA - 2; // Should be const.
 
     gTasks[taskId].func = (TaskFunc)((u16)(gTasks[taskId].data[followupFuncIndex]) | (gTasks[taskId].data[followupFuncIndex + 1] << 16));
+#endif
 }
 
 bool8 FuncIsActiveTask(TaskFunc func)
@@ -189,4 +214,28 @@ u32 GetWordTaskArg(u8 taskId, u8 dataElem)
         return (u16)gTasks[taskId].data[dataElem] | (gTasks[taskId].data[dataElem + 1] << 16);
     else
         return 0;
+}
+
+void SetPointerTaskArg(u8 taskId, u8 dataElem, const void *value)
+{
+    if (taskId >= NUM_TASKS || dataElem >= NUM_TASK_DATA - 1)
+        return;
+
+#ifdef PLATFORM_ANDROID
+    sTaskPointerArgs[taskId][dataElem] = (uintptr_t)value;
+#else
+    SetWordTaskArg(taskId, dataElem, (u32)(uintptr_t)value);
+#endif
+}
+
+void *GetPointerTaskArg(u8 taskId, u8 dataElem)
+{
+    if (taskId >= NUM_TASKS || dataElem >= NUM_TASK_DATA - 1)
+        return NULL;
+
+#ifdef PLATFORM_ANDROID
+    return (void *)sTaskPointerArgs[taskId][dataElem];
+#else
+    return (void *)(uintptr_t)GetWordTaskArg(taskId, dataElem);
+#endif
 }
