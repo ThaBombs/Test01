@@ -62,6 +62,7 @@ static void SpriteCB_TextCursor(struct Sprite *sprite);
 static EWRAM_DATA struct TextPrinter *sFirstTextPrinter = NULL;
 #ifdef PLATFORM_ANDROID
 static u8 sAndroidLastBattleTextRenderState = 0xFF;
+static u8 sAndroidBattleMessageGlyphCount;
 #endif
 
 static EWRAM_DATA u16 sFontHalfRowLookupTable[0x100];
@@ -477,6 +478,13 @@ bool32 AddTextPrinter(struct TextPrinterTemplate *printerTemplate, u8 speed, voi
     if (!gFonts)
         return FALSE;
 
+#ifdef PLATFORM_ANDROID
+    if (gMain.inBattle
+     && printerTemplate->type == WINDOW_TEXT_PRINTER
+     && printerTemplate->windowId == B_WIN_MSG)
+        sAndroidBattleMessageGlyphCount = 0;
+#endif
+
     struct TextPrinter sTempTextPrinter = {0};
 
     sTempTextPrinter.active = TRUE;
@@ -563,7 +571,19 @@ void RunTextPrinters(void)
                         switch (currentPrinter->printerTemplate.type)
                         {
                         case WINDOW_TEXT_PRINTER:
+#ifdef PLATFORM_ANDROID
+                            if (gMain.inBattle
+                             && currentPrinter->printerTemplate.windowId == B_WIN_MSG
+                             && sAndroidBattleMessageGlyphCount == 3)
+                                PortRuntime_SetBattleDiagnosticStage("G5");
+#endif
                             CopyWindowToVram(currentPrinter->printerTemplate.windowId, COPYWIN_GFX);
+#ifdef PLATFORM_ANDROID
+                            if (gMain.inBattle
+                             && currentPrinter->printerTemplate.windowId == B_WIN_MSG
+                             && sAndroidBattleMessageGlyphCount == 3)
+                                PortRuntime_SetBattleDiagnosticStage("G6");
+#endif
                             break;
                         case SPRITE_TEXT_PRINTER:
                             break;
@@ -1417,10 +1437,24 @@ static u16 RenderText(struct TextPrinter *textPrinter)
         else
             textPrinter->delayCounter = textPrinter->textSpeed;
 
+#ifdef PLATFORM_ANDROID
+        bool32 traceBattleGlyph = gMain.inBattle
+                              && textPrinter->printerTemplate.type == WINDOW_TEXT_PRINTER
+                              && textPrinter->printerTemplate.windowId == B_WIN_MSG
+                              && sAndroidBattleMessageGlyphCount == 2;
+        if (traceBattleGlyph)
+            PortRuntime_SetBattleDiagnosticStage("G0");
+#endif
+
         do {
             currChar = *textPrinter->printerTemplate.currentChar;
             textPrinter->printerTemplate.currentChar++;
         } while (currChar == CHAR_ZWS);
+
+#ifdef PLATFORM_ANDROID
+        if (traceBattleGlyph)
+            PortRuntime_SetBattleDiagnosticStage("G1");
+#endif
 
         switch (currChar)
         {
@@ -1644,6 +1678,10 @@ static u16 RenderText(struct TextPrinter *textPrinter)
             return RENDER_FINISH;
         }
 
+#ifdef PLATFORM_ANDROID
+        if (traceBattleGlyph)
+            PortRuntime_SetBattleDiagnosticStage("G2");
+#endif
         switch (textPrinter->fontId)
         {
         case FONT_SMALL:
@@ -1680,7 +1718,20 @@ static u16 RenderText(struct TextPrinter *textPrinter)
             break;
         }
 
+#ifdef PLATFORM_ANDROID
+        if (traceBattleGlyph)
+            PortRuntime_SetBattleDiagnosticStage("G3");
+#endif
         PrintGlyph(textPrinter);
+#ifdef PLATFORM_ANDROID
+        if (traceBattleGlyph)
+            PortRuntime_SetBattleDiagnosticStage("G4");
+        if (gMain.inBattle
+         && textPrinter->printerTemplate.type == WINDOW_TEXT_PRINTER
+         && textPrinter->printerTemplate.windowId == B_WIN_MSG
+         && sAndroidBattleMessageGlyphCount < 0xFF)
+            sAndroidBattleMessageGlyphCount++;
+#endif
 
         return RENDER_PRINT;
     case RENDER_STATE_WAIT:
