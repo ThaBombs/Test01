@@ -27,6 +27,7 @@
 #include "constants/rgb.h"
 #ifdef PLATFORM_ANDROID
 #include "port_game_bootstrap.h"
+#include "port_runtime.h"
 #endif
 
 void Game_VBlank(void);
@@ -80,6 +81,9 @@ COMMON_DATA s8 gPcmDmaCounter = 0;
 COMMON_DATA void *gAgbMainLoop_sp = NULL;
 
 static EWRAM_DATA u16 sTrainerId = 0;
+#ifdef PLATFORM_ANDROID
+static bool32 sAndroidFirstBattlePostVBlankTraced;
+#endif
 
 //EWRAM_DATA void (**gFlashTimerIntrFunc)(void) = NULL;
 
@@ -414,14 +418,39 @@ void Game_VBlank(void)
     if (gMain.vblankCallback)
         gMain.vblankCallback();
 
+#ifdef PLATFORM_ANDROID
+    bool32 traceBattlePostVBlank = gMain.inBattle && !sAndroidFirstBattlePostVBlankTraced;
+    if (traceBattlePostVBlank)
+        PortRuntime_SetBattleDiagnosticStage("A-A");
+#endif
+
     gMain.vblankCounter2++;
 
     CopyBufferedValuesToGpuRegs();
+#ifdef PLATFORM_ANDROID
+    if (traceBattlePostVBlank)
+        PortRuntime_SetBattleDiagnosticStage("A-B");
+#endif
     ProcessDma3Requests();
+#ifdef PLATFORM_ANDROID
+    if (traceBattlePostVBlank)
+        PortRuntime_SetBattleDiagnosticStage("A-C");
+#endif
 
     gPcmDmaCounter = gSoundInfo.pcmDmaCounter;
+#ifdef PLATFORM_ANDROID
+    if (traceBattlePostVBlank)
+        PortRuntime_SetBattleDiagnosticStage("A-E");
+#endif
 
     m4aSoundMain();
+#ifdef PLATFORM_ANDROID
+    if (traceBattlePostVBlank)
+    {
+        PortRuntime_SetBattleDiagnosticStage("A-Z");
+        sAndroidFirstBattlePostVBlankTraced = TRUE;
+    }
+#endif
 #ifndef PLATFORM_ANDROID
     TryReceiveLinkBattleData();
 #endif
