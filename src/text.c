@@ -15,6 +15,9 @@
 #include "string_util.h"
 #include "text.h"
 #include "window.h"
+#ifdef PLATFORM_ANDROID
+#include "port_runtime.h"
+#endif
 #include "constants/songs.h"
 #include "constants/speaker_names.h"
 
@@ -57,6 +60,9 @@ static void FreeFinishedTextPrinters(void);
 static void SpriteCB_TextCursor(struct Sprite *sprite);
 
 static EWRAM_DATA struct TextPrinter *sFirstTextPrinter = NULL;
+#ifdef PLATFORM_ANDROID
+static u8 sAndroidLastBattleTextRenderState = 0xFF;
+#endif
 
 static EWRAM_DATA u16 sFontHalfRowLookupTable[0x100];
 static EWRAM_DATA union TextColor sLastTextColor;
@@ -1340,6 +1346,23 @@ static u16 RenderText(struct TextPrinter *textPrinter)
     u16 currChar;
     s32 width;
     s32 widthHelper;
+
+#ifdef PLATFORM_ANDROID
+    if (gMain.inBattle && sAndroidLastBattleTextRenderState != textPrinter->state)
+    {
+        sAndroidLastBattleTextRenderState = textPrinter->state;
+        switch (textPrinter->state)
+        {
+        case RENDER_STATE_HANDLE_CHAR:   PortRuntime_SetBattleDiagnosticStage("T0"); break;
+        case RENDER_STATE_WAIT:          PortRuntime_SetBattleDiagnosticStage("T1"); break;
+        case RENDER_STATE_CLEAR:         PortRuntime_SetBattleDiagnosticStage("T2"); break;
+        case RENDER_STATE_SCROLL_START:  PortRuntime_SetBattleDiagnosticStage("T3"); break;
+        case RENDER_STATE_SCROLL:        PortRuntime_SetBattleDiagnosticStage("T4"); break;
+        case RENDER_STATE_WAIT_SE:       PortRuntime_SetBattleDiagnosticStage("T5"); break;
+        case RENDER_STATE_PAUSE:         PortRuntime_SetBattleDiagnosticStage("T6"); break;
+        }
+    }
+#endif
 
     switch (textPrinter->state)
     {
