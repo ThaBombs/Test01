@@ -261,7 +261,7 @@ void SetPCBoxToSendMon(u8 boxId)
     sAndroidPCBoxToSendMon = boxId;
 }
 
-u8 GetPCBoxToSendMon(void)
+u16 GetPCBoxToSendMon(void)
 {
     return sAndroidPCBoxToSendMon;
 }
@@ -483,7 +483,7 @@ u8 *GetBoxNamePtr(u8 boxId)
     return sAndroidBoxName;
 }
 
-bool32 ShouldShowBoxWasFullMessage(void)
+bool8 ShouldShowBoxWasFullMessage(void)
 {
     return FALSE;
 }
@@ -1179,9 +1179,10 @@ u8 GetObjectEventIdByLocalIdAndMap(u8 localId, u8 mapNum, u8 mapGroupId)
     return OBJECT_EVENTS_COUNT;
 }
 
-void ObjectEventClearHeldMovementIfFinished(struct ObjectEvent *objectEvent)
+u8 ObjectEventClearHeldMovementIfFinished(struct ObjectEvent *objectEvent)
 {
     (void)objectEvent;
+    return 0;
 }
 
 void ObjectEventClearHeldMovement(struct ObjectEvent *objectEvent)
