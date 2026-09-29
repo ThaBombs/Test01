@@ -16,6 +16,7 @@ enum class EffectType {
     ATTACK_UP,
     GUARD_UP,
     SPEED_UP,
+    POWER_UP,
     DRAIN,
     JAM_NEXT,
     ATTACK_DOWN,
