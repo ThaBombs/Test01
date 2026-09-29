@@ -484,6 +484,10 @@ class GameController(
                 source.speed += ability.amount
                 lines += "${source.card.name} uses ${ability.name}: +${ability.amount} Speed."
             }
+            EffectType.POWER_UP -> {
+                source.power += ability.amount
+                lines += "${source.card.name} uses ${ability.name}: +${ability.amount} Power."
+            }
             EffectType.DRAIN -> {
                 val amount = ability.amount + powerScale
                 val dealt = dealDamage(target, amount)
