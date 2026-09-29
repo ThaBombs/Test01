@@ -163,7 +163,7 @@ object GameData {
         FighterCard(
             "ember_adept", "Ember Adept", "Spark Unbound", 15, 2, "Cinders",
             listOf(
-                AbilityCard("Kindle", req(DiceFace.POWER to 1, DiceFace.FOCUS to 1), EffectType.POWER_SURGE_COMPAT(), 0, ""),
+                AbilityCard("Kindle", req(DiceFace.POWER to 1, DiceFace.FOCUS to 1), EffectType.ATTACK_UP, 0, ""),
                 AbilityCard("Flare", req(DiceFace.POWER to 2), EffectType.DAMAGE, 4, "Launch a concentrated flame."),
                 AbilityCard("Solar Lance", req(DiceFace.BLADE to 1, DiceFace.POWER to 2), EffectType.DAMAGE, 6, "A costly burst of direct damage.")
             )
@@ -222,7 +222,7 @@ object GameData {
         FighterCard(
             "rift_scholar", "Rift Scholar", "Unlicensed Theorist", 15, 2, "Oracles",
             listOf(
-                AbilityCard("Calculation", req(DiceFace.FOCUS to 2), EffectType.POWER_SURGE_COMPAT(), 0, ""),
+                AbilityCard("Calculation", req(DiceFace.FOCUS to 2), EffectType.ATTACK_UP, 0, ""),
                 AbilityCard("Fold Space", req(DiceFace.FOCUS to 1, DiceFace.SPEED to 1), EffectType.JAM_NEXT, 0, "Interrupt the next enemy ability."),
                 AbilityCard("Rift Burn", req(DiceFace.POWER to 2, DiceFace.FOCUS to 1), EffectType.DAMAGE, 5, "Tear open a damaging rift.")
             )
@@ -262,7 +262,7 @@ object GameData {
         FighterCard(
             "tempest_idol", "Tempest Idol", "Walking Storm", 18, 2, "Tempest",
             listOf(
-                AbilityCard("Charge", req(DiceFace.SPEED to 1, DiceFace.POWER to 1), EffectType.POWER_SURGE_COMPAT(), 0, ""),
+                AbilityCard("Charge", req(DiceFace.SPEED to 1, DiceFace.POWER to 1), EffectType.ATTACK_UP, 0, ""),
                 AbilityCard("Forked Bolt", req(DiceFace.POWER to 2), EffectType.DAMAGE, 4, "Blast the foe."),
                 AbilityCard("Storm Crown", req(DiceFace.SPEED to 2, DiceFace.POWER to 1), EffectType.DAMAGE, 5, "Call down a focused storm.")
             )
@@ -286,7 +286,3 @@ object GameData {
         EventCard("Second Wind", "Both chosen fighters heal 1 before abilities.", startHeal = 1)
     )
 }
-
-// Small helper used by two starter abilities that simply build Power.
-private fun EffectType.CompanionPlaceholder() = EffectType.ATTACK_UP
-private fun EffectType.POWER_SURGE_COMPAT() = EffectType.ATTACK_UP
